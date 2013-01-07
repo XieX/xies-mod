@@ -1,0 +1,11 @@
+{
+	"spawn": {
+		"shrub": {
+			"rarity": 22,
+			"spawnson": "dirt,grass",
+			"spawnsin": 0,
+			"biomes": "plains,hills,marsh,shrubland",
+			"clusterSize": 12
+		}
+	}
+}

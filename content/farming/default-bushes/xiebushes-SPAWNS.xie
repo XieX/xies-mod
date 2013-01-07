@@ -1,0 +1,10 @@
+{
+	"spawn": {
+		"wildtomatobush": {
+			"rarity": 30,
+			"spawnson": "dirt,grass",
+			"spawnsin": 0,
+			"biomes": "forest,swamp,hills,marsh"
+		}
+	}
+}

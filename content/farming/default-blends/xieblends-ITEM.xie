@@ -1,0 +1,129 @@
+{
+	"items": {
+		"vegetableoil": {
+			"name": "Vegetable Oil",
+			"fuel": 200,
+			"texFile": "xieblends.png",
+			"icon": 0
+		},
+		"mayo": {
+			"name": "Mayonnaise",
+			"container": "bowl",
+			"texFile": "xieblends.png",
+			"icon": 1
+		},
+		"guacamole": {
+			"name": "Guacamole",
+			"type": "food",
+			"hunger": 8,
+			"nourishment": 0.6,
+			"container": "bowl",
+			"texFile": "xieblends.png",
+			"icon": 2
+		},
+		"ketchup": {
+			"name": "Ketchup",
+			"type": "food",
+			"hunger": 1,
+			"action": "drink",
+			"nourishment": 0.1,
+			"container": "glassBottle",
+			"texFile": "xieblends.png",
+			"icon": 3
+		},
+		"cornchips": {
+			"name": "Corn Chips",
+			"type": "food",
+			"hunger": 10,
+			"nourishment": 0.1,
+			"texFile": "xieblends.png",
+			"icon": 4
+		},
+		"foragingstick": {
+			"name": "Foraging Stick",
+			"type": "stick",
+			"uses": 32,
+			"texFile": "xieblends.png",
+			"icon": 128,
+			"destroyChance": 33,
+			"blocks": {
+				"deadbush": {
+					"appleseeds": {"chance": 4, "amount": 1},
+					"orangeseeds": {"chance": 4, "amount": 1},
+					"lemonseeds": {"chance": 4, "amount": 1},
+					"avocadoseeds": {"chance": 4, "amount": 1}
+				},
+				"tallgrass": {
+					"onionseeds": {"chance": 2, "amount": 2},
+					"carrotseeds": {"chance": 2, "amount": 2},
+					"lettuceseeds": {"chance": 2, "amount": 2}
+				},
+				"rose": {
+					"roseseeds": {"chance": 6, "amount": 2}
+				},
+				"flower": {
+					"dandelionseeds": {"chance": 6, "amount": 2}
+				},
+				"wildcorncrop": {
+					"cornkernels": {"chance":6, "amount": 2}
+				},
+				"shrub": {
+					"cottonseeds": {"chance": 2, "amount": 2},
+					"soybeans": {"chance": 2, "amount": 2},
+					"tealeaves": {"chance": 2, "amount": 2}
+				},
+				"wildtomatobush": {
+					"tomatoseeds": {"chance": 6, "amount": 2}
+				}
+			}
+		},
+		"foragingrod": {
+			"name": "Foraging Rod",
+			"type": "stick",
+			"uses": 781,
+			"texFile": "xieblends.png",
+			"icon": 129,
+			"destroyChance": 50,
+			"blocks": {
+				"tallgrass": {
+					"seeds": {"chance": 3, "amount": 1},
+					"hybridseeds": {"chance": 3, "amount": 1},
+					"onionseeds": {"chance": 3, "amount": 1},
+					"carrotseeds": {"chance": 3, "amount": 1},
+					"lettuceseeds": {"chance": 3, "amount": 1},
+					"cottonseeds": {"chance": 3, "amount": 1},
+					"soybeans": {"chance": 3, "amount": 1},
+					"tealeaves": {"chance": 3, "amount": 1},
+					"cornkernels": {"chance": 3, "amount": 1},
+					"tomatoseeds": {"chance": 3, "amount": 1}
+				},
+				"deadbush": {
+					"appleseeds": {"chance": 6, "amount": 1},
+					"orangeseeds": {"chance": 6, "amount": 1},
+					"lemonseeds": {"chance": 6, "amount": 1},
+					"avocadoseeds": {"chance": 6, "amount": 1}
+				},
+				"rose": {
+					"roseseeds": {"chance": 20, "amount": 1}
+				},
+				"flower": {
+					"dandelionseeds": {"chance": 20, "amount": 1}
+				},
+				"wildcorncrop": {
+					"cornkernels": {"chance": 20, "amount": 1}
+				},
+				"shrub": {
+					"cottonseeds": {"chance": 15, "amount": 1},
+					"soybeans": {"chance": 15, "amount": 1},
+					"tealeaves": {"chance": 15, "amount": 1}
+				},
+				"wildtomatobush": {
+					"tomatoseeds": {"chance": 50, "amount": 1}
+				},
+				"sand": {
+					"salt": {"chance": 1, "amount": 1}
+				}
+			}
+		}	
+	}
+}

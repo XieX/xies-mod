@@ -1,0 +1,101 @@
+{
+	"recipes": {
+		"chocolatebar": {
+			"product": "chocolatebar:6",
+			"pattern": " X , Y , Z ",
+			"content": "cocoabeans,sugar,milk"
+		},
+		"appleseeds": {
+			"product": "appleseeds",
+			"content": "apple"
+		},
+		"appleseedsplice": {
+			"product": "appleseeds:6",
+			"content": "seeds,seeds,seeds,seeds,seeds,seeds,reddye"
+		},
+		"orangeseeds": {
+			"product": "orangeseeds",
+			"content": "orange"
+		},
+		"orangeseedsplice": {
+			"product": "orangeseeds:6",
+			"content": "seeds,seeds,seeds,seeds,seeds,seeds,orangedye"
+		},
+		"lemonseeds": {
+			"product": "lemonseeds",
+			"content": "lemon"
+		},
+		"lemonseedsplice": {
+			"product": "lemonseeds:6",
+			"content": "seeds,seeds,seeds,seeds,seeds,seeds,yellowdye"
+		},
+		"avocadoseeds": {
+			"product": "avocadoseeds",
+			"content": "avocado"
+		},
+		"avacadoseedsplice": {
+			"product": "avocadoseeds:6",
+			"content": "seeds,seeds,seeds,seeds,seeds,seeds,greendye"
+		},
+		"cocoasapling": {
+			"product": "cocoasapling",
+			"content": "dirt,cocoapod"
+		},
+		"cocoapodbreak": {
+			"product": "cocoabeans",
+			"content": "cocoapod"
+		},
+		"cider": {
+			"product": "cider",
+			"pattern": "X,X,Y",
+			"content": "apple,glassBottle"
+		},
+		"orangejuice": {
+			"product": "orangejuice",
+			"pattern": "X,X,Y",
+			"content": "orange,glassBottle"
+		},
+		"lemonade": {
+			"product": "lemonade",
+			"pattern": "X,Y,Z",
+			"content": "sugar,lemonjuice,glassBottle"
+		},
+		"chocolatemilk": {
+			"product": "chocolatemilk:3",
+			"pattern": " X , Y ,ZZZ",
+			"content": "chocolatesyrup,milk,glassBottle"
+		},
+		"lemonjuice": {
+			"product": "lemonjuice",
+			"content": "lemon,lemon"
+		},
+		"avocadospread": {
+			"product": "avocadospread",
+			"content": "bakedavocado,bowl"
+		},
+		"bakedapple": {
+			"product": "bakedapple",
+			"smelt": "apple"
+		},
+		"orangejelly": {
+			"product": "orangejelly",
+			"smelt": "orange"
+		},
+		"lemonjelly": {
+			"product": "lemonjelly",
+			"smelt": "lemon"
+		},
+		"bakedavacado": {
+			"product": "bakedavocado",
+			"smelt": "avocado"
+		},
+		"chocolatesyrup": {
+			"product": "chocolatesyrup",
+			"smelt": "chocolatebar"
+		},
+		"applejelly": {
+			"product": "applejelly",
+			"smelt": "bakedapple"
+		}
+	}
+}

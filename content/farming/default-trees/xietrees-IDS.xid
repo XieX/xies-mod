@@ -1,0 +1,35 @@
+
+#~~~~~~~~~~~~BLOCK IDS~~~~~~~~~~~~
+fruitleaves=1001
+treeleaves=1002
+fruitsapling=1003
+treesapling=1004
+
+
+
+#~~~~~~~~~~~~ITEM IDS~~~~~~note:itemid=10+{position in pic}~~~~~~
+
+orange=10001
+lemon=10002
+avocado=10003
+chocolatebar=10004
+
+fruitseed=10048
+treeseed=10052
+
+drinkables=10064
+
+lemonjuice=10082
+avocadospread=10083
+
+bakedapple=10096
+orangejelly=10097
+lemonjelly=10098
+bakedavocado=10099
+chocolatesyrup=10100
+
+applejelly=10112
+
+
+
+

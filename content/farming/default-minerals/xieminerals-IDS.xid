@@ -1,0 +1,20 @@
+
+#~~~~~~~~~~~~BLOCK IDS~~~~~~~~~~~~
+saltdeposit=1301
+coalblock=1302
+charcoalblock=1303
+hardcoalblock=1304
+blackdiamondblock=1305
+
+
+
+
+#~~~~~~~~~~~~ITEM IDS~~~~~~~~~~~~
+
+salt=8502
+hardcoal=8519
+blackdiamond=8533
+
+fakediamond=8757
+
+jerky=8828

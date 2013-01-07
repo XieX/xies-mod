@@ -1,0 +1,21 @@
+{
+	"recipes": {
+		"cull": "pumpkinSeeds:4",
+		"melonjuice": {
+			"product": "melonjuice",
+			"content": "item.melon,glassBottle"
+		},
+		"pumpkinpiece": {
+			"product": "pumpkinpiece:4",
+			"content": "pumpkin"
+		},
+		"pumpkincooked": {
+			"product": "pumpkincooked",
+			"smelt": "pumpkinpiece"
+		},
+		"pumpkinseeds": {
+			"product": "pumpkinseeds",
+			"content": "pumpkinpiece"
+		}
+	}
+}

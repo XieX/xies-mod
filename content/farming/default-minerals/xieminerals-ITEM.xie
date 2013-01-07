@@ -1,0 +1,32 @@
+{
+	"items": {
+		"salt": {
+			"name": "Salt",
+			"texFile": "xieminerals.png",
+			"icon": 2
+		},
+		"hardcoal": {
+			"name": "Hard Coal",
+			"fuel": 20000,
+			"texFile": "xieminerals.png",
+			"icon": 19
+		},
+		"blackdiamond": {
+			"name": "Black Diamond",
+			"texFile": "xieminerals.png",
+			"icon": 33
+		},
+		"fakediamond": {
+			"name": "Fake Diamond",
+			"icon": "#diamond"
+		},
+		"jerky": {
+			"name": "Beef Jerky",
+			"texFile": "xieminerals.png",
+			"icon": 128,
+			"type": "food",
+			"hunger": 2,
+			"nourishment": 0.9
+		}
+	}
+}

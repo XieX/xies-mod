@@ -1,0 +1,134 @@
+{
+	"items": {
+		"snackTaco": {
+			"name": "Snack Taco",
+			"type": "food",
+			"hunger": 12,
+			"nourishment": 0.9,
+			"texFile": "xiemulti.png",
+			"icon": 32
+		},
+		"taco": {
+			"name": "Taco",
+			"type": "food",
+			"hunger": 14,
+			"nourishment": 1.0,
+			"texFile": "xiemulti.png",
+			"icon": 33
+		},
+		"snackBurrito": {
+			"name": "Snack Burrito",
+			"type": "food",
+			"hunger": 12,
+			"nourishment": 0.9,
+			"texFile": "xiemulti.png",
+			"icon": 34
+		},
+		"burrito": {
+			"name": "Burrito",
+			"type": "food",
+			"hunger": 14,
+			"nourishment": 1.0,
+			"texFile": "xiemulti.png",
+			"icon": 35
+		}
+	},
+	"recipes": {
+		"TacoP": {
+			"product": "snackTaco:2",
+			"content": "tacoshell,tacoshell,$protein"
+		},
+		"TacoPP": {
+			"product": "snackTaco:4",
+			"content": "tacoshell,tacoshell,tacoshell,tacoshell,$protein,$protein"
+		},
+		"TacoSP": {
+			"product": "snackTaco:4",
+			"content": "tacoshell,tacoshell,tacoshell,tacoshell,$salady,$protein"
+		},
+		"TacoPPP": {
+			"product": "snackTaco:6",
+			"content": "tacoshell,tacoshell,tacoshell,tacoshell,tacoshell,tacoshell,$protein,$protein,$protein"
+		},
+		"TacoSSP": {
+			"product": "snackTaco:6",
+			"content": "tacoshell,tacoshell,tacoshell,tacoshell,tacoshell,tacoshell,$protein,$salady,$salady"
+		},
+		"TacoPPS": {
+			"product": "snackTaco:6",
+			"content": "tacoshell,tacoshell,tacoshell,tacoshell,tacoshell,tacoshell,$protein,$protein,$salady"
+		},
+		"TacoPSX": {
+			"product": "taco:6",
+			"content": "tacoshell,tacoshell,tacoshell,tacoshell,tacoshell,tacoshell,$protein,$salady,$saucy"
+		},
+		"TacoPPX": {
+			"product": "taco:6",
+			"content": "tacoshell,tacoshell,tacoshell,tacoshell,tacoshell,tacoshell,$protein,$protein,$saucy"
+		},
+		"TacoSSX": {
+			"product": "snackTaco:6",
+			"content": "tacoshell,tacoshell,tacoshell,tacoshell,tacoshell,tacoshell,$salady,$salady,$saucy"
+		},
+		"TacoPX": {
+			"product": "taco:4",
+			"content": "tacoshell,tacoshell,tacoshell,tacoshell,$protein,$saucy"
+		},
+		"TacoSX": {
+			"product": "snackTaco:4",
+			"content": "tacoshell,tacoshell,tacoshell,tacoshell,$salady,$saucy"
+		},
+		"TacoX": {
+			"product": "snackTaco:2",
+			"content": "tacoshell,tacoshell,$saucy"
+		},
+		"BurritoP": {
+			"product": "snackBurrito",
+			"content": "tortilla,$protein"
+		},
+		"BurritoPP": {
+			"product": "snackBurrito:2",
+			"content": "tortilla,tortilla,$protein,$protein"
+		},
+		"BurritoSP": {
+			"product": "snackBurrito:2",
+			"content": "tortilla,tortilla,$salady,$protein"
+		},
+		"BurritoPPP": {
+			"product": "snackBurrito:3",
+			"content": "tortilla,tortilla,tortilla,$protein,$protein,$protein"
+		},
+		"BurritoPSS": {
+			"product": "snackBurrito:3",
+			"content": "tortilla,tortilla,tortilla,$protein,$salady,$salady"
+		},
+		"BurritoPPS": {
+			"product": "snackBurrito:3",
+			"content": "tortilla,tortilla,tortilla,$protein,$protein,$salady"
+		},
+		"BurritoPSX": {
+			"product": "burrito:3",
+			"content": "tortilla,tortilla,tortilla,$protein,$salady,$saucy"
+		},
+		"BurritoPPX": {
+			"product": "burrito:3",
+			"content": "tortilla,tortilla,tortilla,$protein,$protein,$saucy"
+		},
+		"BurritoSSX": {
+			"product": "snackBurrito:3",
+			"content": "tortilla,tortilla,tortilla,$salady,$salady,$saucy"
+		},
+		"BurritoPX": {
+			"product": "burrito:2",
+			"content": "tortilla,tortilla,$protein,$saucy"
+		},
+		"BurritoSX": {
+			"product": "snackBurrito:2",
+			"content": "tortilla,tortilla,$salady,$saucy"
+		},
+		"BurritoX": {
+			"product": "snackBurrito",
+			"content": "tortilla,$saucy"
+		}
+	}
+}
