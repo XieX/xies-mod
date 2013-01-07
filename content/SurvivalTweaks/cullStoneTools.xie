@@ -1,0 +1,9 @@
+{
+	"recipes": {
+		"cullStoneSword": { "cull": "stoneSword" },
+		"cullStonePickaxe": { "cull": "stonePickaxe" },
+		"cullStoneAxe": { "cull": "stoneAxe" },
+		"cullStoneShovel": { "cull": "stoneShovel" },
+		"cullStoneHoe": { "cull": "stoneHoe" }
+	}
+}
