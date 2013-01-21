@@ -240,10 +240,12 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
         ejectContents(world,i,j,k);
         super.breakBlock(world, i, j, k, id, meta);
         
-    	if (becomesWhenDestroyed!=null) {
-    		if (becomesWhenDestroyed.length>1 && becomesWhenDestroyed[1]>=0)
+    	if (becomesWhenDestroyed!=null && becomesWhenDestroyed[0]>=0) {
+    		if (becomesWhenDestroyed.length>1 && becomesWhenDestroyed[1]>=0) {
     			Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
-    		else Xie.setBlock(world, i, j, k, becomesWhenDestroyed[0]);
+    		} else {
+    			Xie.setBlock(world, i, j, k, becomesWhenDestroyed[0]);
+    		}
     	}
     }
     

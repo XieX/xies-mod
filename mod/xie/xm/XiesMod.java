@@ -217,6 +217,8 @@ public class XiesMod {
 			if (e.isDirectory()) continue;
 			
 			String entry = e.getName();
+
+			if (entry.contains("/_")) continue;
 			
 			if (entry.endsWith(".xie")) {
 				XieLog.log().config("Found "+entry);

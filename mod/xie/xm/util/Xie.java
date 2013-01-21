@@ -796,11 +796,13 @@ public class Xie {
 	
 	// wrapper methods
 	public static void setBlock(World world, int x, int y, int z, int id) {
+		if (id<0) return;
 		world.setBlockWithNotify(x, y, z, id);
 		world.markBlockForRenderUpdate(x, y, z);
 	}
 	
 	public static void setBlockAndMeta(World world, int x, int y, int z, int id, int m) {
+		if (id<0) return;
 		world.setBlockAndMetadataWithNotify(x, y, z, id, m);
 		world.markBlockForRenderUpdate(x, y, z);
 	}
