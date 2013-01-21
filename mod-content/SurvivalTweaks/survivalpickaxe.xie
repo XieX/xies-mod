@@ -1,0 +1,20 @@
+{
+    "items": {
+		"genshouPickaxeWood": {
+			"name": "Wood Pickaxe",
+			"overide": "pickaxeWood",
+			"type": "tool",
+			"material": "wood",
+			"blocksEffective": "stonebrick,stoneSlab,sandStone,stoneMoss,oreIron,oreCoal,ice,hellrock,rail,goldenRail,detectorRail",
+			"canHarvest": "stonebrick,stoneSlab,sandStone,stoneMoss,oreIron,oreCoal,ice,hellrock,rail,goldenRail,detectorRail"
+		},
+		"genshouPickaxeStone": {
+			"name": "Stone Pickaxe",
+			"overide": "pickaxeStone",
+			"type": "tool",
+			"material": "stone",
+			"blocksEffective": "stonebrick,stoneSlab,sandStone,stoneMoss,oreIron,oreCoal,ice,hellrock,rail,goldenRail,detectorRail",
+			"canHarvest": "stonebrick,stoneSlab,sandStone,stoneMoss,oreIron,oreCoal,ice,hellrock,rail,goldenRail,detectorRail"
+		}
+    }
+}

@@ -1,0 +1,12 @@
+{
+	"spawn": {
+		"wildcorncrop": {
+			"rarity": 22,
+			"spawnson": "dirt,grass",
+			"spawnsin": "tallgrass,air",
+			"clusterSize": 5,
+			"biomes": "plains,meadow,savanna",
+			"clump": "true"
+		}
+	}
+}

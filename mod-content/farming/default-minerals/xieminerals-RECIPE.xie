@@ -1,0 +1,97 @@
+{
+	"recipes": {
+		"coalblock": {
+			"product": "coalblock",
+			"content": "coal,coal,coal,coal,coal,coal,coal,coal,coal"
+		},
+		"brokencoalblock": {
+			"product": "coal:9",
+			"content": "coalblock"
+		},
+		"charcoalblock": {
+			"product": "charcoalblock",
+			"content": "charcoal,charcoal,charcoal,charcoal,charcoal,charcoal,charcoal,charcoal,charcoal"
+		},
+		"charcoalblocktocoal": {
+			"product": "coal:0:1",
+			"smelt": "charcoalblock"
+		},
+		"hardcoalblock": {
+			"product": "hardcoalblock",
+			"content": "hardcoal,hardcoal,hardcoal,hardcoal,hardcoal,hardcoal,hardcoal,hardcoal,hardcoal"
+		},
+		"hardcoal": {
+			"product": "hardcoal",
+			"smelt": "coalblock"
+		},
+		"brokenhardcoalblock": {
+			"product": "hardcoal:9",
+			"content": "hardcoalblock"
+		},
+		"blackdiamond": {
+			"product": "blackdiamond",
+			"smelt": "hardcoalblock"
+		},
+		"blackdiamondblock": {
+			"product": "blackdiamondblock",
+			"content": "blackdiamond,blackdiamond,blackdiamond,blackdiamond,blackdiamond,blackdiamond,blackdiamond,blackdiamond,blackdiamond"
+		},
+		"brokenblackdiamondblock": {
+			"product": "blackdiamond:9",
+			"content": "blackdiamondblock"
+		},
+		"fakediamond": {
+			"product": "fakediamond",
+			"smelt": "blackdiamondblock"
+		},
+		"jerky": {
+			"product": "jerky:4",
+			"content": "salt,beefRaw"
+		},
+		"diamondSword": {
+			"product": "diamondSword",
+			"pattern": " X , X , Y ",
+			"content": "fakediamond,stick"
+		},
+		"diamondPickaxe": {
+			"product": "diamondPickaxe",
+			"pattern": "XXX, Y , Y ",
+			"content": "fakediamond,stick"		
+		},
+		"diamondShovel": {
+			"product": "diamondShovel",
+			"pattern": " X , Y , Y ",
+			"content": "fakediamond,stick"		
+		},
+		"diamondHoe": {
+			"product": "diamondHoe",
+			"pattern": "XX , Y , Y ",
+			"content": "fakediamond,stick"		
+		},
+		"diamondAxe": {
+			"product": "diamondAxe",
+			"pattern": "XX ,XY , Y ",
+			"content": "fakediamond,stick"		
+		},
+		"diamondHelmet": {
+			"product": "diamondHelmet",
+			"pattern": "XXX,X X",
+			"content": "fakediamond"
+		},
+		"diamondBreastplate": {
+			"product": "diamondBreastplate",
+			"pattern": "X X,XXX,XXX",
+			"content": "fakediamond"
+		},
+		"diamondLeggings": {
+			"product": "diamondLeggings",
+			"pattern": "XXX,X X,X X",
+			"content": "fakediamond"
+		},
+		"diamondBoots": {
+			"product": "diamondBoots",
+			"pattern": "X X,X X",
+			"content": "fakediamond"
+		}
+	}
+}

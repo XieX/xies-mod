@@ -1,0 +1,13 @@
+{
+	"recipes": {
+		"furnace": {
+			"pattern": "XXX,X X,XXX",
+			"content": "clayBlock"
+		},
+		"flint": {
+			"smelt": "gravel"
+		},
+		"stick": "sapling",
+		"stick:2": "fence"
+	}
+}

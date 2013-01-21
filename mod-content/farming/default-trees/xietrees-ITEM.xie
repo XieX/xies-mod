@@ -1,0 +1,138 @@
+{
+	"items": {
+		"orange": {
+			"name": "Orange",
+			"type": "food",
+			"hunger": 4,
+			"nourishment": 0.3,
+			"texFile": "xietrees.png",
+			"icon": 1
+		},
+		"lemon": {
+			"name": "Lemon",
+			"texFile": "xietrees.png",
+			"icon": 2
+		},
+		"avocado": {
+			"name": "Avocado",
+			"type": "food",
+			"hunger": 4,
+			"nourishment": 0.6,
+			"texFile": "xietrees.png",
+			"icon": 3
+		},
+		"chocolatebar": {
+			"name": "ChocolateBar",
+			"type": "food",
+			"hunger": 4,
+			"nourishment": 0.3,
+			"texFile": "xietrees.png",
+			"icon": 4
+		},
+		"fruitseed": {
+			"name": "Fruit Seed",
+			"names": "Apple Seeds,Orange Seeds,Lemon Seeds,Avocado Seed",
+			"type": "seeds",
+			"growsInto": "fruitsapling",
+			"inheritMeta": true,
+			"texFile": "xietrees.png",
+			"icon": {
+				"0": 48,
+				"1": 49,
+				"2": 50,
+				"3": 51
+			}
+		},
+		"treeseed": {
+			"name": "Tree Seeds",
+			"names": "Cocoa Pod",
+			"type": "seeds",
+			"growsInto": "treesapling",
+			"inheritMeta": true,
+			"texFile": "xietrees.png",
+			"icon": {
+				"0": 52
+			}
+		},
+		"drinkables": {
+			"name": "drinkables",
+			"names": "Cider,Orange Juice,Lemonade,Avacado Juice,Chocolate Milk",
+			"type": "food",
+			"hunger": 1,
+			"action": "drink",
+			"nourishment": 0.1,
+			"potionEffect":{
+				"0": "regeneration:10:1@20",
+				"1": "regeneration:10:1@20",
+				"2": "regeneration:10:1@20",
+				"3": "regeneration:10:1@20",
+				"4": "haste:20:1@20"
+			},
+			"drops": "glassBottle",
+			"texFile": "xietrees.png",
+			"icon" : {
+				"0": 64,
+				"1": 65,
+				"2": 66,
+				"3": 67,
+				"4": 68
+			}
+		},
+		"lemonjuice": {
+			"name": "Lemon Juice",
+			"texFile": "xietrees.png",
+			"icon": 82
+		},
+		"avocadospread": {
+			"name": "Avocado Spread",
+			"container": "bowl",
+			"texFile": "xietrees.png",
+			"icon": 83
+		},
+		"bakedapple": {
+			"name": "Baked Apple",
+			"type": "food",
+			"hunger": 4,
+			"nourishment": 0.3,
+			"texFile": "xietrees.png",
+			"icon": 96
+		},
+		"orangejelly": {
+			"name": "Orange Jelly",
+			"type": "food",
+			"hunger": 1,
+			"nourishment": 0.1,
+			"texFile": "xietrees.png",
+			"icon": 97
+		},
+		"lemonjelly": {
+			"name": "Lemon Jelly",
+			"type": "food",
+			"hunger": 1,
+			"nourishment": 0.1,
+			"texFile": "xietrees.png",
+			"icon": 98
+		},
+		"bakedavocado": {
+			"name": "Baked Avocado",
+			"type": "food",
+			"hunger": 4,
+			"nourishment": 0.3,
+			"texFile": "xietrees.png",
+			"icon": 99
+		},
+		"chocolatesyrup": {
+			"name": "Chocolate Syrup",
+			"texFile": "xietrees.png",
+			"icon": 100
+		},
+		"applejelly": {
+			"name": "Apple Jelly",
+			"type": "food",
+			"hunger": 1,
+			"nourishment": 0.1,
+			"texFile": "xietrees.png",
+			"icon": 112
+		}
+	}
+}

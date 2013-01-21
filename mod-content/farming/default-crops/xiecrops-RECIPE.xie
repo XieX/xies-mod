@@ -1,0 +1,68 @@
+{
+	"recipes": {
+		"soybeansplice": {
+			"product": "soybeans:4",
+			"content": "seeds,seeds,seeds,seeds,redstone,greendye"
+		},
+		"tofu": {
+			"product": "tofu",
+			"content": "soybeans,soybeans,soybeans,soybeans,soybeans,soybeans,soybeans,soybeans,soybeans"
+		},
+		"tofucooked": {
+			"product": "tofucooked",
+			"smelt": "tofu"
+		},
+		"soymilk": {
+			"product": "soymilk",
+			"content": "soybeans,soybeans,soybeans,soybeans,soybeans,soybeans,glassBottle"
+		},
+		"soymilkbucket": {
+			"product": "milk",
+			"content": "soymilk,soymilk,soymilk,bucket"
+		},
+		"cornkernels": {
+			"product": "cornkernels:2",
+			"content": "corncob"
+		},
+		"cornkernelsplice": {
+			"product": "cornkernels:4",
+			"content": "seeds,seeds,seeds,seeds,redstone,yellowdye"
+		},
+		"corncobcooked": {
+			"product": "corncobcooked",
+			"smelt": "corncob"
+		},
+		"wildcornkernel": {
+			"product": "cornkernels:2",
+			"content": "wildcorn"
+		},
+		"popcorn": {
+			"product": "popcorn:4",
+			"smelt": "cornkernels"
+		},
+		"tortilla": {
+			"product": "tortilla",
+			"content": "cornkernels,cornkernels,cornkernels"
+		},
+		"tortillachips": {
+			"product": "tortillachips:4",
+			"content": "tacoshell"
+		},
+		"tacoshell": {
+			"product": "tacoshell",
+			"smelt": "tortilla"
+		},
+		"hybridseedsplice": {
+			"product": "hybridseeds:4",
+			"content": "seeds,seeds,seeds,seeds,redstone"
+		},
+		"wheatoverideseeds": {
+			"product": "seeds:3",
+			"content": "wheat"
+		},
+		"wheatoveridewheat": {
+			"product": "wheat",
+			"content": "seeds,seeds,seeds"
+		}
+	}
+}

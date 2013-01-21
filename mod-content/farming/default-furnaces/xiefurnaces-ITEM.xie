@@ -1,0 +1,15 @@
+{
+	"items": {
+		"potash": {
+			"name": "Pot Ash",
+			"texFile": "xiefurnaces.png",
+			"icon": 128
+		},
+		"fertiliser": {
+			"name": "Fertiliser",
+			"type": "fertiliser",
+			"texFile": "xiefurnaces.png",
+			"icon": 129
+		}
+	}
+}

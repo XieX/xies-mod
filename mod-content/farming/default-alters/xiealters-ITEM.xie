@@ -1,0 +1,27 @@
+{
+	"items": {
+		"melonjuice": {
+			"name": "Melon Juice",
+			"type": "food",
+			"hunger": 1,
+			"action": "drink",
+			"nourishment": 0.1,
+			"container": "glassBottle",
+			"texFile": "xiealters.png",
+			"icon": 0
+		},
+		"pumpkinpiece": {
+			"name": "Pumpkin Piece",
+			"texFile": "xiealters.png",
+			"icon": 16
+		},
+		"pumpkincooked": {
+			"name": "Roast Pumpkin",
+			"type": "food",
+			"hunger": 7,
+			"nourishment": 0.3,
+			"texFile": "xiealters.png",
+			"icon": 17
+		}
+	}
+}

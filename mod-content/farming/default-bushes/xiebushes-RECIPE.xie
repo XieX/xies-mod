@@ -1,0 +1,44 @@
+{
+	"recipes": {
+		"tomatoseeds": {
+			"product": "tomatoseeds",
+			"content": "tomato"
+		},
+		"tomatoseedssplice": {
+			"product": "tomatoseeds:2",
+			"content": "seeds,seeds,redstone,reddye"
+		},
+		"tomatojuice": {
+			"product": "tomatojuice",
+			"content": "tomato,tomato,glassBottle"
+		},
+		"cottontostring": {
+			"product": "string:2",
+			"content": "cotton"
+		},
+		"stringtocotton": {
+			"product": "cotton",
+			"content": "string,string"
+		},
+		"cottonseedssplice": {
+			"product": "cottonseeds:2",
+			"content": "seeds,seeds,redstone,browndye"
+		},
+		"roseseeds": {
+			"product": "roseseeds:2",
+			"content": "rose,rose"
+		},
+		"dandelionseeds": {
+			"product": "dandelionseeds:2",
+			"content": "yellowFlower,yellowFlower"
+		},
+		"sweettea": {
+			"product": "sweettea:3",
+			"content": "tealeaves,sugar,waterBucket,glassBottle,glassBottle,glassBottle"
+		},
+		"wooltostring": {
+			"product": "string:4",
+			"content": "whitewool"
+		}	
+	}
+}
