@@ -48,6 +48,8 @@ public class Spawnable {
 	}
 	
 	protected boolean canSpawnHere(World world, int i, int j, int k) {
+		if (spawns == null) return false;
+		
 		if (spawnsNear!=null && !spawnsNear.isEmpty()) {
 			boolean foundSome = false;
 			for (int blockID : spawnsNear) {
@@ -187,6 +189,7 @@ public class Spawnable {
 	
 	// largely copy-pasta from WorldGenMinable
 	protected boolean attemptSpawnOre(World world, int i, int j, int k, int meta, int dxz, int dy) {
+		if (spawns == null) return false;
 		boolean spawned = false;
 		Random random = world.rand;
 		float radians = random.nextFloat() * 3.141593F;
@@ -247,6 +250,7 @@ public class Spawnable {
 	}
 	
 	protected void spawn(World world, int x, int y, int z, int meta) {
+		if (spawns == null) return;
 		if (spawns instanceof XieBlockLeaves) {
     		XieBlockLeaves leafBlock = (XieBlockLeaves) spawns;
     		leafBlock.generate(world, x, y, z, meta, true);
@@ -257,6 +261,7 @@ public class Spawnable {
 	
 	@Override
 	public String toString() {
+		if (spawns == null) return "null";
 		String rtn="Spawnable: "+spawns.getBlockName()+" factor: "+spawnFactor+"\nSpawns On: ";
 		for (int i : spawnsOn) rtn+=i+" ";
 		rtn+="\nSpawns In: ";
