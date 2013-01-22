@@ -1,0 +1,24 @@
+{
+	"blocks": {
+		"saltDeposit": {
+			"name": "Salt Deposit",
+			"becomesWhenDestroyed": "sand",
+			"drops": "salt",
+			"material": "sand",
+			"stepSound": "powder",
+			"tex": {
+				"texFile": "xieterrain.png",
+				"top": 1,
+				"bottom": 0,
+				"sides": 0
+			}
+		}
+	},
+	"items": {
+		"salt": {
+			"name": "Salt",
+			"texFile": "xieitems.png",
+			"icon": 50
+		}
+	}
+}

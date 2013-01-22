@@ -1,0 +1,94 @@
+{
+    "items": {
+		"jerky": {
+			"name": "Beef Jerky",
+			"texFile": "xieitems.png",
+			"icon": 8,
+			"type": "food",
+			"hunger": 2,
+			"nourishment": 0.9
+		},
+        "cornCobCooked": {
+            "name": "Corn on the Cob",
+            "type": "food",
+            "hunger": 6,
+			"nourishment": 0.6,
+			"texFile": "xieitems.png",
+			"icon": 21
+        },
+        "cornCob": {
+            "name": "Corn Cob",
+            "type": "food",
+            "hunger": 3,
+			"nourishment": 0.3,
+			"texFile": "xieitems.png",
+			"icon": 5,
+			"cooked": "cornCobCooked",
+			"fuel": 100
+        },
+		"popcorn": {
+            "name": "Popcorn",
+            "type": "food",
+            "hunger": 5,
+			"nourishment": 0.1,
+			"texFile": "xieitems.png",
+			"icon": 25
+		},
+        "tomato": {
+            "name": "Tomato",
+            "type": "food",
+            "hunger": 4,
+			"nourishment": 0.3,
+			"texFile": "xieitems.png",
+			"icon": 4
+        },
+        "orange": {
+            "name": "Orange",
+            "type": "food",
+            "hunger": 4,
+			"nourishment": 0.3,
+			"texFile": "xieitems.png",
+			"icon": 1
+        },
+        "lemon": {
+            "name": "Lemon",
+			"texFile": "xieitems.png",
+			"icon": 2
+        },
+        "avocado": {
+            "name": "Avocado",
+            "type": "food",
+            "hunger": 4,
+			"nourishment": 0.6,
+			"texFile": "xieitems.png",
+			"icon": 3
+        },
+		"guacamole": {
+			"name": "Guacamole",
+			"type": "food",
+			"hunger": 8,
+			"nourishment": 0.6,
+			"container": "bowl",
+			"texFile": "xieitems.png",
+			"icon": 53
+		}
+    },
+    "recipes": {
+		"guacamole": 
+			"bowl,avocado,$guacstuffs",
+		"guacamole:2":
+				"bowl,avocado,$guacstuffs,
+				bowl,avocado,$guacstuffs",
+		"guacamole:3":
+			"bowl,avocado,$guacstuffs,
+			bowl,avocado,$guacstuffs,
+			bowl,avocado,$guacstuffs",
+		"jerky": {
+			"product": "jerky:4",
+			"content": "salt,beefRaw"
+		}
+	},
+	"aliases": {
+		"guacstuffs": "tomato,lemon,onion,salt"
+	}
+}

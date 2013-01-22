@@ -1,0 +1,107 @@
+{
+	"blocks": {
+		"lettucePlant": {
+            "name": "Lettuce",
+            "type": "plant",
+			"renderType": "flower",
+            "growsOn": "farmland",
+            "growthRate": 40,
+			"maxGrowth": 3,
+            "drops": {
+                "lettuce": { 
+					"chance": { 
+						"0-2": 0, "3": 100 
+					} 
+				},
+                "lettuceSeeds": { 
+					"chance": { 
+						"0-1": 0,
+						"2": 10,
+						"3": 40
+					}, 
+					"amount": 3
+				}
+			},
+            "tex": {
+				"texFile": "xieterrain.png",
+                "all": {
+                    "0": 80,
+                    "1-2": 81,
+                    "3+": 82
+                }
+            },
+			"blockBounds": {
+                    "0-14": "0.375,0,0.375,0.625,0.1875,0.625",
+                    "15": "0.25,0,0.25,0.75,0.3125,0.75"
+			}
+        },
+		"onionPlant": {
+            "name": "Onion",
+            "type": "plant",
+			"renderType": "flower",
+            "growsOn": "farmland",
+            "growthRate": 35,
+			"maxGrowth": 3,
+            "drops": {
+				"onion": {
+					"chance": {
+						"0-2": 0,
+						"3": 100
+					}
+				},
+                "onionSeeds": {
+					"chance": {
+						"0-1": 0,
+						"2": 10,
+						"3": 35
+					},
+					"amount": 3
+				}
+			},
+            "tex": {
+				"texFile": "xieterrain.png",
+                "all": {
+					"0": 83,
+                    "1-2": 84,
+                    "3+": 85
+                }
+            },
+			"blockBounds": {
+                    "0-14": "0.375,0,0.375,0.625,0.1875,0.625",
+                    "15": "0.25,0,0.25,0.75,0.3125,0.75"
+			}
+        }
+	},
+	"items": {
+        "lettuceSeeds": {
+            "name": "Lettuce Seeds",
+            "type": "seeds",
+            "growsInto": "lettucePlant",
+            "texFile": "xieitems.png",
+			"icon": 39
+        },
+        "lettuce": {
+            "name": "Lettuce",
+            "type": "food",
+            "hunger": 4,
+			"nourishment": 0.1,
+            "texFile": "xieitems.png",
+			"icon": 7
+        },
+        "onion": {
+            "name": "Onion",
+            "texFile": "xieitems.png",
+			"icon": 11
+        },
+        "onionSeeds": {
+            "name": "Onion Seeds",
+            "type": "seeds",
+            "growsInto": "onionPlant",
+            "texFile": "xieitems.png",
+			"icon": 43
+        }
+	},
+	"aliases": {
+		"salady": "lettuce,onion,carrot"
+	}
+}

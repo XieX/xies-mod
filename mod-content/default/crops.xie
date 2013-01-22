@@ -1,0 +1,186 @@
+{
+    "version": "Xie's Mod v1.4",
+    "blocks": {
+        "cornCrop": {
+            "name": "Corn",
+            "type": "crop",
+            "growsOn": "farmland",
+            "growthHeight": 3,
+            "growthRate": 20,
+            "drops": {
+                "cornCob": {
+                    "chance": {
+                        "0-12": 0,
+                        "13-14": 20,
+                        "15": 40
+                    },
+                    "amount": 2
+                }
+            },
+            "tex": {
+				"texFile": "xieterrain.png",
+                "all": {
+                    "0-1": 96,
+                    "2-3": 97,
+                    "4-6": 98,
+                    "7-9": 99,
+                    "10-11": 100,
+                    "12-13": 101,
+                    "14": 102,
+                    "15": 103
+                }
+            },
+			"blockBounds": {
+                    "0-1": "0,0,0,1,0.1875,1",
+                    "2-3": "0,0,0,1,0.4375,1",
+                    "4-6": "0,0,0,1,0.625,1",
+                    "7-9": "0,0,0,1,0.9375,1",
+                    "10-15": "0,0,0,1,1,1"
+			}
+        },
+        "tomatoBush": {
+            "name": "Tomato Bush",
+            "type": "bush",
+            "growsOn": "farmland,dirt,grass",
+            "drops": {
+                "tomato": {
+                    "chance": {
+                        "0-14": 0,
+                        "15": 50
+                    },
+                    "amount": 2
+                },
+                "tomatoSeeds": {
+                    "chance": {
+                        "0": 0,
+                        "1-3": 15,
+                        "4-6": 20,
+                        "7-9": 30,
+                        "10-12": 40,
+                        "13-14": 60,
+                        "15": 0
+                    },
+                    "amount": 3
+                }
+            },
+            "tex": {
+				"texFile": "xieterrain.png",
+                "all": {
+                    "0-3": 53,
+                    "4-8": 54,
+                    "9-13": 55,
+                    "14": 56,
+                    "15": 57
+                }
+            },
+			"blockBounds": {
+                    "0-3": "0.4375,0,0.4375,0.6875,0.3125,0.6875",
+                    "4-8": "0.375,0,0.375,0.6875,0.625,0.6875",
+                    "9-13": "0.25,0,0.25,0.8125,0.875,0.8125",
+                    "14-15": "0.125,0,0.125,0.9375,1,0.9375"
+			}
+        },
+        "cottonPlant": {
+            "name": "Cotton Plant",
+            "type": "bush",
+            "growsOn": "farmland",
+            "drops": {
+                "cotton": {
+                    "chance": {
+                        "0-14": 0,
+                        "15": 66
+                    },
+                    "amount": 2
+                },
+                "cottonSeeds": {
+                    "chance": {
+                        "0": 0,
+                        "15": 0,
+                        "1-3": 15,
+                        "4-6": 20,
+                        "7-9": 30,
+                        "10-12": 40,
+                        "13-14": 60
+                    },
+                    "amount": 3
+                }
+            },
+            "tex": {
+				"texFile": "xieterrain.png",
+                "all": {
+                    "0-3": 48,
+                    "4-8": 49,
+                    "9-13": 50,
+                    "14": 51,
+                    "15": 52
+                }
+            },
+			"blockBounds": {
+                    "0-3": "0.0625,0,0.0625,0.875,0.125,0.875",
+                    "4-8": "0.125,0,0.125,0.875,0.5,0.875",
+                    "9-13": "0.0625,0,0.0625,0.9375,0.625,0.9375",
+                    "14-15": "0,0,0,1,0.8125,1"
+			}
+        }
+    },
+    "items": {
+        "cornSeeds": {
+            "name": "Corn Seeds",
+            "type": "seeds",
+            "growsInto": "cornCrop",
+			"texFile": "xieitems.png",
+            "icon": 37
+        },
+        "cornKernels": {
+            "name": "Corn Kernels",
+            "type": "seeds",
+            "growsInto": "cornCrop",
+			"texFile": "xieitems.png",
+            "icon": 9,
+			"cooked": "popcorn"
+        },
+        "potash": {
+            "name": "Pot Ash",
+			"texFile": "xieitems.png",
+            "icon": 48,
+            "type": "fertiliser",
+			"worksOn": "fruitSapling"
+        },
+		"fertiliser": {
+			"name": "Fertiliser",
+			"texFile": "xieitems.png",
+			"icon": 49,
+			"type": "fertiliser"
+		},
+        "tomatoSeeds": {
+            "name": "Tomato Seeds",
+            "type": "seeds",
+            "growsInto": "tomatoBush",
+			"texFile": "xieitems.png",
+            "icon": 36
+        },
+		"cottonSeeds": {
+            "name": "Cotton Seeds",
+            "type": "seeds",
+            "growsInto": "cottonPlant",
+			"texFile": "xieitems.png",
+            "icon": 42		
+		},
+        "cotton": {
+            "name": "Cotton",
+            "type": "basic",
+			"texFile": "xieitems.png",
+            "icon": 10
+        }
+    },
+    "recipes": {
+        "potash": "charcoal",
+		"tomatoSeeds": "tomato",
+        "string:2": {
+            "pattern": "X,X",
+            "content": "cotton"
+        },
+		"cornKernels:2": "cornCob",
+		"fertiliser:2": "bonemeal,potash"
+	}
+}
