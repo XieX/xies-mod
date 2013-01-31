@@ -1,0 +1,87 @@
+{
+  "blocks": {
+    "cornCrop": {
+      "name": "Corn",
+      "type": "crop",
+      "growsOn": "farmland",
+      "growthHeight": 3,
+      "growthRate": 20,
+      "drops": {
+        "cornCob": {
+          "chance": {
+            "0-12": 0,
+            "13-14": 20,
+            "15": 40
+          },
+          "amount": 2
+        }
+      },
+      "tex": {
+        "texFile": "xieterrain.png",
+        "all": {
+          "0-1": 96,
+          "2-3": 97,
+          "4-6": 98,
+          "7-9": 99,
+          "10-11": 100,
+          "12-13": 101,
+          "14": 102,
+          "15": 103
+        }
+      },
+      "blockBounds": {
+        "0-1": "0,0,0,1,0.1875,1",
+        "2-3": "0,0,0,1,0.4375,1",
+        "4-6": "0,0,0,1,0.625,1",
+        "7-9": "0,0,0,1,0.9375,1",
+        "10-15": "0,0,0,1,1,1"
+      }
+    }
+  },
+  "items": {
+    "cornCobCooked": {
+      "name": "Corn on the Cob",
+      "type": "food",
+      "hunger": 6,
+      "nourishment": 0.6,
+      "texFile": "xieitems.png",
+      "icon": 21
+    },
+    "cornCob": {
+      "name": "Corn Cob",
+      "type": "food",
+      "hunger": 3,
+      "nourishment": 0.3,
+      "texFile": "xieitems.png",
+      "icon": 5,
+      "cooked": "cornCobCooked",
+      "fuel": 100
+    },
+    "popcorn": {
+      "name": "Popcorn",
+      "type": "food",
+      "hunger": 5,
+      "nourishment": 0.1,
+      "texFile": "xieitems.png",
+      "icon": 25
+    },
+    "cornSeeds": {
+      "name": "Corn Seeds",
+      "type": "seeds",
+      "growsInto": "cornCrop",
+      "texFile": "xieitems.png",
+      "icon": 37
+    },
+    "cornKernels": {
+      "name": "Corn Kernels",
+      "type": "seeds",
+      "growsInto": "cornCrop",
+      "texFile": "xieitems.png",
+      "icon": 9,
+      "cooked": "popcorn"
+    }
+  },
+  "recipes": {
+    "cornKernels:2": "cornCob"
+  }
+}

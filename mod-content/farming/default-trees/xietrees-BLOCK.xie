@@ -26,27 +26,7 @@
 					"2": 18,
 					"3": 19
 				}
-			}
-		},
-		"treeleaves": {
-			"name": "Tree Leaves",
-			"names": "Cocoa Leaves",
-			"type": "tree",
-			"growsOn": "dirt,grass",
-			"sheds": {
-				"cocoapod": {"chance": {"0": 20, "1+":0}}
-			},
-			"shedSaturation": 8,
-			"drops": {
-				"treesapling": {"chance": {"0": 5, "1+":0}},
-				"cocoapod": {"chance": {"0": 5, "1+":0}}
-			},
-			"tex": {
-				"texFile": "xietrees.png",
-				"all": {
-					"0": 20
-				}
-			}			
+			}		
 		},
 		"fruitsapling": {
 			"name": "Fruit Sapling",
@@ -62,22 +42,6 @@
 					"2": 34,
 					"3": 35
 				} 
-			},
-			"fuel": {
-				"0-4": 100
-			}
-		},
-		"treesapling": {
-			"name": "Tree Sapling",
-			"names": "Cocoa Sapling",
-			"type": "sapling",
-			"growsInto": "treeleaves",
-			"inheritMeta": true,
-			"tex": {
-				"texFile": "xietrees.png",
-				"all": {
-					"0": 36
-				}
 			},
 			"fuel": {
 				"0-4": 100

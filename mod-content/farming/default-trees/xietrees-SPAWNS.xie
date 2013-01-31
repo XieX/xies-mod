@@ -23,12 +23,6 @@
 			"spawnson": "dirt, grass",
 			"spawnsin": 0,
 			"biomes": "jungle,junglehills,swamp"
-		},
-		"_cocoatree": {
-			"rarity": 26,
-			"spawnson": "dirt, grass",
-			"spawnsin": 0,
-			"biomes": "jungle,swamp"
 		}
 	}
 }

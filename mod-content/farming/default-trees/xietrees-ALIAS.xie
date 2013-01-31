@@ -12,14 +12,10 @@
 		"orangeseeds": "fruitseed:1:1",
 		"lemonseeds": "fruitseed:1:2",
 		"avocadoseeds": "fruitseed:1:3",
-		"cocoasapling": "treesapling:1:0",
-		"cocoatree": "treeleaves:1:0",
-		"cocoapod": "treeseed:1:0",
 		"cider": "drinkables:1:0",
 		"orangejuice": "drinkables:1:1",
 		"lemonade": "drinkables:1:2",
 		"avocadojuice": "drinkables:1:3",
 		"chocolatemilk": "drinkables:1:4"
-		
 	}
 }

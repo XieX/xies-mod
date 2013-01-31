@@ -1,74 +1,74 @@
 {
-	"blocks": {
-		"soyCrop": {
-            "name": "Soy Crop",
-            "type": "bush",
-            "growsOn": "farmland",
-            "growthRate": 20,
-            "drops": {
-                "soyBeans": {
-                    "chance": {
-                        "15": 90,
-                        "0-12": 25,
-                        "13-14": 50
-                    },
-                    "amount": 3
-                }
-            },
-            "tex": {
-				"texFile": "xieterrain.png",
-                "all": {
-                    "0-1": 104,
-                    "2-3": 105,
-                    "4-6": 106,
-                    "7-9": 107,
-                    "10-11": 108,
-                    "12-13": 109,
-                    "14": 110,
-                    "15": 111
-                }
-            },
-			"blockBounds": {
-                    "0-1": "0,0,0,1,0.1875,1",
-                    "2-3": "0,0,0,1,0.4375,1",
-                    "4-6": "0,0,0,1,0.625,1",
-                    "7-9": "0,0,0,1,0.9375,1",
-                    "10-15": "0,0,0,1,1,1"
-			}
+  "blocks": {
+    "soyCrop": {
+      "name": "Soy Crop",
+      "type": "bush",
+      "growsOn": "farmland",
+      "growthRate": 20,
+      "drops": {
+        "soyBeans": {
+          "chance": {
+            "15": 90,
+            "0-12": 25,
+            "13-14": 50
+          },
+          "amount": 3
         }
-	},
-	"items": {
-		"soyBeans": {
-            "name": "Soy Beans",
-            "type": "seeds",
-            "growsInto": "soyCrop",
-			"texFile": "xieitems.png",
-			"icon": 13
-		},
-		"tofu": {
-			"name": "Tofu",
-			"type": "food",
-			"hunger": 5,
-			"nourishment": 0.3,
-			"texFile": "xieitems.png",
-			"icon": 29,
-			"cooked": "tofuCooked"
-		},
-		"tofuCooked": {
-			"name": "Cooked Tofu",
-			"type": "food",
-			"hunger": 7,
-			"nourishment": 0.6,
-			"texFile": "xieitems.png",
-			"icon": 45
-		}
-	},
-	"recipes": {
-		"milk": "soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,bucketWater",
-		"tofu": "soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans"
-	},
-	"aliases": {
-		"protein": "tofu,tofuCooked",
-		"salady": "soyBeans"
-	}
+      },
+      "tex": {
+        "texFile": "xieterrain.png",
+        "all": {
+          "0-1": 104,
+          "2-3": 105,
+          "4-6": 106,
+          "7-9": 107,
+          "10-11": 108,
+          "12-13": 109,
+          "14": 110,
+          "15": 111
+        }
+      },
+      "blockBounds": {
+        "0-1": "0,0,0,1,0.1875,1",
+        "2-3": "0,0,0,1,0.4375,1",
+        "4-6": "0,0,0,1,0.625,1",
+        "7-9": "0,0,0,1,0.9375,1",
+        "10-15": "0,0,0,1,1,1"
+      }
+    }
+  },
+  "items": {
+    "soyBeans": {
+      "name": "Soy Beans",
+      "type": "seeds",
+      "growsInto": "soyCrop",
+      "texFile": "xieitems.png",
+      "icon": 13
+    },
+    "tofu": {
+      "name": "Tofu",
+      "type": "food",
+      "hunger": 5,
+      "nourishment": 0.3,
+      "texFile": "xieitems.png",
+      "icon": 29,
+      "cooked": "tofuCooked"
+    },
+    "tofuCooked": {
+      "name": "Cooked Tofu",
+      "type": "food",
+      "hunger": 7,
+      "nourishment": 0.6,
+      "texFile": "xieitems.png",
+      "icon": 45
+    }
+  },
+  "recipes": {
+    "milk": "soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,bucketWater",
+    "tofu": "soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans"
+  },
+  "aliases": {
+    "protein": "tofu,tofuCooked",
+    "salady": "soyBeans"
+  }
 }

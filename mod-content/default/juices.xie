@@ -1,49 +1,88 @@
-{	
-	"version": "Xie's Mod v1.1",
-	"items": {
-		"fruitJuice": {
-			"name": "Fruit Juice",
-			"names": "Cider,Orange Juice,Lemonade,Tomato Juice,Melon Juice",
-			"type": "food",
-			"hunger": 1,
-			"action": "drink",
-			"nourishment": 0.1,
-			"drops": "glassBottle",
-			"texFile": "xieitems.png",
-			"icon" : {
-				"0": 16,
-				"1": 17,
-				"2": 18,
-				"3": 20,
-				"4": 19
-			}
-		}
-	},
-	"recipes": {
-		"Cider": {
-            "product": "fruitJuice:1:0",
-            "pattern": "X,X,Y",
-            "content": "apple,glassBottle"
-		},
-        "OJ": {
-            "product": "fruitJuice:1:1",
-            "pattern": "X,Y",
-            "content": "orange,glassBottle"
-        },
-        "lemonade": {
-			"product": "fruitJuice:1:2",
-            "pattern": "X,Y,Z",
-            "content": "sugar,lemon,glassBottle"
-        },
-        "tomatoJuice": {
-			"product": "fruitJuice:1:3",
-            "pattern": "X,Y,Z",
-            "content": "salt,tomato,glassBottle"
-        },
-        "melonJuice": {
-			"product": "fruitJuice:1:4",
-            "pattern": "X,X,Y",
-            "content": "item.melon,glassBottle"
-        }
-	}
+{
+  "items": {
+    "fruitJuice": {
+      "name": "Fruit Juice",
+      "names": "Cider,Orange Juice,Lemonade,Tomato Juice,Melon Juice",
+      "type": "food",
+      "hunger": 1,
+      "action": "drink",
+      "nourishment": 0.1,
+      "drops": "glassBottle",
+      "texFile": "xieitems.png",
+      "icon": {
+        "0": 16,
+        "1": 17,
+        "2": 18,
+        "3": 20,
+        "4": 19
+      }
+    },
+    "milkBottle": {
+      "name": "Bottled Milk",
+      "type": "food",
+      "hunger": 1,
+      "action": "drink",
+      "nourishment": 0.1,
+      "drops": "glassBottle",
+      "texFile": "xieitems.png",
+      "icon": 23
+    },
+    "chocolateMilk": {
+      "name": "Chocolate Milk",
+      "type": "food",
+      "hunger": 3,
+      "action": "drink",
+      "nourishment": 0.1,
+      "drops": "glassBottle",
+      "potionEffect": "haste:20:1@20",
+      "texFile": "xieitems.png",
+      "icon": 24
+    },
+    "avocadoJuice": {
+      "name": "Avocado Juice",
+      "type": "food",
+      "hunger": 3,
+      "action": "drink",
+      "nourishment": 0.1,
+      "drops": "glassBottle",
+      "potionEffect": "regeneration:20:1@20",
+      "texFile": "xieitems.png",
+      "icon": 24
+    }
+  },
+  "recipes": {
+    "Cider": {
+      "product": "fruitJuice:1:0",
+      "pattern": "X,X,Y",
+      "content": "apple,glassBottle"
+    },
+    "OJ": {
+      "product": "fruitJuice:1:1",
+      "pattern": "X,Y",
+      "content": "orange,glassBottle"
+    },
+    "lemonade": {
+      "product": "fruitJuice:1:2",
+      "pattern": "X,Y,Z",
+      "content": "sugar,lemon,glassBottle"
+    },
+    "tomatoJuice": {
+      "product": "fruitJuice:1:3",
+      "pattern": "X,Y,Z",
+      "content": "salt,tomato,glassBottle"
+    },
+    "melonJuice": {
+      "product": "fruitJuice:1:4",
+      "pattern": "X,X,Y",
+      "content": "item.melon,glassBottle"
+    },
+    "avocadoJuice": {
+      "pattern": "X,Y,Z",
+      "content": "sugar,avocado,milkBottle"
+    },
+    "chocolateMilk": {
+      "pattern": "X,Y,Z",
+      "content": "sugar,dyePowder:1:3,milkBottle"
+    }
+  }
 }

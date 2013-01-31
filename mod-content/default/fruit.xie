@@ -1,0 +1,195 @@
+{
+  "aliases": {
+    "fruit": "orange,avocado",
+    "appleTree": "fruitLeaves:0",
+    "orangeTree": "fruitLeaves:1",
+    "lemonTree": "fruitLeaves:2",
+    "avocadoTree": "fruitLeaves:3",
+    "guacstuffs": "tomato,lemon,onion,salt",
+    "appleSapling": "fruitSapling:1:0",
+    "orangeSapling": "fruitSapling:1:1",
+    "lemonSapling": "fruitSapling:1:2",
+    "avocadoSapling": "fruitSapling:1:3",
+    "appleSeeds": "fruitSeed:1:0",
+    "orangeSeeds": "fruitSeed:1:1",
+    "lemonSeeds": "fruitSeed:1:2",
+    "avocadoSeed": "fruitSeed:1:3"
+  },
+  "blocks": {
+    "fruitLeaves": {
+      "name": "Fruit Leaves",
+      "names": "Apple Leaves,Orange Leaves,Lemon Leaves,Avocado Leaves",
+      "type": "tree",
+      "growsOn": "dirt,grass",
+      "trunkMeta": "0,0,2,1",
+      "sheds": {
+        "apple": {
+          "chance": {
+            "0": 20,
+            "1+": 0
+          }
+        },
+        "orange": {
+          "chance": {
+            "1": 20,
+            "0": 0,
+            "2+": 0
+          }
+        },
+        "lemon": {
+          "chance": {
+            "2": 20,
+            "0-1": 0,
+            "3+": 0
+          }
+        },
+        "avocado": {
+          "chance": {
+            "3": 20,
+            "0-2": 0,
+            "4+": 0
+          }
+        }
+      },
+      "shedSaturation": 8,
+      "drops": {
+        "apple": {
+          "chance": {
+            "0": 5,
+            "1+": 0
+          }
+        },
+        "orange": {
+          "chance": {
+            "1": 5,
+            "0": 0,
+            "2+": 0
+          }
+        },
+        "lemon": {
+          "chance": {
+            "2": 5,
+            "0-1": 0,
+            "3+": 0
+          }
+        },
+        "avocado": {
+          "chance": {
+            "3": 5,
+            "0-2": 0,
+            "4+": 0
+          }
+        }
+      },
+      "tex": {
+        "texFile": "xieterrain.png",
+        "all": {
+          "0": 16,
+          "1": 17,
+          "2": 18,
+          "3": 19
+        }
+      }
+    },
+    "fruitSapling": {
+      "name": "Fruit Sapling",
+      "names": "Apple Sapling,Orange Sapling,Lemon Sapling,Avocado Sapling",
+      "type": "sapling",
+      "growsInto": "fruitLeaves",
+      "inheritMeta": true,
+      "tex": {
+        "texFile": "xieterrain.png",
+        "all": {
+          "0": 32,
+          "1": 33,
+          "2": 34,
+          "3": 35
+        }
+      },
+      "fuel": {
+        "0-4": 100
+      }
+    }
+  },
+  "items": {
+    "fruitSeed": {
+      "name": "Fruit Seed",
+      "names": "Apple Seeds,Orange Seeds,Lemon Seeds,Avocado Seed",
+      "type": "seeds",
+      "growsInto": "fruitSapling",
+      "inheritMeta": true,
+      "texFile": "xieitems.png",
+      "icon": {
+        "0": 32,
+        "1": 33,
+        "2": 34,
+        "3": 35
+      }
+    },
+    "orange": {
+      "name": "Orange",
+      "type": "food",
+      "hunger": 4,
+      "nourishment": 0.3,
+      "texFile": "xieitems.png",
+      "icon": 1
+    },
+    "lemon": {
+      "name": "Lemon",
+      "texFile": "xieitems.png",
+      "icon": 2
+    },
+    "avocado": {
+      "name": "Avocado",
+      "type": "food",
+      "hunger": 4,
+      "nourishment": 0.6,
+      "texFile": "xieitems.png",
+      "icon": 3
+    },
+    "guacamole": {
+      "name": "Guacamole",
+      "type": "food",
+      "hunger": 8,
+      "nourishment": 0.6,
+      "container": "bowl",
+      "texFile": "xieitems.png",
+      "icon": 53
+    }
+  },
+  "recipes": {
+    "guacamole": "bowl,avocado,$guacstuffs",
+    "guacamole:2": "bowl,avocado,$guacstuffs,bowl,avocado,$guacstuffs",
+    "guacamole:3": "bowl,avocado,$guacstuffs,bowl,avocado,$guacstuffs,bowl,avocado,$guacstuffs",
+    "appleSeeds": "apple",
+    "orangeSeeds": "orange",
+    "lemonSeeds": "lemon",
+    "avocadoSeed": "avocado"
+  },
+  "spawn": {
+    "appleTree": {
+      "rarity": 20,
+      "spawnson": "dirt, grass",
+      "spawnsin": 0,
+      "biomes": "forest,taiga,jungle,wood"
+    },
+    "orangeTree": {
+      "rarity": 25,
+      "spawnson": "dirt, grass",
+      "spawnsin": 0,
+      "biomes": "forest,jungle,savanna"
+    },
+    "lemonTree": {
+      "rarity": 25,
+      "spawnson": "dirt, grass",
+      "spawnsin": 0,
+      "biomes": "forest,hills,foresthills"
+    },
+    "avocadoTree": {
+      "rarity": 23,
+      "spawnson": "dirt, grass",
+      "spawnsin": 0,
+      "biomes": "jungle,junglehills,swamp"
+    }
+  }
+}

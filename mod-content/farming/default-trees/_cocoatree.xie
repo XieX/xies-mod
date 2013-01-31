@@ -1,0 +1,21 @@
+{
+	"blocks": {
+
+	},
+	"items": {
+
+	},
+	"spawn": {
+		"_cocoatree": {
+			"rarity": 26,
+			"spawnson": "dirt, grass",
+			"spawnsin": 0,
+			"biomes": "jungle,swamp"
+		}
+	},
+	"aliases": {
+		"cocoasapling": "treesapling:1:0",
+		"cocoatree": "treeleaves:1:0",
+		"cocoapod": "treeseed:1:0"
+	}
+}

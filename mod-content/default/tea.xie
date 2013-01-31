@@ -1,58 +1,58 @@
 {
-	"blocks": {
-		"teaBush": {
-            "name": "Tea Bush",
-            "type": "bush",
-            "growsOn": "farmland",
-            "drops": {
-                "teaLeaves": {
-                    "chance": {
-                        "0-11": 0,
-						"12-14": 20,
-                        "15": 60
-                    },
-                    "amount": 4
-                }
-            },
-            "tex": {
-				"texFile": "xieterrain.png",
-                "all": {
-                    "0-3": 74,
-                    "4-8": 75,
-                    "9-13": 76,
-                    "14": 77,
-                    "15": 78
-                }
-            },
-			"blockBounds": {
-                    "0-3": "0.4375,0,0.4375,0.6875,0.3125,0.6875",
-                    "4-8": "0.375,0,0.375,0.6875,0.625,0.6875",
-                    "9-13": "0.25,0,0.25,0.8125,0.875,0.8125",
-                    "14-15": "0.125,0,0.125,0.9375,1,0.9375"
-			}
+  "blocks": {
+    "teaBush": {
+      "name": "Tea Bush",
+      "type": "bush",
+      "growsOn": "farmland",
+      "drops": {
+        "teaLeaves": {
+          "chance": {
+            "0-11": 0,
+            "12-14": 20,
+            "15": 60
+          },
+          "amount": 4
         }
-	},
-	"items": {
-		"teaLeaves": {
-            "name": "Tea Leaves",
-            "type": "seeds",
-            "growsInto": "teaBush",
-			"texFile": "xieitems.png",
-            "icon": 14
-		},
-		"sweetTea": {
-			"name": "Sweet Tea",
-			"type": "food",
-			"hunger": 3,
-			"action": "drink",
-			"nourishment": 0.1,
-			"drops": "glassBottle",
-			"potionEffect": "speed:20:1@20",
-			"texFile": "xieitems.png",
-			"icon" : 30
-		}
-	},
-	"recipes": {
-		"sweetTea": "potion:1:0,sugar,teaLeaves"
-	}
+      },
+      "tex": {
+        "texFile": "xieterrain.png",
+        "all": {
+          "0-3": 74,
+          "4-8": 75,
+          "9-13": 76,
+          "14": 77,
+          "15": 78
+        }
+      },
+      "blockBounds": {
+        "0-3": "0.4375,0,0.4375,0.6875,0.3125,0.6875",
+        "4-8": "0.375,0,0.375,0.6875,0.625,0.6875",
+        "9-13": "0.25,0,0.25,0.8125,0.875,0.8125",
+        "14-15": "0.125,0,0.125,0.9375,1,0.9375"
+      }
+    }
+  },
+  "items": {
+    "teaLeaves": {
+      "name": "Tea Leaves",
+      "type": "seeds",
+      "growsInto": "teaBush",
+      "texFile": "xieitems.png",
+      "icon": 14
+    },
+    "sweetTea": {
+      "name": "Sweet Tea",
+      "type": "food",
+      "hunger": 3,
+      "action": "drink",
+      "nourishment": 0.1,
+      "drops": "glassBottle",
+      "potionEffect": "speed:20:1@20",
+      "texFile": "xieitems.png",
+      "icon": 30
+    }
+  },
+  "recipes": {
+    "sweetTea": "potion:1:0,sugar,teaLeaves"
+  }
 }
