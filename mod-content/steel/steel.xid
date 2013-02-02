@@ -1,0 +1,19 @@
+# ids for Xie's Mod steel content
+greySteelBlock=12100
+steelBlock=12101
+redSteelBlock=12102
+purpleSteelBlock=12103
+blueSteelBlock=12104
+greySteelOre=12105
+steelOre=12106
+redSteelOre=12107
+purpleSteelOre=12108
+blueSteelOre=12109
+
+# need to leave 9 blank ids after each ingot
+# for armour and tools
+greySteelIngot=12110
+steelIngot=12120
+redSteelIngot=12130
+purpleSteelIngot=12140
+blueSteelIngot=12150

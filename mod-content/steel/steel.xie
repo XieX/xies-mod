@@ -1,0 +1,173 @@
+{
+	"blocks": {
+		"greySteelBlock": {
+			"material": "metal",
+			"stepsound": "metal",
+			"hardness": 4.5,
+			"resistance": 9.5,
+			"tex": {
+				"texFile": "xie_steel.png",
+				"all": 0
+			}
+		},
+		"steelBlock": {
+			"material": "metal",
+			"stepsound": "metal",
+			"hardness": 6,
+			"resistance": 11,
+			"tex": {
+				"texFile": "xie_steel.png",
+				"all": 1
+			}
+		},
+		"redSteelBlock": {
+			"material": "metal",
+			"stepsound": "metal",
+			"hardness": 5,
+			"resistance": 10,
+			"tex": {
+				"texFile": "xie_steel.png",
+				"all": 2
+			}
+		},
+		"blueSteelBlock": {
+			"material": "metal",
+			"stepsound": "metal",
+			"hardness": 7.5,
+			"resistance": 15,
+			"tex": {
+				"texFile": "xie_steel.png",
+				"all": 3
+			}
+		}
+	},
+	"items": {
+		"greySteelOre": {
+			"smeltsInto": "greySteelIngot",
+			"texFile": "xie_steel.png",
+			"icon": "0"
+		},
+		"steelOre": {
+			"smeltsInto": "steelIngot",
+			"texFile": "xie_steel.png",
+			"icon": "16"
+		},
+		"redSteelOre": {
+			"smeltsInto": "redSteelIngot",
+			"texFile": "xie_steel.png",
+			"icon": "32"
+		},
+		"purpleSteelOre": {
+			"smeltsInto": "purpleSteelIngot",
+			"texFile": "xie_steel.png",
+			"icon": "48"
+		},
+		"blueSteelOre": {
+			"smeltsInto": "blueSteelIngot",
+			"texFile": "xie_steel.png",
+			"icon": "64"
+		},
+		"greySteelIngot": {
+			"_comment": "5% less good than iron",
+			"toolMaterial": {
+				"harvestLevel": 2,
+				"uses": 238,
+				"efficiency": 5.7,
+				"damage": 1,
+				"enchantability": 5
+			},
+			"armorMaterial": {
+				"uses": 14,
+				"damageReduction": [2,5,4,2],
+				"enchantability": 5
+			},
+			"texFile": "xie_steel.png",
+			"icon": "1"
+		},
+		"steelIngot": {
+			"_comment": "10% improvement over iron",
+			"toolMaterial": {
+				"harvestLevel": 2,
+				"uses": 275,
+				"efficiency": 6.6,
+				"damage": 2,
+				"enchantability": 15
+			},
+			"armorMaterial": {
+				"uses": 17,
+				"damageReduction": [2,7,6,2],
+				"enchantability": 10
+			},
+			"texFile": "xie_steel.png",
+			"icon": "17"
+		},
+		"redSteelIngot": {
+			"_comment": "steel with 50% improvement to enchantability",
+			"toolMaterial": {
+				"harvestLevel": 2,
+				"uses": 275,
+				"efficiency": 6.6,
+				"damage": 2,
+				"enchantability": 21
+			},
+			"armorMaterial": {
+				"uses": 17,
+				"damageReduction": [2,7,6,2],
+				"enchantability": 14
+			},
+			"texFile": "xie_steel.png",
+			"icon": "33"
+		},
+		"purpleSteelIngot": {
+			"_comment": "20% improvement to iron",
+			"toolMaterial": {
+				"harvestLevel": 2,
+				"uses": 300,
+				"efficiency": 7.0,
+				"damage": 2,
+				"enchantability": 17
+			},
+			"armorMaterial": {
+				"uses": 18,
+				"damageReduction": [2,7,6,2],
+				"enchantability": 11
+			},
+			"texFile": "xie_steel.png",
+			"icon": "49"
+		},
+		"blueSteelIngot": {
+			"_comment": "100% improvement to hardness",
+			"toolMaterial": {
+				"harvestLevel": 2,
+				"uses": 500,
+				"efficiency": 7.5,
+				"damage": 3,
+				"enchantability": 15
+			},
+			"armorMaterial": {
+				"uses": 24,
+				"damageReduction": [3,8,6,3],
+				"enchantability": 10
+			},
+			"texFile": "xie_steel.png",
+			"icon": "65"
+		}
+	},
+	"recipes": {
+		"greySteelOre:9": {
+			"pattern": "XXX,XSX,XXX",
+			"contents": "ironOre,sand"
+		},
+		"steelOre": {
+			"pattern": " X ,XOX, X ",
+			"contents": "coal,ironOre"
+		},
+		"redSteelOre": {
+			"pattern": "RXR,XOX,RXR",
+			"contents": "redstone,coal,ironOre"
+		},
+		"purpleSteelOre": "obsidian,ironOre",
+		"blueSteelOre:3": "diamond,ironOre,ironOre,ironOre",
+		"greySteelBlock": "greySteel"
+	}
+}
