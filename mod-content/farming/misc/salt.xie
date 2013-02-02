@@ -1,0 +1,45 @@
+{
+  "blocks": {
+    "saltDeposit": {
+      "name": "Salt Deposit",
+      "becomesWhenDestroyed": "sand",
+      "drops": "salt",
+      "material": "sand",
+      "stepSound": "powder",
+      "tex": {
+        "texFile": "xie_misc.png",
+        "top": 1,
+        "bottom": 0,
+        "sides": 0
+      }
+    }
+  },
+  "items": {
+    "salt": {
+      "name": "Salt",
+      "texFile": "xie_misc.png",
+      "icon": 2
+    }
+  },
+  "spawns": {
+    "seasalt": {
+      "block": "saltDeposit",
+      "rarity": 8,
+      "spawnsin": "sand",
+      "spawnsNear": "8,9",
+      "nearDistance": 2,
+      "spawnsUnder": 0,
+      "clusterSize": 16,
+      "clump": "true"
+    },
+    "saltpan": {
+      "block": "saltDeposit",
+      "rarity": 45,
+      "spawnsin": "sand",
+      "spawnsUnder": 0,
+      "clusterSize": 36,
+      "clump": "true",
+      "biomes": "desert"
+    }
+  }
+}

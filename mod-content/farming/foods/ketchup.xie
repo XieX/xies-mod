@@ -1,0 +1,20 @@
+{
+	"items": {
+		"ketchup": {
+			"name": "Ketchup",
+			"type": "food",
+			"hunger": 1,
+			"action": "drink",
+			"nourishment": 0.1,
+			"container": "glassBottle",
+			"texFile": "xie_foods.png",
+			"icon": 67
+		}
+	},
+	"recipes": {
+		"ketchup": "tomato,tomato,tomato,onion,salt,sugar,glassBottle"
+	},
+	"aliases": {
+		"saucy": "ketchup"
+	}
+}

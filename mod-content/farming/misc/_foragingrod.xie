@@ -1,0 +1,54 @@
+{
+	"items": {
+		"foragingRod": {
+			"name": "Foraging Rod",
+			"type": "stick",
+			"uses": 781,
+			"texFile": "xie_misc.png",
+			"icon": 49,
+			"destroyChance": 50,
+			"blocks": {
+				"tallgrass": {
+					"seeds": {"chance": 3, "amount": 1},
+					"hybridSeeds": {"chance": 3, "amount": 1},
+					"onionSeeds": {"chance": 3, "amount": 1},
+					"lettuceSeeds": {"chance": 3, "amount": 1},
+					"cottonSeeds": {"chance": 3, "amount": 1},
+					"soyBeans": {"chance": 3, "amount": 1},
+					"teaLeaves": {"chance": 3, "amount": 1},
+					"cornSeeds": {"chance": 3, "amount": 1},
+					"tomatoSeeds": {"chance": 3, "amount": 1}
+				},
+				"deadbush": {
+					"appleSeeds": {"chance": 6, "amount": 1},
+					"orangeSeeds": {"chance": 6, "amount": 1},
+					"lemonSeeds": {"chance": 6, "amount": 1},
+					"avocadoSeed": {"chance": 6, "amount": 1}
+				},
+				"rose": {
+					"roseSeeds": {"chance": 20, "amount": 1}
+				},
+				"flower": {
+					"dandelionSeeds": {"chance": 20, "amount": 1}
+				},
+				"shrub:0": {
+					"cornSeeds": {"chance": 20, "amount": 1}
+				},
+				"shrub:1": {
+					"cottonSeeds": {"chance": 15, "amount": 1},
+					"soyBeans": {"chance": 15, "amount": 1},
+					"teaLeaves": {"chance": 15, "amount": 1}
+				},
+				"shrub:2": {
+					"tomatoSeeds": {"chance": 50, "amount": 1}
+				},
+				"sand": {
+					"salt": {"chance": 1, "amount": 1}
+				}
+			}
+		}
+	},
+	"recipes": {
+		"foragingRod": "stick,diamond"
+	}
+}
