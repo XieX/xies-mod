@@ -1,6 +1,8 @@
 package mod.xie.xm.util;
 
 import java.util.LinkedList;
+
+import mod.xie.xm.file.XieLog;
 import net.minecraft.block.Block;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;

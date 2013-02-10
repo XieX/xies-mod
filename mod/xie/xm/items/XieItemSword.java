@@ -31,8 +31,8 @@ public class XieItemSword extends ItemSword implements XieItemInterface {
 	protected List<Block> canCut;
 	protected boolean canBlock;
 	
-	public XieItemSword(String name, int id, int index) {
-		super(id-Xie.idShift, EnumToolMaterial.IRON);
+	public XieItemSword(String name, int id, int index, EnumToolMaterial material) {
+		super(id-Xie.idShift, material);
         setIconIndex(index);
         setItemName(name);
         

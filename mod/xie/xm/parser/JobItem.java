@@ -25,6 +25,7 @@ import mod.xie.xm.util.JobType;
 import mod.xie.xm.util.PotionEffectWrapper;
 import mod.xie.xm.util.Recipe;
 import mod.xie.xm.util.Xie;
+import mod.xie.xm.util.XieMaterialManager;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.util.MathHelper;
@@ -70,10 +71,6 @@ public class JobItem extends Job  {
 		if (!isKey("name")) {
 			logFailure("No name");
 			return 0;
-		}
-		if (name.equals("genshouPickaxeStone")) {
-			System.out.println("Genshou 2!");
-			
 		}
 		
 		if (id<0) {
@@ -171,6 +168,14 @@ public class JobItem extends Job  {
 			}
 		}
 		
+		if (isKey("toolMaterial")) {
+			doToolMaterial();
+		}
+		
+		if (isKey("armorMaterial")) {
+			doArmorMaterial();
+		}
+		
 		if (subtype.equals("armor") && isDone) return 4;
 		
 		if (isDone) finaliseItem();
@@ -253,7 +258,10 @@ public class JobItem extends Job  {
 			item = seeds;
 			logFiner("Added seeds: "+name+"("+id+") icon="+iconID+" grows "+growsInto.getBlockName());
 			isDone = true;
-		} else return;
+		} else {
+			logDelayed("Failed to identify 'growsInto' block");
+			return;
+		}
 	}
 	
 	protected void doBucket() {
@@ -347,8 +355,15 @@ public class JobItem extends Job  {
 	// TODO add "toolSet" type
 	protected void doTool() {
 		logFiner("Processing tool item");
+		EnumToolMaterial toolMaterial = getToolMaterial();
+		if (toolMaterial == null) {
+			logDelayed("Could not find tool's material");
+			isDone = false;
+			return;
+		}
+		
 		if (item==null) { 
-			item = new XieItemTool(name, id, iconID, getToolDamage(), getToolMaterial());
+			item = new XieItemTool(name, id, iconID, getToolDamage(), toolMaterial);
 			logFiner("Initialised tool object, "+name+" id: "+id);
 		}
 		
@@ -394,8 +409,15 @@ public class JobItem extends Job  {
 	
 	protected void doSword() {
 		logFiner("Processing sword item");
+		EnumToolMaterial toolMaterial = getToolMaterial();
+		if (toolMaterial == null) {
+			logDelayed("Could not find sword's material");
+			isDone = false;
+			return;
+		}
+		
 		if (item==null) { 
-			item = new XieItemSword(name, id, iconID);
+			item = new XieItemSword(name, id, iconID, toolMaterial);
 			logFiner("Initialised sword object, "+name+" id: "+id);
 		}
 		
@@ -453,20 +475,32 @@ public class JobItem extends Job  {
 		if (armorType<0) logFiner("Processing armor set");
 		else logFiner("Processing armor item");
 		
-		int maxDamage = isKey("maxDamage")?getInt("maxDamage"):5;
-		int dmgReduction[] = new int[] {1, 3, 2, 1};
-		if (isKey("damageReduction")) {
-			int dr[] = Xie.parseArray(getStr("damageReduction"));
-			if (dr.length<4) {
-				logIncomplete("Incomplete damage reduction array, found only "+dr.length+"/4 elements");
-				for (int i=0; i<dr.length; i++) dmgReduction[i]=dr[i];
-			} else {
-				for (int i=0; i<4; i++) dmgReduction[i]=dr[i];
+		EnumArmorMaterial material;
+		if (isKey("material")) {
+			material = XieMaterialManager.instance().getArmorMaterial(getStr("material"));
+			if (material == null) {
+				logDelayed("Could not find armor material");
+				isDone=false;
+				return;
 			}
+		} else {
+			int maxDamage = isKey("maxDamage")?getInt("maxDamage"):5;
+			int dmgReduction[] = new int[] {1, 3, 2, 1};
+			if (isKey("damageReduction")) {
+				int dr[] = Xie.parseArray(getStr("damageReduction"));
+				if (dr.length<4) {
+					logIncomplete("Incomplete damage reduction array, found only "+dr.length+"/4 elements");
+					for (int i=0; i<dr.length; i++) dmgReduction[i]=dr[i];
+				} else {
+					for (int i=0; i<4; i++) dmgReduction[i]=dr[i];
+				}
+			}
+			
+			int enchantability = isKey("enchantability")?getInt("enchantability"):15;
+			Item craftingItem = null;
+			if (isKey("craftedFrom")) craftingItem = Xie.parseItem(getStr("craftedFrom"));
+			material = XieMaterialManager.instance().newArmorMaterial(name, maxDamage, dmgReduction, enchantability,craftingItem);
 		}
-		
-		int enchantability = isKey("enchantability")?getInt("enchantability"):15;
-		EnumArmorMaterial material = EnumHelper.addArmorMaterial(name, maxDamage, dmgReduction, enchantability);
 		
 		String armorTextures[] = getArmorTextures();
 		String armorTexture = armorTextures[0];
@@ -570,6 +604,28 @@ public class JobItem extends Job  {
 		Recipe.makeArmorRecipe(type, new ItemStack(armor), ingredient);
 		logFiner("Added recipe for "+name);
 		Work.instance().jobsCompleted[JobType.RECIPE.ordinal()]++;
+	}
+	
+	protected void doToolMaterial() {
+		JsonNode node = getNode("toolMaterial");
+		if (node.getType()!=JsonNodeType.OBJECT) {
+			logIncomplete("Invalid toolMaterial node type");
+		}
+		
+		Map<JsonStringNode, JsonNode> map = node.getFields();
+		EnumToolMaterial base = null;
+		if (map.containsKey("base")) {
+			base = XieMaterialManager.instance().getToolMaterial(map.get("base").getText());
+		}
+		for (JsonStringNode key : map.keySet()) {
+			if (key.getText().equals("harvestLevel")) {
+				// TODO FTFESAD
+			}
+		}
+	}
+	
+	protected void doArmorMaterial() {
+		// TODO FTFESAD
 	}
 	
 	protected void doBasic() { 	
@@ -747,10 +803,12 @@ public class JobItem extends Job  {
 	}
 	
 	protected EnumToolMaterial getToolMaterial() {
-		if (isKey("material")) return getToolMaterial(getNode("material").getText());
-		else return EnumToolMaterial.WOOD;
+		if (isKey("material")) {
+			return XieMaterialManager.instance().getToolMaterial(getStr("material"));
+		} else return EnumToolMaterial.WOOD;
 	}
 	
+	@Deprecated
 	protected EnumToolMaterial getToolMaterial(String s) {
 		s=s.trim().toUpperCase();
 		if (s.equals("WOOD")) return EnumToolMaterial.WOOD;
