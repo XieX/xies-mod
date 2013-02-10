@@ -68,9 +68,5 @@
   "recipes": {
     "milk": "soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,bucketWater",
     "tofu": "soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans"
-  },
-  "aliases": {
-    "protein": "tofu,tofuCooked",
-    "salady": "soyBeans"
   }
 }

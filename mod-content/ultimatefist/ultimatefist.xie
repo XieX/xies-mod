@@ -6,7 +6,6 @@
 			"type": "tool",
 			"texFile": "ufsheet.png",
 			"icon": 0,
-			"_icon": "http://xw-gs.com/mc/img/ultimatefist.png",
 			"damage": 20,
 			"blocksEffective": "all",
 			"material": "diamond",

@@ -1,7 +1,4 @@
 {
-  "aliases": {
-    "salady": "tomato"
-  },
   "blocks": {
     "tomatoBush": {
       "name": "Tomato Bush",

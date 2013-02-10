@@ -1,4 +1,10 @@
-{  "items": {
+{
+  "aliases": {
+    "protein": "porkchopCooked,beefCooked,chickenCooked,fishCooked,tofu,tofuCooked",
+	"fruit": "apple,item.melon,orange,avocado",
+	"salady": "lettuce,tomato,onion,avocado,soyBeans"
+  },  
+  "items": {
     "gardenSalad": {
       "name": "Garden Salad",
       "type": "food",
@@ -66,9 +72,5 @@
       "product": "tastySalad",
       "content": "bowl,$salady,$salady,$protein,$saucy"
     }
-  },
-  "aliases": {
-    "protein": "porkchopCooked,beefCooked,chickenCooked,fishCooked",
-    "fruit": "apple,item.melon"
   }
 }

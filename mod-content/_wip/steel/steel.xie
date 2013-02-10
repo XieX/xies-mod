@@ -1,6 +1,7 @@
 {
 	"blocks": {
 		"greySteelBlock": {
+			"name": "Grey Steel Block",
 			"material": "metal",
 			"stepsound": "metal",
 			"hardness": 4.5,
@@ -11,6 +12,7 @@
 			}
 		},
 		"steelBlock": {
+			"name": "Steel Block",
 			"material": "metal",
 			"stepsound": "metal",
 			"hardness": 6,
@@ -21,6 +23,7 @@
 			}
 		},
 		"redSteelBlock": {
+			"name": "Red Steel Block",
 			"material": "metal",
 			"stepsound": "metal",
 			"hardness": 5,
@@ -31,6 +34,7 @@
 			}
 		},
 		"blueSteelBlock": {
+			"name": "Blue Steel Block",
 			"material": "metal",
 			"stepsound": "metal",
 			"hardness": 7.5,
@@ -43,31 +47,37 @@
 	},
 	"items": {
 		"greySteelOre": {
+			"name": "Grey Steel Ore",
 			"smeltsInto": "greySteelIngot",
 			"texFile": "xie_steel.png",
 			"icon": "0"
 		},
 		"steelOre": {
+			"name": "Steel Ore",
 			"smeltsInto": "steelIngot",
 			"texFile": "xie_steel.png",
 			"icon": "16"
 		},
 		"redSteelOre": {
+			"name": "Red Steel Ore",
 			"smeltsInto": "redSteelIngot",
 			"texFile": "xie_steel.png",
 			"icon": "32"
 		},
 		"purpleSteelOre": {
+			"name": "Purple Steel Ore",
 			"smeltsInto": "purpleSteelIngot",
 			"texFile": "xie_steel.png",
 			"icon": "48"
 		},
 		"blueSteelOre": {
+			"name": "Blue Steel Ore",
 			"smeltsInto": "blueSteelIngot",
 			"texFile": "xie_steel.png",
 			"icon": "64"
 		},
 		"greySteelIngot": {
+			"name": "Grey Steel Ingot",
 			"_comment": "5% less good than iron",
 			"toolMaterial": {
 				"harvestLevel": 2,
@@ -85,6 +95,7 @@
 			"icon": "1"
 		},
 		"steelIngot": {
+			"name": "Steel Ingot",
 			"_comment": "10% improvement over iron",
 			"toolMaterial": {
 				"harvestLevel": 2,
@@ -102,6 +113,7 @@
 			"icon": "17"
 		},
 		"redSteelIngot": {
+			"name": "Red Steel Ingot",
 			"_comment": "steel with 50% improvement to enchantability",
 			"toolMaterial": {
 				"harvestLevel": 2,
@@ -119,6 +131,7 @@
 			"icon": "33"
 		},
 		"purpleSteelIngot": {
+			"name": "Purple Steel Ingot",
 			"_comment": "20% improvement to iron",
 			"toolMaterial": {
 				"harvestLevel": 2,
@@ -136,6 +149,7 @@
 			"icon": "49"
 		},
 		"blueSteelIngot": {
+			"name": "Blue Steel Ingot",
 			"_comment": "100% improvement to hardness",
 			"toolMaterial": {
 				"harvestLevel": 2,
