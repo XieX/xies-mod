@@ -39,5 +39,8 @@
 		"cheeseBlock": "bucketOfCheese",
 		"furnace": "dirt",
 		"milkBucket": "dirt,dirt"
+	},
+	"aliases": {
+		"protein": "cheeseSlice"
 	}
 }
