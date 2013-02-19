@@ -1,0 +1,44 @@
+{
+	"blocks": {
+		"blazeTreeSapling": {
+			"name": "Blaze Tree Sapling",
+			"type": "sapling",
+			"growsInto": "blazeTree",
+			"tex": {
+				"texFile": "nether_crops.png",
+				"all": 23
+			},
+			"growsOn": "soulsand",
+			"growthRate": 10,
+			"lightLevel": 0
+		},
+		"blazeLog": {
+			"name": "Blaze Log",
+			"drops": "blazeRod,blazeRod",
+			"tex": {
+				"texFile": "nether_crops.png",
+				"sides": 21,
+				"ends": 22
+			},
+			"blockBounds": "0.375,0,0.375,0.625,1,0.625"
+		},
+		"blazeTree": {
+			"name": "Blaze Leaves",
+			"type": "tree",
+			"trunk": "blazeLog",
+			"growsOn": "soulsand",
+			"renderType": "flower",
+			"lightValue": 1.0,
+			"spikey": true,
+            "tex": {
+				"all": {
+					"0": 31
+				}
+			}
+		}
+	},
+	"recipes": {
+		"blazeRod": "blazeTreeSapling",
+		"blazeTreeSapling": "etherWart,blazeRod"
+	}
+}

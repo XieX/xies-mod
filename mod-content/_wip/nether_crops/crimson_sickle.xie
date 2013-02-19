@@ -1,0 +1,29 @@
+{
+	"items": {
+		"crimsonSickle": {
+			"name": "Crimson Sickle",
+			"type": "stick",
+			"uses": 64,
+			"texFile": "nether_crops.png",
+			"icon": 16,
+			"destroyChance": 100,
+			"blocks": {
+				"netherStalk:3": {
+					"etherWart": {"chance": 2, "amount": 1},
+					"nethwerwart": {"chance": 20, "amount": 6}
+				}
+			}
+		},
+		"etherWart": {
+			"name": "Ether Wart",
+			"texFile": "nether_crops.png",
+			"icon": 17
+		}
+	},
+	"recipes": {
+		"crimsonSickle": {
+			"pattern": " XX, YX, Y ",
+			"content": "netherBrick,blazeRod"
+		}
+	}
+}

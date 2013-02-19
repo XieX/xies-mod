@@ -1,0 +1,36 @@
+{
+	"blocks": {
+		"zombiePigmelon": {
+			"name": "Zombie Pigmelon",
+			"tex": {
+				"texFile": "nether_crops.png",
+				"sides": 19,
+				"ends": 20
+			},
+			"hardness": "1.0",
+			"stepsound": "wood",
+			"material": "pumpkin",
+			"drops": "zombiePigmelon"
+		},
+		"zombiePigmelonStem": {
+			"name": "Zombie Pigmelon Stem",
+			"type": "stem",
+			"grows": "zombiePigmelon",
+			"plantType": "nether",
+			"tex": "#melonstem"
+		}
+	},
+	"items": {
+		"zombiePigmelonSeed": {
+			"name": "Zombie Pigmelon Seed",
+			"type": "seed",
+			"growsInto": "zombiePigmelonStem",
+			"texFile": "nether_crops.png",
+			"icon": 24
+		}
+	},
+	"recipes": {
+		"zombiePigmelonSeed": "goldNugget,etherWart",
+		"cookedPorkchop:4": "zombiePigmelon"
+	}
+}
