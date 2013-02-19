@@ -41,8 +41,14 @@ public class JobRecipe extends Job  {
 		if (isKey("cull")) return doCulling();
 		
 		// identify product
-		String product = name;
-		if (isKey("product")) product = getStr("product");
+		String p = name;
+		if (isKey("product")) p = getStr("product");
+		ItemWrapper product = Xie.parseItemWrapper(p);
+		if (product==null) {
+			logDelayed("Failed to identify product "+p);
+			logClose();
+			return 0;
+		}
 		
 		// check for a smelting recipe
 		if (isKey("smelt")) return doSmelting(product);
@@ -83,6 +89,13 @@ public class JobRecipe extends Job  {
 			return recipes.size();
 		}
 		
+		List<ItemStack> contents = Xie.parseItemStacks(ingredients);
+		if (contents==null) {
+			logDelayed("Recipe failed, could not identify ingredients "+ingredients);
+			logClose();
+			return 0;
+		}
+		
 		if (isKey("pattern")) {
 			// shaped recipe
 			String pattern = getStr("pattern");
@@ -90,11 +103,12 @@ public class JobRecipe extends Job  {
 			if (ingredients.contains("whiskey")) {
 				int wtf = 0;
 			}
-			recipe = new Recipe(product, ingredients, pattern);
+			
+			recipe = new Recipe(product, contents, pattern);
 		} else {
 			// shapeless recipe
 			logFiner("Attempting shapeless recipe ("+product+","+ingredients+")");
-			recipe = new Recipe(product, ingredients);
+			recipe = new Recipe(product, contents);
 		}
 		
 		if (recipe!=null && recipe.validate()) {
@@ -111,7 +125,7 @@ public class JobRecipe extends Job  {
 	}
 	
 	// process a recipe containing one or more aliases
-	protected List<Recipe> doComplexRecipe(String product, String ingreds) {
+	protected List<Recipe> doComplexRecipe(ItemWrapper product, String ingreds) {
 		String pattern = null;
 		if (isKey("pattern")) pattern = getStr("pattern");
 		
@@ -188,9 +202,12 @@ public class JobRecipe extends Job  {
 		return recipes;
 	}
 	
-	protected void processRecipe(List<Recipe> recipeList, String product, ItemStack these[], boolean isList[], String pattern) {
+	protected void processRecipe(List<Recipe> recipeList, ItemWrapper product, ItemStack items[], boolean isList[], String pattern) {
+		List<ItemStack> these = new LinkedList<ItemStack>();
+		for (ItemStack i : items) these.add(i);
+		
 		// check to see if there are doubled up ingredients
-		if (ingredientsMatch(these, isList)) return;
+		if (ingredientsMatch(these, isList)) return;	
 		
 		// create recipe object
 		Recipe recipe;
@@ -203,13 +220,13 @@ public class JobRecipe extends Job  {
 		recipeList.add(recipe);
 	}
 	
-	protected boolean ingredientsMatch(ItemStack ingredients[], boolean careAbout[]) {
-		for (int i=0; i<ingredients.length; i++) {
-			if (!careAbout[i]) continue;
-			for (int j=0; j<ingredients.length; j++) {
+	protected boolean ingredientsMatch(List<ItemStack> ingredients, boolean careAbout[]) {
+		for (int i=0; i<ingredients.size(); i++) {
+			if (i>careAbout.length || !careAbout[i]) continue;
+			for (int j=0; j<ingredients.size(); j++) {
 				if (i==j) continue;
-				if (ingredients[i].itemID == ingredients[j].itemID && 
-					ingredients[i].getItemDamage() == ingredients[j].getItemDamage()) 
+				if (ingredients.get(i).itemID == ingredients.get(j).itemID && 
+					ingredients.get(i).getItemDamage() == ingredients.get(j).getItemDamage()) 
 					return true;
 			}
 		}
@@ -258,15 +275,8 @@ public class JobRecipe extends Job  {
 		return 0;
 	}
 	
-	protected int doSmelting(String product) {
-		logFiner("Processing smelting recipe for "+product);
-		
-		ItemWrapper result = Xie.parseItemWrapper(product);
-		if (result==null) {
-			logDelayed("Failed to identify product "+product);
-			logClose();
-			return 0;
-		}
+	protected int doSmelting(ItemWrapper product) {
+		logFiner("Processing smelting recipe for "+product.getItemName());
 		
 		String smelt = getStr("smelt");
 		int smeltable = Xie.parseItemID(smelt);
@@ -276,12 +286,12 @@ public class JobRecipe extends Job  {
 			return 0;
 		}
 		
-		logFiner("Adding smelting recipe "+smelt+" -> "+result.toString());
+		logFiner("Adding smelting recipe "+smelt+" -> "+product.toString());
 		
-		Xie.addSmeltingRecipe(smeltable, result);
-		if (result.getItem() instanceof ItemFood) {
-			foodSmeltsSoFar.put(new ItemWrapper(smeltable),result);
-			for (Map<ItemWrapper,ItemWrapper> map : foodSmeltMapsToUpdate) map.put(new ItemWrapper(smeltable),result);
+		Xie.addSmeltingRecipe(smeltable, product);
+		if (product.getItem() instanceof ItemFood) {
+			foodSmeltsSoFar.put(new ItemWrapper(smeltable),product);
+			for (Map<ItemWrapper,ItemWrapper> map : foodSmeltMapsToUpdate) map.put(new ItemWrapper(smeltable),product);
 		}
 		
 		isDone=true;

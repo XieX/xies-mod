@@ -19,19 +19,46 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraftforge.common.EnumPlantType;
+
 import java.util.Random;
 
 
 public class XieBlockStem extends BlockStem implements IXieBlock {
 
+	protected int[] growsOn;
+	protected EnumPlantType plantType;
+	
 	public XieBlockStem(String name, int id, Block growsBlock) {
 		super(id, growsBlock);
 		setBlockName(name);
 	}
 	
+	@Override
     public void fertilizeStem(World world, int i, int j, int k) {
         super.fertilizeStem(world,i,j,k);
         world.markBlockForRenderUpdate(i, j, k);
+    }
+    
+	@Override
+    protected boolean canThisPlantGrowOnThisBlockID(int id) {
+        if (growsOn==null || growsOn.length <=0) return false;
+        for (int i : growsOn) if (i==id) return true;
+        return false;
+    }
+    
+    public void setGrowsOn(int[] i) {
+    	growsOn=i;
+    }
+    
+    public void setPlantType(EnumPlantType t) {
+    	plantType = t;
+    }
+    
+    @Override
+    public EnumPlantType getPlantType(World world, int x, int y, int z) {
+    	if (plantType==null) plantType = EnumPlantType.Crop;
+    	return plantType;
     }
 	
 	 // copy-pasta from XieBlock
@@ -43,10 +70,6 @@ public class XieBlockStem extends BlockStem implements IXieBlock {
 	
 	protected XieTex tex;
 	protected String[] names;
-	
-	public int renderType;
-	public boolean renderNormally = true;
-	protected Boolean isOpaque;
 	
 	protected int becomesWhenDestroyed[];
 	
@@ -97,26 +120,23 @@ public class XieBlockStem extends BlockStem implements IXieBlock {
 	@Override
 	public int getRenderType()
     {
-        return renderType;
+        return super.getRenderType();
     }
     
     @Override
 	public boolean renderAsNormalBlock()
     {
-    	return renderNormally;
+    	return false;
     }
     
     @Override
 	public void setRenderType(int r) {
-    	renderType=r;
-    	renderNormally=false;
-    	if (Xie.isTransparentRenderType(r)) setIsOpaque(false);
+    	
     }
     
     @Override
 	public boolean isOpaqueCube() {
-    	if (isOpaque==null) isOpaque = true;
-        return isOpaque;
+    	return super.isOpaqueCube();
     }
     
     @Override
@@ -214,11 +234,7 @@ public class XieBlockStem extends BlockStem implements IXieBlock {
 	
 	@Override
 	public void setIsOpaque(boolean b) { 
-    	isOpaque=b;
-    	renderNormally=false;
-    	Block.opaqueCubeLookup[blockID]=b;
-    	if (!b) Block.lightOpacity[blockID]=0;
-    	else Block.lightOpacity[blockID]=255;
+
     }
 
 	@Override

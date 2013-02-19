@@ -601,7 +601,7 @@ public class JobItem extends Job  {
 	}
 	
 	protected void addArmorRecipe(int type, ItemStack ingredient, XieItemArmor armor) {
-		Recipe.makeArmorRecipe(type, new ItemStack(armor), ingredient);
+		Recipe.makeArmorRecipe(type, new ItemWrapper(armor), ingredient);
 		logFiner("Added recipe for "+name);
 		Work.instance().jobsCompleted[JobType.RECIPE.ordinal()]++;
 	}

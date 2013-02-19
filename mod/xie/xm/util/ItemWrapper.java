@@ -6,6 +6,7 @@ import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 
 
@@ -97,8 +98,8 @@ public class ItemWrapper implements Comparable {
 	}
 
 	public Block getBlock() {
-		if (id < Xie.idShift) {
-			if (Block.blocksList[id]!=null) return Block.blocksList[id];
+		if (Item.itemsList[id] instanceof ItemBlock) {
+			return Block.blocksList[id];
 		}
 		
 		return null;

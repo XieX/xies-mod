@@ -46,6 +46,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.crafting.FurnaceRecipes;
 import net.minecraft.src.ModLoader;
 import net.minecraftforge.common.DungeonHooks;
+import net.minecraftforge.common.EnumPlantType;
 import argo.jdom.JsonNode;
 import argo.jdom.JsonNodeType;
 import argo.jdom.JsonStringNode;
@@ -478,6 +479,16 @@ public class JobBlock extends Job {
 					return false;
 				} else block.setTex(tex);
 			}
+		}
+		
+		if (isKey("growsOn")) {
+			int [] growsOn = Xie.parseBlockIDs(getStr("growsOn"));
+			if (growsOn!=null) b.setGrowsOn(growsOn);
+		}
+		
+		if (isKey("plantType")) {
+			EnumPlantType t = Xie.parsePlantType(getStr("plantType"));
+			if (t!=null) b.setPlantType(t);
 		}
 		isDone = expandCommonBlockParameters();
 		return true;

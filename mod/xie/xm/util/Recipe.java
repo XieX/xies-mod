@@ -19,40 +19,18 @@ public class Recipe {
 	protected boolean shapeless;
 	protected String pattern[];
 	protected char symbols[]; // symbols and contents need to be same length
-	protected ItemStack ingredients[]; // ingredients and symbols need to be same length
-	protected ItemStack yield;
+	protected List<ItemStack> ingredients; // ingredients and symbols need to be same length
+	protected ItemWrapper yield;
 	protected String failMsg = "unknown error";
 	
-	// shapeless recipe constructor using strings
-	public Recipe(String product, String contents) {
-		this(Xie.parseItemStack(product), parseIngredients(contents));
-	}
-	
-	public Recipe(String product, ItemStack contents[]) {
-		this(Xie.parseItemStack(product),contents);
-	}	
-	
-	public Recipe(ItemStack product, ItemStack contents[]) {
+	public Recipe(ItemWrapper product, List<ItemStack> contents) {
 		shapeless=true;
 		yield = product;
 		ingredients = contents;
 		validate();
 	}
 	
-	// shaped recipe constructors
-	public Recipe(String product, String contents, String patternString) {
-		shapeless=false;
-		yield = Xie.parseItemStack(product);
-		ingredients = parseIngredients(contents);
-		pattern = parsePattern(patternString);
-		validate();
-	}
-	
-	public Recipe(String product, ItemStack contents[], String patternString) {
-		this(Xie.parseItemStack(product), contents, patternString);
-	}
-	
-	public Recipe(ItemStack product, ItemStack contents[], String patternString) {
+	public Recipe(ItemWrapper product, List<ItemStack> contents, String patternString) {
 		shapeless=false;
 		yield = product;
 		ingredients = contents;
@@ -62,8 +40,8 @@ public class Recipe {
 	
 	public void addRecipeUsingModLoader() {
 		if (!validate()) return;
-		if (shapeless) ModLoader.addShapelessRecipe(yield, getIngredients());
-		else ModLoader.addRecipe(yield, getIngredients());
+		if (shapeless) ModLoader.addShapelessRecipe(yield.getItemStack(), getIngredients());
+		else ModLoader.addRecipe(yield.getItemStack(), getIngredients());
 	}
 	
 	protected void setFailMsg(String s) { failMsg = s; }
@@ -118,7 +96,7 @@ public class Recipe {
 				// TODO throw some kind of error I suppose... :P
 				return null;
 			}
-			return ingredients;
+			return ingredients.toArray();
 		} else {
 			if (ingredients==null || pattern==null || symbols==null) {
 				// TODO throw some kind of error?
@@ -132,7 +110,7 @@ public class Recipe {
 			}
 			for (int i=0; i<b; i++) {
 				obj[a+2*i]=symbols[i];
-				obj[a+2*i+1]=ingredients[i];
+				obj[a+2*i+1]=ingredients.get(i);
 			}
 			return obj;
 		}
@@ -160,8 +138,8 @@ public class Recipe {
 			}
 			
 			if (symbols!=null && ingredients!=null)
-			if (symbols.length!=ingredients.length) {
-				setFailMsg("length mismatch: found "+symbols.length+" symbols and "+ingredients.length+" ingredients");
+			if (symbols.length!=ingredients.size()) {
+				setFailMsg("length mismatch: found "+symbols.length+" symbols and "+ingredients.size()+" ingredients");
 				flag=false;
 			}
 			if (pattern!=null)
@@ -203,25 +181,25 @@ public class Recipe {
 			if (symbols.length!=other.symbols.length) return false;
 			
 			// compare ingredients, order matters
-			if (ingredients.length!=other.ingredients.length) return false;
-			for (int i=0; i<ingredients.length; i++) 
-				if (!Xie.itemstacksEqual(ingredients[i],other.ingredients[i])) return false;
+			if (ingredients.size()!=other.ingredients.size()) return false;
+			for (int i=0; i<ingredients.size(); i++) 
+				if (!Xie.itemstacksEqual(ingredients.get(i),other.ingredients.get(i))) return false;
 		} else {
 			// compare ingredients, but they may be in any order
-			if (ingredients.length!=other.ingredients.length) return false;
-			for (int i=0; i<ingredients.length; i++) {
+			if (ingredients.size()!=other.ingredients.size()) return false;
+			for (int i=0; i<ingredients.size(); i++) {
 				boolean foundMatch = false;
-				for (int j=0; j<ingredients.length && !foundMatch; j++) {
-					foundMatch = Xie.itemstacksEqual(ingredients[i], other.ingredients[j]);
+				for (int j=0; j<ingredients.size() && !foundMatch; j++) {
+					foundMatch = Xie.itemstacksEqual(ingredients.get(i), other.ingredients.get(j));
 				}
 				if (!foundMatch) return false;
 			}
 		}
 		
-		return Xie.itemstacksEqual(yield, other.yield);
+		return yield.equals(other);
 	}
 	
-	public static void makeArmorRecipe(int type, ItemStack product, ItemStack material) {
+	public static void makeArmorRecipe(int type, ItemWrapper product, ItemStack material) {
 		String pattern;
 		switch(type) {
 		case 0: // helmet
@@ -238,7 +216,9 @@ public class Recipe {
 			pattern = "X X,X X";
 		}
 		
-		new Recipe(product,new ItemStack[]{material},pattern).addRecipeUsingModLoader();
+		List<ItemStack> armorMaterials = new LinkedList<ItemStack>();
+		armorMaterials.add(material);
+		new Recipe(product,armorMaterials,pattern).addRecipeUsingModLoader();
 		// TODO include some error checking
 	}
 }

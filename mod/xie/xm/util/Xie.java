@@ -46,6 +46,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DungeonHooks;
+import net.minecraftforge.common.EnumPlantType;
 import net.minecraftforge.common.MinecraftForge;
 
 public class Xie {
@@ -138,8 +139,12 @@ public class Xie {
         for(String s : item)
         {
             ItemStack i = parseItemStack(s);
-            if(i != null)
+            if(i != null) {
                 list.add(i);
+            } else {
+            	XieLog.log().logDelayed("Failed on parsing itemstack "+s);
+            	return null;
+            }
         }
 
         return list;
@@ -918,5 +923,13 @@ public class Xie {
 
 	public static boolean validateImageFile(String textureFilePath) {
 		return XiesMod.proxy.validateImageFile(textureFilePath);
+	}
+
+	public static EnumPlantType parsePlantType(String str) {
+		for (EnumPlantType t : EnumPlantType.values()) {
+			if (t.name().equalsIgnoreCase(str)) return t;
+		}
+		
+		return null;
 	}
 }

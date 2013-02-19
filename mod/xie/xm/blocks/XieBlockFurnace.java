@@ -246,6 +246,8 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
     		} else {
     			Xie.setBlock(world, i, j, k, becomesWhenDestroyed[0]);
     		}
+    	} else {
+    		Xie.setBlock(world, i, j, k, 0);
     	}
     }
     

@@ -29,7 +29,7 @@ public class XieBlockSapling extends XieBlockPlant implements IXieBlock {
 		growsInto = Block.leaves.blockID;
 		setRenderType(1);
 		setBlockBounds(0.1F,0.1F,0.1F,0.9F,0.9F,0.9F);
-		growthRate=5;
+		growthRate=14;
 		this.setCreativeTab(CreativeTabs.tabDecorations);
 	}
 
