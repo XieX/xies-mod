@@ -91,7 +91,7 @@ public class JobRecipe extends Job  {
 		
 		List<ItemStack> contents = Xie.parseItemStacks(ingredients);
 		if (contents==null) {
-			logDelayed("Recipe failed, could not identify ingredients "+ingredients);
+			logDelayed("Recipe failed, could not identify one or more ingredients from: "+ingredients);
 			logClose();
 			return 0;
 		}

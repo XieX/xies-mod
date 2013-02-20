@@ -251,11 +251,17 @@ public class Work {
 	}
 
 	// attempts to resolve the work queue
-	private static final int MAX_PASSES = 20;
+	private static final int EXTRA_PASSES = 4;
     public Boolean doWork() {
-        for(int passCounter = 0; passCounter < MAX_PASSES && !jobs.isEmpty(); passCounter++) {
+    	int jobCount = jobs.size();
+    	int extraPassCounter = 0;
+        for(int passCounter = 0; extraPassCounter < EXTRA_PASSES && !jobs.isEmpty(); passCounter++) {
             XieLog.log().fine((new StringBuilder()).append("Attempting pass ").append(passCounter).append(" of job queues").toString());
+            
             resolveJobList(jobs);
+            
+            if (jobs.size()==jobCount) extraPassCounter++;
+            else jobCount = jobs.size();
         }
 
         return jobs.isEmpty();
