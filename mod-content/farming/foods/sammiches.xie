@@ -18,7 +18,6 @@
     },
     "tastySammich": {
       "name": "Tasty Sammich",
-      "names": "Tasty Sammich, BLT",
       "type": "food",
       "hunger": 14,
       "nourishment": 0.9,
@@ -86,10 +85,6 @@
     "sammichX": {
       "product": "sammich:2",
       "content": "bread,bread,$saucy"
-    },
-    "BLT": {
-      "product": "tastySammich:6:1",
-      "content": "bread,bread,bread,bread,bread,bread,porkchopCooked,lettuce,tomato"
     }
   },
   "aliases": {

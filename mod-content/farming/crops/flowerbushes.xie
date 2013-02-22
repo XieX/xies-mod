@@ -104,8 +104,8 @@
     "dandelionCull": {
       "cull": "yellowDye:2"
     },
-    "roseSeeds:2": "rose",
-    "dandelionSeeds:2": "yellowFlower",
+    "roseSeeds": "rose",
+    "dandelionSeeds": "yellowFlower",
     "redDye": "roseSeeds",
     "yellowDye": "dandelionSeeds"
   }
