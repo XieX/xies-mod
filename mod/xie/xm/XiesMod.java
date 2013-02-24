@@ -37,12 +37,15 @@ import mod.xie.xm.file.StyleFile;
 import mod.xie.xm.file.XieLog;
 import mod.xie.xm.parser.Job;
 import mod.xie.xm.util.GameState;
+import mod.xie.xm.util.ItemWrapper;
 import mod.xie.xm.util.JobType;
+import mod.xie.xm.util.Xie;
 import mod.xie.xm.util.XieCraftingManager;
 import mod.xie.xm.util.XieFuelManager;
 import mod.xie.xm.util.XieGuiHandler;
 import mod.xie.xm.world.XieWorldGenerator;
 import net.minecraft.client.Minecraft;
+import net.minecraft.item.ItemStack;
 import net.minecraft.src.ModLoader;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.MinecraftForge;
@@ -94,7 +97,7 @@ public class XiesMod {
 	private GameState localContent;
 	
 	@PreInit
-	public void init(FMLPreInitializationEvent event) {
+	public void init(FMLPreInitializationEvent event) {		
 		//System.out.println("MCPath ==> "+proxy.getMinecraftPath());
 		// register handlers etc
 		GameRegistry.registerFuelHandler(XieFuelManager.get());
@@ -222,7 +225,8 @@ public class XiesMod {
 			
 			if (entry.endsWith(".xie")) {
 				XieLog.log().config("Found "+entry);
-				String path = filePath+"/"+entry.substring(0,entry.lastIndexOf("/"));
+				String path = filePath;
+				if (entry.contains("/")) path += "/"+entry.substring(0,entry.lastIndexOf("/"));
 				String name = entry.substring(entry.lastIndexOf("/")+1);
 				
 				try {
