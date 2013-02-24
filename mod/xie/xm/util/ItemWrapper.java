@@ -108,9 +108,8 @@ public class ItemWrapper implements Comparable {
 	@Override
 	public String toString() {
 		String s = getItemName();
-		if (count>0 && hasMeta()) s+=":"+count+":"+meta;
-		if (count>1) s+="*"+count;
-		if (hasMeta()) s+=":"+meta;
+		if (hasMeta()) s+=":"+count+":"+meta;
+		else if (count>1) s+="*"+count;
 		return s;
 	}
 	

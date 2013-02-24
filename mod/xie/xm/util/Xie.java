@@ -167,33 +167,11 @@ public class Xie {
     	return list;
     }
     
-    // parses an item or itemstack of the format "item", "item:meta", "item:count:meta"
+    // parses an item or itemstack of the format "item", "item:count", "item:count:meta"
     public static ItemWrapper parseItemWrapper(String string) {
-    	int meta=-1;
-    	int count=1;
-
-    	if (string.contains(":")) {
-    		String s[] = string.split(":");
-    		if (s.length>0) string=s[0];
-    		if (s.length>1) count=Integer.parseInt(s[1]);
-    		if (s.length>2) meta=Integer.parseInt(s[2]);
-    		else {
-    			meta=count;
-    			count=1;
-    		}
-    	}
-	
-		// check for alias
-		ItemWrapper iw = aliasSearch(string);
-		if (iw!=null) return iw;
-		
-		// then try translation table
-		iw = translationLookup(string);
-		if (iw!=null) return iw;
-    	
-    	int id = parseBlockOrItemId(string);
-    	if (id<0) return null;
-    	else return new ItemWrapper(id,count,meta);
+    	ItemStack is = Xie.parseItemStack(string);
+    	if (is==null) return null;
+    	else return new ItemWrapper(is);
     }
     
     // parses an itemwrapper of the form "id_meta", using numbers not identifiers
@@ -356,7 +334,7 @@ public class Xie {
 	
 	public static ItemStack parseItemStack(String text) {
 		// defaults
-		int damage=0;
+		int damage=-1;
 		int amount=-1;
 		String name = text.trim();
 		
@@ -378,11 +356,12 @@ public class Xie {
 		iw = translationLookup(name);
 		if (iw!=null) {
 			if (amount>0) iw.count=amount;
-			if (damage>0) iw.meta=damage;
+			if (damage>=0) iw.meta=damage;
 			else return iw.getItemStack();
 		}
 		
 		if (amount<1) amount=1;
+		if (damage<0) damage=0;
 		
 		// check to see if name is an id
 		if (isNumbers(name)) {

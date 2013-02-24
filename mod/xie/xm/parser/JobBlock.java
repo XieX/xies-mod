@@ -796,6 +796,8 @@ public class JobBlock extends Job {
 			addedSpawn=true;
 		}
 		
+		if (isKey("resistance")) block.getBlock().setResistance(getFloat("resistance"));
+		
 		if (isKey("tool")) expandToolEffectivenessNode(getNode("tool"));
 		
 		if (isKey("drops")) {
