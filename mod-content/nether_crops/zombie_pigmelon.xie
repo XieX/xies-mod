@@ -30,7 +30,7 @@
 		}
 	},
 	"recipes": {
-		"zombiePigmelonSeed": "goldNugget,etherWart",
+		"zombiePigmelonSeed": "melonSeeds,etherWart",
 		"cookedPorkchop:4": "zombiePigmelon"
 	}
 }

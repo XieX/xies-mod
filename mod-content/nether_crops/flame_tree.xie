@@ -42,6 +42,6 @@
 	},
 	"recipes": {
 		"blazeRod": "blazeTreeSapling",
-		"blazeTreeSapling": "etherWart,blazeRod"
+		"blazeTreeSapling": "etherWart,blazeRod,sapling"
 	}
 }

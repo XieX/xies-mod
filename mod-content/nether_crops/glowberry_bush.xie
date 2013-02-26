@@ -53,6 +53,6 @@
 		}
 	},
 	"recipes": {
-		"glowberry": "etherWart,glowstoneDust"
+		"glowberry": "etherWart,pumpkinSeeds"
 	}
 }
