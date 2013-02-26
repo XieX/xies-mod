@@ -4,6 +4,7 @@
 			"name": "Blaze Tree Sapling",
 			"type": "sapling",
 			"growsInto": "blazeTree",
+			"fertilisable": false,
 			"tex": {
 				"texFile": "nether_crops.png",
 				"all": 23
@@ -14,6 +15,7 @@
 		},
 		"blazeLog": {
 			"name": "Blaze Log",
+			"type": "log",
 			"drops": "blazeRod,blazeRod",
 			"tex": {
 				"texFile": "nether_crops.png",

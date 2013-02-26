@@ -6,6 +6,8 @@
 			"growsOn": "soulsand",
 			"growthRate": 10,
 			"lightValue": 1.0,
+			"lightLevel": 0,
+			"fertilisable": false,
 			"drops": {
 				"glowberry": {
 				  "chance": {
