@@ -2,8 +2,8 @@ package mod.xie.xm.blocks;
 
 
 import mod.xie.xm.parser.Location;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Xie;
-import mod.xie.xm.util.XieTex;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockPane;
 import net.minecraft.block.StepSound;

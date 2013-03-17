@@ -98,11 +98,16 @@ public class ItemWrapper implements Comparable {
 	}
 
 	public Block getBlock() {
-		if (Item.itemsList[id] instanceof ItemBlock) {
-			return Block.blocksList[id];
-		}
-		
-		return null;
+		if (isBlock()) return Block.blocksList[id];
+		else return null;
+	}
+	
+	public boolean isBlock() {
+		return Item.itemsList[id] instanceof ItemBlock;
+	}
+	
+	public boolean isItem() {
+		return !isBlock();
 	}
 	
 	@Override

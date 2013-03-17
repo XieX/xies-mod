@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 
 
@@ -25,6 +26,7 @@ import mod.xie.xm.file.XieLog;
 import mod.xie.xm.items.XieItemBucket;
 import mod.xie.xm.items.XieItemInterface;
 import mod.xie.xm.parser.DungeonLootHelper;
+import mod.xie.xm.tex.XieTex;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFire;
 import net.minecraft.block.BlockLeaves;
@@ -46,6 +48,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DungeonHooks;
 import net.minecraftforge.common.EnumPlantType;
+import net.minecraftforge.common.ForgeDirection;
 import net.minecraftforge.common.MinecraftForge;
 
 public class Xie {
@@ -909,5 +912,9 @@ public class Xie {
 		}
 		
 		return null;
+	}
+
+	public static ForgeDirection getRandomDir(Random r) {
+		return ForgeDirection.VALID_DIRECTIONS[r.nextInt(ForgeDirection.VALID_DIRECTIONS.length)];
 	}
 }

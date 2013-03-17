@@ -3,11 +3,11 @@ package mod.xie.xm.blocks;
 import java.util.HashMap;
 
 import mod.xie.xm.XiesMod;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.ItemWrapper;
 import mod.xie.xm.util.Xie;
-import mod.xie.xm.util.XieTex;
 import net.minecraft.block.Block;
 import net.minecraft.block.StepSound;
 import net.minecraft.entity.Entity;
@@ -30,6 +30,7 @@ import java.util.Random;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.src.ModLoader;
+import net.minecraftforge.common.ForgeDirection;
 
 
 public class XieBlockFurnace extends BlockContainer implements IXieBlock {
@@ -117,7 +118,7 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
     	
     	// scale and set meta based on burn level
     	if (world.getBlockMetadata(i,j,k)!=burnLevel) {
-    		world.setBlockMetadataWithNotify(i,j,k,metaByBurnTime[burnLevel<0?0:burnLevel]);
+    		world.setBlockMetadataWithNotify(i,j,k,metaByBurnTime[burnLevel<0?0:burnLevel], 3);
     		setBlockBoundsBasedOnState(world, i, j, k);
     	}
     		
@@ -147,14 +148,13 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
       	Random random = new Random();
     	if (random.nextInt(10)>=volatility) return;
     		for (int n=0; n<volatility; n++) {
-	    		int dx = random.nextInt(3) - 1;
-	    		int dy = random.nextInt(3) - 1;
-	    		int dz = random.nextInt(3) - 1;
-	    		if (dx!=0 || dy!=0 || dz!=0) {
-	    			
-	    			if (Block.fire.canBlockCatchFire(world, i+dx, j+dy, k+dz))
-	    				world.setBlock(i+dx, j+dy, k+dz, Block.fire.blockID);
-	    		}
+    			ForgeDirection dir = Xie.getRandomDir(random);
+    			int x = i + dir.offsetX;
+    			int y = j + dir.offsetY;
+    			int z = k + dir.offsetZ;
+					    			
+    			if (Block.fire.canBlockCatchFire(world, x, y, z, dir))
+    				Xie.setBlockAndMeta(world, x, y, z, Block.fire.blockID, 0);
     		}
     	}
     }
@@ -250,9 +250,8 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
     		Xie.setBlock(world, i, j, k, 0);
     	}
     }
-    
-    // entity.func_40046_d(int i) ==> set's the entity on fire by amount 20*i
-    @Override
+
+	@Override
 	public void onEntityCollidedWithBlock(World world, int i, int j, int k, Entity entity)
     {
     	if (isSpikey && !world.isRemote) entity.attackEntityFrom(DamageSource.generic, 1);
@@ -294,7 +293,7 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
         	if(Block.opaqueCubeLookup[west] && !Block.opaqueCubeLookup[east]) direction = 4;
         }
         
-        world.setBlockMetadataWithNotify(i, j, k, direction);
+        Xie.setBlockMeta(world, i, j, k, direction);
     }
     
     /* Xie Basic Block copy-pasta */

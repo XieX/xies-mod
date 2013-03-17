@@ -3,10 +3,11 @@ package mod.xie.xm.blocks;
 import java.util.List;
 import java.util.Random;
 
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
+import mod.xie.xm.util.ItemWrapper;
 import mod.xie.xm.util.Xie;
-import mod.xie.xm.util.XieTex;
 import net.minecraft.block.Block;
 import net.minecraft.block.StepSound;
 import net.minecraft.block.material.Material;
@@ -46,7 +47,7 @@ public class XieBlock extends Block implements IXieBlock {
 	public boolean renderNormally = true;
 	protected Boolean isOpaque;
 	
-	protected int becomesWhenDestroyed[];
+	protected ItemWrapper becomesWhenDestroyed;
 	
 	protected float blockBounds[];
 	protected float blockBoundsByMeta[][];
@@ -124,7 +125,6 @@ public class XieBlock extends Block implements IXieBlock {
     
     @Override
 	public void setTex(XieTex t) {
-    	isDefaultTexture=t.getTexFile()==null;
     	tex=t;
     }
  
@@ -148,10 +148,10 @@ public class XieBlock extends Block implements IXieBlock {
     
     @Override
 	public void onBlockDestroyedByPlayer(World world, int i, int j, int k, int l) {
-    	if (becomesWhenDestroyed!=null) {
-    		if (becomesWhenDestroyed.length>1)
-    			Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
-    		else Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], l);
+    	if (becomesWhenDestroyed!=null && becomesWhenDestroyed.isBlock()) {
+    		if (becomesWhenDestroyed.hasMeta())
+    			Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed.id, becomesWhenDestroyed.meta);
+    		else Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed.id, 0); // TODO preserve meta value of previous block??
     	}
     }
     
@@ -240,9 +240,23 @@ public class XieBlock extends Block implements IXieBlock {
 	}
 
 	@Override
+	@Deprecated
 	public void setBecomesWhenDestroyed(int[] bwd) {
-		becomesWhenDestroyed=bwd;
-	} 
+		if (bwd.length>1) setBecomesWhenDestroyed(bwd[0],bwd[1]);
+		else if (bwd.length==1) setBecomesWhenDestroyed(bwd[0]);
+	}
+	
+	public void setBecomesWhenDestroyed(int id) {
+		setBecomesWhenDestroyed(new ItemWrapper(id));
+	}
+	
+	public void setBecomesWhenDestroyed(int id, int meta) {
+		setBecomesWhenDestroyed(new ItemWrapper(id,meta));
+	}
+	
+	public void setBecomesWhenDestroyed(ItemWrapper w) {
+		becomesWhenDestroyed = w;
+	}
 	
 	protected boolean walkThroughable = false;
 	@Override

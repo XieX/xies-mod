@@ -2,9 +2,9 @@ package mod.xie.xm.blocks;
 
 import java.util.List;
 
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
-import mod.xie.xm.util.XieTex;
 import net.minecraft.block.Block;
 import net.minecraft.block.StepSound;
 import net.minecraft.entity.player.EntityPlayer;

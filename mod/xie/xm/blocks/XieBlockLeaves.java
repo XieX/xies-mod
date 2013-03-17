@@ -7,10 +7,10 @@ import java.util.Random;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.Xie;
-import mod.xie.xm.util.XieTex;
 import mod.xie.xm.world.TreeGenerator;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLeaves;
