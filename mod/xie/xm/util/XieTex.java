@@ -1,6 +1,5 @@
 package mod.xie.xm.util;
 
-
 // texture id handler for complex objects
 
 public class XieTex {

@@ -39,7 +39,7 @@ public class XieItemBlock extends ItemBlock {
 	public String getItemNameIS(ItemStack itemstack) {
 		if (xieBlock==null) {
 			if (block==null) return "null";
-			else return block.getBlockName();
+			else return block.getUnlocalizedName();
 		} else return xieBlock.getBlockNameIS(itemstack);
 	}
 }

@@ -83,7 +83,7 @@ public class JobItem extends Job  {
 				return 0;
 			} else if (Item.itemsList[id]!=null && item==null) {
 				if (isKey("overide") || isKey("override")) {
-					logInfo("Item id "+id+" is in use. Overriding "+Item.itemsList[id].getItemName());
+					logInfo("Item id "+id+" is in use. Overriding "+Item.itemsList[id].getUnlocalizedName());
 					if (!isKey("icon")) copyIconsFrom(Item.itemsList[id]);
 					Item.itemsList[id]=null;
 				} else {
@@ -133,7 +133,7 @@ public class JobItem extends Job  {
 			namess=namess.substring(0,namess.length()-1);
 			logFiner("Set names: "+namess);
 			for (int i=0; i<names.length; i++) 
-				ModLoader.addName(new ItemStack(item.getItem().shiftedIndex,1,i), names[i]);
+				ModLoader.addName(new ItemStack(item.getItem().itemID,1,i), names[i]);
 			item.setHasSubtypes(true);
 		}
 
@@ -256,7 +256,7 @@ public class JobItem extends Job  {
 			if (isKey("inheritMeta")) seeds.setGrowsIntoMeta(-1);
 			if (isKey("growsIntoMeta")) seeds.setGrowsIntoMeta(getInt(getNode("growsIntoMeta")));
 			item = seeds;
-			logFiner("Added seeds: "+name+"("+id+") icon="+iconID+" grows "+growsInto.getBlockName());
+			logFiner("Added seeds: "+name+"("+id+") icon="+iconID+" grows "+growsInto.getUnlocalizedName());
 			isDone = true;
 		} else {
 			logDelayed("Failed to identify 'growsInto' block");
@@ -297,7 +297,7 @@ public class JobItem extends Job  {
 				return false;
 			} else {
 				String worksOnList = " which works on ";
-				for (Block b : l) worksOnList+=b.getBlockName();
+				for (Block b : l) worksOnList+=b.getUnlocalizedName();
 				logFiner("Added fertiliser "+name+"("+id+") icon="+iconID+worksOnList);
 				if (item==null) item = new XieItemFertiliser(name, id, iconID, l);
 			}
@@ -708,7 +708,7 @@ public class JobItem extends Job  {
 		
 		ItemWrapper cookedStack = Xie.parseItemWrapper(cooked);
 		if (cookedStack!=null) {
-			logFiner("Cooks/smelts into "+cookedStack.getItemName());
+			logFiner("Cooks/smelts into "+cookedStack.getUnlocalizedName());
 			Xie.addSmeltingRecipe(id, cookedStack);
 			if (cookedStack.getItem() instanceof ItemFood) {
 				foodSmeltsSoFar.put(new ItemWrapper(id),cookedStack);
@@ -792,7 +792,7 @@ public class JobItem extends Job  {
 			for (int n=0; n<N; n++) icons[n]=i.getIconFromDamage(n);
 		} else {
 			int iID=i.getIconIndex(new ItemStack(i));
-			logFine("Using id from "+i.getItemName()+", icon ID "+iID);
+			logFine("Using id from "+i.getUnlocalizedName()+", icon ID "+iID);
 			iconID=iID;
 		}
 	}

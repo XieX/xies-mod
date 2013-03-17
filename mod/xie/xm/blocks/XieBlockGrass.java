@@ -35,7 +35,7 @@ public class XieBlockGrass extends BlockGrass implements IXieBlock {
 	
 	public XieBlockGrass(String name, int id) {
 		super(id);
-		setBlockName(name);
+		setUnlocalizedName(name);
 		setStepSound(Block.soundGrassFootstep);
 		setHardness(0.6F);
 		dirtBlock = new BlockID(Block.dirt.blockID);
@@ -291,7 +291,7 @@ public class XieBlockGrass extends BlockGrass implements IXieBlock {
 	@Override
 	public String getBlockNameIS(ItemStack itemstack) {
 		int i = itemstack.getItemDamage();
-		if (names==null || names.length <= i) return getBlockName();
+		if (names==null || names.length <= i) return getUnlocalizedName();
 		else return names[i];
 	}
 

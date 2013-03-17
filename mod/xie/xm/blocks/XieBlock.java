@@ -16,6 +16,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Icon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
@@ -28,7 +29,7 @@ public class XieBlock extends Block implements IXieBlock {
 	
 	public XieBlock(int id, Material mat, String n) {
 		super(id, mat);
-		setBlockName(n);
+		setUnlocalizedName(n);
 		this.setCreativeTab(CreativeTabs.tabBlock);
 	}
 
@@ -126,15 +127,10 @@ public class XieBlock extends Block implements IXieBlock {
     	isDefaultTexture=t.getTexFile()==null;
     	tex=t;
     }
-    
-    @Override
-	public int getBlockTextureFromSide(int i) {
-    	return getBlockTextureFromSideAndMetadata(i,0);
-    }
  
 	// texture IDs, tex[side][meta]
     @Override
-	public int getBlockTextureFromSideAndMetadata(int i, int j) {
+	public Icon getBlockTextureFromSideAndMetadata(int i, int j) {
     	return tex.getTexFromSideAndMeta(i, j);
     }
     
@@ -154,8 +150,8 @@ public class XieBlock extends Block implements IXieBlock {
 	public void onBlockDestroyedByPlayer(World world, int i, int j, int k, int l) {
     	if (becomesWhenDestroyed!=null) {
     		if (becomesWhenDestroyed.length>1)
-    			world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
-    		else world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], l);
+    			Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
+    		else Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], l);
     	}
     }
     
@@ -226,7 +222,7 @@ public class XieBlock extends Block implements IXieBlock {
 	@Override
 	public String getBlockNameIS(ItemStack itemstack) {
 		int i = itemstack.getItemDamage();
-		if (names==null || names.length <= i) return getBlockName();
+		if (names==null || names.length <= i) return getUnlocalizedName();
 		else return names[i];
 	}
 

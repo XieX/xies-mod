@@ -58,7 +58,7 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
 	public XieBlockFurnace(String blockName, int id, String displayName, boolean active) {
 		super(id, Material.rock);
 		name = blockName;
-		setBlockName(blockName);
+		setUnlocalizedName(blockName);
 		this.displayName=displayName;
 		isActive=active;
 		if (isActive) this.active = this;
@@ -485,7 +485,7 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
 	@Override
 	public String getBlockNameIS(ItemStack itemstack) {
 		int i = itemstack.getItemDamage();
-		if (names==null || names.length <= i || i < 0) return getBlockName();
+		if (names==null || names.length <= i || i < 0) return getUnlocalizedName();
 		else return names[i];
 	}
 

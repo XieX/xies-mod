@@ -31,7 +31,7 @@ public class XieBlockStem extends BlockStem implements IXieBlock {
 	
 	public XieBlockStem(String name, int id, Block growsBlock) {
 		super(id, growsBlock);
-		setBlockName(name);
+		setUnlocalizedName(name);
 	}
 	
 	@Override
@@ -245,7 +245,7 @@ public class XieBlockStem extends BlockStem implements IXieBlock {
 	@Override
 	public String getBlockNameIS(ItemStack itemstack) {
 		int i = itemstack.getItemDamage();
-		if (names==null || names.length <= i) return getBlockName();
+		if (names==null || names.length <= i) return getUnlocalizedName();
 		else return names[i];
 	}
 

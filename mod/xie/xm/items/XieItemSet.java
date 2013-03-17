@@ -71,7 +71,7 @@ public class XieItemSet implements XieItemInterface {
 	}
 
 	@Override
-	public String getItemName() {
+	public String getUnlocalizedName() {
 		return name;
 	}
 

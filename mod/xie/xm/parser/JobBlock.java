@@ -34,6 +34,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemFood;
+import net.minecraft.item.ItemSpade;
 import net.minecraft.item.ItemStack;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +81,7 @@ public class JobBlock extends Job {
 			return 0;
 		} else if (Block.blocksList[id]!=null && block==null) {
 			if (isKey("overide") || isKey("override")) {
-				logInfo("Block id "+id+" is in use. Overriding block '"+Block.blocksList[id].getBlockName()+"'.");
+				logInfo("Block id "+id+" is in use. Overriding block '"+Block.blocksList[id].getUnlocalizedName()+"'.");
 				Block.blocksList[id]=null;
 				Item.itemsList[id]=null;
 			} else {
@@ -792,7 +793,7 @@ public class JobBlock extends Job {
 		if (isKey("hardness")) block.setHardness(getFloat("hardness"));
 		
 		if (isKey("spawn") && !addedSpawn) {
-			Work.instance().addSpawnJob(block.getBlockName(),getNode("spawn"));
+			Work.instance().addSpawnJob(block.getUnlocalizedName(),getNode("spawn"));
 			addedSpawn=true;
 		}
 		
@@ -974,7 +975,7 @@ public class JobBlock extends Job {
 		
 		ItemWrapper cookedStack = Xie.parseItemWrapper(cooked);
 		if (cookedStack!=null) {
-			logFiner("Cooks/smelts into "+cookedStack.getItemName());
+			logFiner("Cooks/smelts into "+cookedStack.getUnlocalizedName());
 			Xie.addSmeltingRecipe(id, cookedStack);
 			if (cookedStack.getItem() instanceof ItemFood) {
 				foodSmeltsSoFar.put(new ItemWrapper(id),cookedStack);

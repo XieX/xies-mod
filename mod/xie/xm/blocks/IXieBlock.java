@@ -21,7 +21,7 @@ public interface IXieBlock {
     void setTex(XieTex t);
     Block setStepSound(StepSound stepsound);
     Block setHardness(float f);
-    String getBlockName();
+    String getUnlocalizedName();
 	void setDrops(Droppables drops);
 	void setBlockBounds(float[] bounds);
 	void setBlockBounds(float[][] blockBounds);

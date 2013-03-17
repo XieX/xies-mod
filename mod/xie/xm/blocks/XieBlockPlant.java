@@ -55,8 +55,8 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 	
 	// constructor
 	public XieBlockPlant(String plantName, int plantID) {
-		super(plantID, Block.plantRed.blockIndexInTexture);
-		setBlockName(plantName);
+		super(plantID);
+		setUnlocalizedName(plantName);
 		
 		// block settings
 		setTickRandomly(true);
@@ -530,7 +530,7 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 	@Override
 	public String getBlockNameIS(ItemStack itemstack) {
 		int i = itemstack.getItemDamage();
-		if (names==null || names.length <= i) return getBlockName();
+		if (names==null || names.length <= i) return getUnlocalizedName();
 		else return names[i];
 	}
 

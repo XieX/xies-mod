@@ -28,7 +28,7 @@ public class Drop {
 	}
 	
 	public Drop(Item item) {
-		this(item.shiftedIndex);
+		this(item.itemID);
 	}
 
 	public Drop(int id, int chance) {
@@ -109,7 +109,7 @@ public class Drop {
 	public String toString() {
 		if (drop==null) return "[XieDrop] null";
 		
-		String r = "[XieDrop] "+drop.getItem().getItemName()+" chance=";
+		String r = "[XieDrop] "+drop.getItem().getUnlocalizedName()+" chance=";
 		if (simple) r+=metaChance[0]+" ";
 		else for (int c : metaChance) r+=c+" ";
 		

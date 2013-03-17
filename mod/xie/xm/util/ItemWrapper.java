@@ -32,7 +32,7 @@ public class ItemWrapper implements Comparable {
 	}
 	
 	public ItemWrapper(Item i) {
-		this(i.shiftedIndex);
+		this(i.itemID);
 	}
 	
 	public ItemWrapper(Block b) {
@@ -48,7 +48,7 @@ public class ItemWrapper implements Comparable {
 			id=b.blockID;
 		} else if (object instanceof Item) {
 			Item i = (Item)object;
-			id=i.shiftedIndex;
+			id=i.itemID;
 		} else if (object instanceof ItemStack) {
 			ItemStack is = (ItemStack)object;
 			id=is.itemID;
@@ -88,8 +88,8 @@ public class ItemWrapper implements Comparable {
 		else return id==other.itemID;
 	}
 
-	public String getItemName() {
-		if (exists()) return Item.itemsList[id].getItemName();
+	public String getUnlocalizedName() {
+		if (exists()) return Item.itemsList[id].getUnlocalizedName();
 		else return "null";
 	}
 
@@ -107,7 +107,7 @@ public class ItemWrapper implements Comparable {
 	
 	@Override
 	public String toString() {
-		String s = getItemName();
+		String s = getUnlocalizedName();
 		if (hasMeta()) s+=":"+count+":"+meta;
 		else if (count>1) s+="*"+count;
 		return s;

@@ -19,6 +19,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Icon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -30,15 +31,14 @@ public class XieBlockLog extends BlockLog implements IXieBlock {
 	
 	public XieBlockLog(String name, int i) {
 		super(i);
-		blockIndexInTexture = Block.wood.blockIndexInTexture;
 		Xie.setFlammability(i, 5,5);
-		setBlockName(name);
+		setUnlocalizedName(name);
 		setHardness(2.0F);
 		setToolEffectiveness();
 	}
 	
 	@Override
-    public int getBlockTextureFromSideAndMetadata(int i, int j) {
+    public Icon getBlockTextureFromSideAndMetadata(int i, int j) {
         if (tex==null) return Block.wood.getBlockTextureFromSideAndMetadata(i, j);
         else return tex.getTexFromSideAndMeta(i, j);
     }
@@ -250,7 +250,7 @@ public class XieBlockLog extends BlockLog implements IXieBlock {
 	@Override
 	public String getBlockNameIS(ItemStack itemstack) {
 		int i = itemstack.getItemDamage();
-		if (names==null || names.length <= i) return getBlockName();
+		if (names==null || names.length <= i) return getUnlocalizedName();
 		else return names[i];
 	}
 

@@ -16,6 +16,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Icon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -27,12 +28,12 @@ import java.util.Random;
 public class XieBlockPane extends BlockPane implements IXieBlock {
 
 	public XieBlockPane(String n, int id, Material mat) {
-		super(id, Block.thinGlass.blockIndexInTexture, Block.thinGlass.blockIndexInTexture, mat, false);
-		setBlockName(n);
+		super(id, "glass", "thinglass_top", mat, false);
+		setUnlocalizedName(n);
 	}
 	
 	@Override
-	public void addCollidingBlockToList(World world, int i, int j, int k, AxisAlignedBB axisalignedbb, List list, Entity entity) {
+	public void addCollisionBoxesToList(World world, int i, int j, int k, AxisAlignedBB axisalignedbb, List list, Entity entity) {
         boolean flag = snapTo(world.getBlockId(i, j, k - 1));
         boolean flag1 = snapTo(world.getBlockId(i, j, k + 1));
         boolean flag2 = snapTo(world.getBlockId(i - 1, j, k));
@@ -40,32 +41,32 @@ public class XieBlockPane extends BlockPane implements IXieBlock {
         if (flag2 && flag3 || !flag2 && !flag3 && !flag && !flag1)
         {
             setBlockBounds(0.0F, 0.0F, 0.4375F, 1.0F, 1.0F, 0.5625F);
-            super.addCollidingBlockToList(world, i, j, k, axisalignedbb, list, entity);
+            super.addCollisionBoxesToList(world, i, j, k, axisalignedbb, list, entity);
         }
         else if (flag2 && !flag3)
         {
             setBlockBounds(0.0F, 0.0F, 0.4375F, 0.5F, 1.0F, 0.5625F);
-            super.addCollidingBlockToList(world, i, j, k, axisalignedbb, list, entity);
+            super.addCollisionBoxesToList(world, i, j, k, axisalignedbb, list, entity);
         }
         else if (!flag2 && flag3)
         {
             setBlockBounds(0.5F, 0.0F, 0.4375F, 1.0F, 1.0F, 0.5625F);
-            super.addCollidingBlockToList(world, i, j, k, axisalignedbb, list, entity);
+            super.addCollisionBoxesToList(world, i, j, k, axisalignedbb, list, entity);
         }
         if (flag && flag1 || !flag2 && !flag3 && !flag && !flag1)
         {
             setBlockBounds(0.4375F, 0.0F, 0.0F, 0.5625F, 1.0F, 1.0F);
-            super.addCollidingBlockToList(world, i, j, k, axisalignedbb, list, entity);
+            super.addCollisionBoxesToList(world, i, j, k, axisalignedbb, list, entity);
         }
         else if (flag && !flag1)
         {
             setBlockBounds(0.4375F, 0.0F, 0.0F, 0.5625F, 1.0F, 0.5F);
-            super.addCollidingBlockToList(world, i, j, k, axisalignedbb, list, entity);
+            super.addCollisionBoxesToList(world, i, j, k, axisalignedbb, list, entity);
         }
         else if (!flag && flag1)
         {
             setBlockBounds(0.4375F, 0.0F, 0.5F, 0.5625F, 1.0F, 1.0F);
-            super.addCollidingBlockToList(world, i, j, k, axisalignedbb, list, entity);
+            super.addCollisionBoxesToList(world, i, j, k, axisalignedbb, list, entity);
         }
     }
 	
@@ -101,7 +102,7 @@ public class XieBlockPane extends BlockPane implements IXieBlock {
         return Block.opaqueCubeLookup[i] || i == blockID || i == Block.thinGlass.blockID || i == Block.glass.blockID;
     }
     
-    public int getSideTextureIndex() {
+    public Icon getSideTextureIndex() {
         return tex.getTexFromSide(XieTex.EAST);
     }
 	
@@ -200,15 +201,10 @@ public class XieBlockPane extends BlockPane implements IXieBlock {
     	isDefaultTexture=t.getTexFile()==null;
     	tex=t;
     }
-    
-    @Override
-	public int getBlockTextureFromSide(int i) {
-    	return getBlockTextureFromSideAndMetadata(i,0);
-    }
  
 	// texture IDs, tex[side][meta]
     @Override
-	public int getBlockTextureFromSideAndMetadata(int i, int j) {
+	public Icon getBlockTextureFromSideAndMetadata(int i, int j) {
     	return tex.getTexFromSideAndMeta(i, j);
     }
     
@@ -228,8 +224,8 @@ public class XieBlockPane extends BlockPane implements IXieBlock {
 	public void onBlockDestroyedByPlayer(World world, int i, int j, int k, int l) {
     	if (becomesWhenDestroyed!=null) {
     		if (becomesWhenDestroyed.length>1)
-    			world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
-    		else world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], l);
+    			world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1],2);
+    		else world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], l,2);
     	}
     }
     
@@ -294,7 +290,7 @@ public class XieBlockPane extends BlockPane implements IXieBlock {
 	@Override
 	public String getBlockNameIS(ItemStack itemstack) {
 		int i = itemstack.getItemDamage();
-		if (names==null || names.length <= i) return getBlockName();
+		if (names==null || names.length <= i) return getUnlocalizedName();
 		else return names[i];
 	}
 

@@ -37,7 +37,7 @@ public class XieBlockLeaves extends BlockLeaves implements IXieBlock {
     public enum Shape { OAK, TALL, CONIFER, BIRCH };
     
 	public XieBlockLeaves(String name, int leafID) {
-		super(leafID, Block.leaves.blockIndexInTexture);
+		super(leafID);
 		
 		setLightOpacity(1);
 		disableStats();
@@ -46,7 +46,7 @@ public class XieBlockLeaves extends BlockLeaves implements IXieBlock {
 		setGraphicsLevel(true);
 		renderType=0;
 		trunkID = Block.wood.blockID;
-		setBlockName(name);
+		setUnlocalizedName(name);
 		setStepSound(Block.soundGrassFootstep);
 		setHardness(0.2F);
     }
@@ -213,7 +213,8 @@ public class XieBlockLeaves extends BlockLeaves implements IXieBlock {
             }
             int j2 = adjacentTreeBlocks[k1 * j1 + k1 * size + k1];
             if(j2 >= 0) {
-            	world.setBlockMetadata(i, j, k, meta & -9);
+            	// TODO not actually sure what this last parameter does :P
+            	world.setBlockMetadataWithNotify(i, j, k, meta & -9, 2);
             } else {
             	removeLeaves(world, i, j, k);
             }
@@ -482,7 +483,7 @@ public class XieBlockLeaves extends BlockLeaves implements IXieBlock {
 	@Override
 	public String getBlockNameIS(ItemStack itemstack) {
 		int i = itemstack.getItemDamage();
-		if (names==null || names.length <= i) return getBlockName();
+		if (names==null || names.length <= i) return getUnlocalizedName();
 		else return names[i];
 	}
 

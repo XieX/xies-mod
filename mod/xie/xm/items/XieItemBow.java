@@ -39,7 +39,7 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
 	public XieItemBow(String name, int id, int index) {
 		super(id - Xie.idShift);
         setIconIndex(index);
-        setItemName(name);
+        setUnlocalizedName(name);
         
         ammunition = new LinkedList<Item>();
         ammunition.add(Item.arrow);
@@ -99,7 +99,7 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
 		if (ammunition.isEmpty()) return false;
 		
 		for (Item i : ammunition) {
-			if (player.inventory.hasItem(i.shiftedIndex)) return true;
+			if (player.inventory.hasItem(i.itemID)) return true;
 		}
 		
 		return false;
@@ -109,7 +109,7 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
 		if (ammunition.isEmpty()) return Item.arrow;
 		
 		for (Item i : ammunition) {
-			if (player.inventory.hasItem(i.shiftedIndex)) return i;
+			if (player.inventory.hasItem(i.itemID)) return i;
 		}
 		
 		return ammunition.get(0);
@@ -159,7 +159,7 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
             world.playSoundAtEntity(player, "random.bow", 1.0F, 1.0F / (itemRand.nextFloat() * 0.4F + 1.2F) + force * 0.5F);
 
             if (!freeFire) {
-                player.inventory.consumeInventoryItem(ammo.shiftedIndex);
+                player.inventory.consumeInventoryItem(ammo.itemID);
                 if (ammoConsumed) entityarrow.canBePickedUp = 0;
             } else {
                 entityarrow.canBePickedUp = 0;
@@ -223,14 +223,14 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
 	}
 	
 	public String getSubName(int damage) {
-		if (names==null) return super.getItemName();
-		if (damage>=names.length) return super.getItemName();
+		if (names==null) return super.getUnlocalizedName();
+		if (damage>=names.length) return super.getUnlocalizedName();
 		return names[damage];
 	}
 	
 	public String getItemNameIS(ItemStack itemstack) {
-		if (names==null) return super.getItemName();
-		else return (new StringBuilder()).append(super.getItemName()).append(".").append(getSubName(itemstack.getItemDamage())).toString();
+		if (names==null) return super.getUnlocalizedName();
+		else return (new StringBuilder()).append(super.getUnlocalizedName()).append(".").append(getSubName(itemstack.getItemDamage())).toString();
 	}
 	
 	@Override

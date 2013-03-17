@@ -17,14 +17,13 @@ public class ClientProxy extends XieProxy {
 	}
 	
 	@Override
+	@Deprecated
 	public boolean validateImageFile(String s) {
-		Minecraft mc = ModLoader.getMinecraftInstance();
-		TexturePackList texturepacklist = ModLoader.getMinecraftInstance().texturePackList;
-		InputStream inputstream = texturepacklist.getSelectedTexturePack().getResourceAsStream(s);
-        return (inputstream != null);
+		return true;
 	}
 
 	@Override
+	@Deprecated
 	public int addOverride(String type, String path) {
 		return ModLoader.addOverride(type,path);
 	}

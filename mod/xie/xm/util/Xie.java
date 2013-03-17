@@ -41,7 +41,6 @@ import net.minecraft.item.ItemTool;
 import net.minecraft.potion.Potion;
 import net.minecraft.src.BaseMod;
 import net.minecraft.src.ModLoader;
-import net.minecraft.src.ModTextureStatic;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
@@ -98,9 +97,9 @@ public class Xie {
 		
 		for (int i=0; i<Block.blocksList.length; i++) {
 			if (Block.blocksList[i]==null) continue;
-			if (Block.blocksList[i].getBlockName()==null) continue;
-			if (Block.blocksList[i].getBlockName().equals(string)) return Block.blocksList[i];
-			String test = cleanName(Block.blocksList[i].getBlockName());
+			if (Block.blocksList[i].getUnlocalizedName()==null) continue;
+			if (Block.blocksList[i].getUnlocalizedName().equals(string)) return Block.blocksList[i];
+			String test = cleanName(Block.blocksList[i].getUnlocalizedName());
 			if (test.equals(string)) {
 				return Block.blocksList[i];
 			}
@@ -190,7 +189,7 @@ public class Xie {
 	
 	public static int parseItemID(String string) {
 		Item it = parseItem(string);
-		if (it!=null) return it.shiftedIndex;
+		if (it!=null) return it.itemID;
 		else return -1;
 	}
 	
@@ -217,9 +216,9 @@ public class Xie {
 		for (int i=0; i<Item.itemsList.length; i++) {
 			if (Item.itemsList[i]==null) continue;
 			try {
-				if (Item.itemsList[i].getItemName()==null) continue;
-				if (Item.itemsList[i].getItemName().equals(string)) return Item.itemsList[i];
-				String test = cleanName(Item.itemsList[i].getItemName());
+				if (Item.itemsList[i].getUnlocalizedName()==null) continue;
+				if (Item.itemsList[i].getUnlocalizedName().equals(string)) return Item.itemsList[i];
+				String test = cleanName(Item.itemsList[i].getUnlocalizedName());
 				if (test.equals(string)) {
 					return Item.itemsList[i];
 				}
@@ -422,7 +421,7 @@ public class Xie {
 		if (b!=null) return b.blockID;
 
 		Item it = parseItem(string);
-		if (it!=null) return it.shiftedIndex;
+		if (it!=null) return it.itemID;
 		
 		return -1;		
 	}
@@ -597,7 +596,7 @@ public class Xie {
 			// reroute pointer to new array
 			field.set(o, newEffectiveAgainst);
 		} catch (Exception e) {
-			System.out.println("Exception setting tool effectiveness for "+block.getBlockName());
+			System.out.println("Exception setting tool effectiveness for "+block.getUnlocalizedName());
 			e.printStackTrace();
 		}
 	}
@@ -724,7 +723,7 @@ public class Xie {
 	
 	public static void setDecayFlag(World world, int i, int j, int k) {
 		int meta = world.getBlockMetadata(i, j, k);
-        if(!isDecayFlagSet(meta)) world.setBlockMetadata(i, j, k, meta | 8);
+        if(!isDecayFlagSet(meta)) setBlockMeta(world, i, j, k, meta | 8);
 	}
 
 	public static boolean isDecayFlagSet(int meta) {
@@ -733,7 +732,7 @@ public class Xie {
 	
 	public static void unsetDecayFlag(World world, int i, int j, int k) {
 		int meta = world.getBlockMetadata(i, j, k);
-        if(isDecayFlagSet(meta)) world.setBlockMetadata(i, j, k, meta & -9);
+        if(isDecayFlagSet(meta)) setBlockMeta(world, i, j, k, meta & -9);
 	}
 	
 	private static final float mag = 0.7f;
@@ -771,7 +770,7 @@ public class Xie {
 		List<EntityItem> itemEntities = world.getEntitiesWithinAABB(EntityItem.class, AxisAlignedBB.getBoundingBox(i-d,j-d,k-d,i+d,j+d,k+d));
 		for (EntityItem e : itemEntities) 
 			for (ItemStack is : items) {
-				ItemStack it = e.func_92014_d();
+				ItemStack it = e.getEntityItem();
 				if (it!=null && it.itemID == is.itemID 
 					&& it.getItemDamage() == is.getItemDamage()) count++;
 			}
@@ -779,20 +778,20 @@ public class Xie {
 	}
 	
 	// wrapper methods
-	public static void setBlock(World world, int x, int y, int z, int id) {
-		if (id<0) return;
-		world.setBlockWithNotify(x, y, z, id);
-		world.markBlockForRenderUpdate(x, y, z);
-	}
+//	public static void setBlock(World world, int x, int y, int z, int id) {
+//		if (id<0) return;
+//		world.setBlockWithNotify(x, y, z, id, 2);
+//		world.markBlockForRenderUpdate(x, y, z);
+//	}
 	
 	public static void setBlockAndMeta(World world, int x, int y, int z, int id, int m) {
 		if (id<0) return;
-		world.setBlockAndMetadataWithNotify(x, y, z, id, m);
+		world.setBlockAndMetadataWithNotify(x, y, z, id, m, 2);
 		world.markBlockForRenderUpdate(x, y, z);
 	}
 	
 	public static void setBlockMeta(World world, int x, int y, int z, int m) {
-		world.setBlockMetadataWithNotify(x, y, z, m);
+		world.setBlockMetadataWithNotify(x, y, z, m, 2);
 		world.markBlockForRenderUpdate(x, y, z);
 	}
 	
