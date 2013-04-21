@@ -18,6 +18,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 
 import mod.xie.xm.Work;
 import mod.xie.xm.XiesMod;
+import mod.xie.xm.blocks.BlockSide;
 import mod.xie.xm.blocks.IXieBlock;
 import mod.xie.xm.blocks.XieBlockPlant;
 import mod.xie.xm.blocks.XieChestRenderer;
@@ -234,8 +235,12 @@ public class Xie {
 		return null;
 	}
 	
+	// TODO FTFESAD strongly consider deleting
+	@Deprecated
 	public static int parseSide(String string) {
-		return XieTex.getSide(string);
+		BlockSide side = BlockSide.parse(string);
+		if (side!=null) return side.ordinal();
+		else return -4;
 	}
 	
 	// removes the "tile." or "item." from a name if present
@@ -781,11 +786,10 @@ public class Xie {
 	}
 	
 	// wrapper methods
-//	public static void setBlock(World world, int x, int y, int z, int id) {
-//		if (id<0) return;
-//		world.setBlockWithNotify(x, y, z, id, 2);
-//		world.markBlockForRenderUpdate(x, y, z);
-//	}
+	public static void setBlock(World world, int x, int y, int z, int id) {
+		if (id<0) return;
+		setBlockAndMeta(world, x, y, z, id, 0);
+	}
 	
 	public static void setBlockAndMeta(World world, int x, int y, int z, int id, int m) {
 		if (id<0) return;
@@ -831,10 +835,9 @@ public class Xie {
     	return XieFuelManager.getItemBurnTime(new ItemStack(id, 1, meta));
     }
     
+    @Deprecated
 	public static String textureWrapper(IXieBlock block) {
-		if (block.getTex()==null) return "/terrain.png";
-		if (block.getTex().getTexFile()==null) return "/terrain.png";
-		else return block.getTex().getTexFile();
+		return "";
 	}
 	
 	public static String textureWrapper(XieItemInterface item) {

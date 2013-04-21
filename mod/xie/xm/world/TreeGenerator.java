@@ -54,7 +54,7 @@ public class TreeGenerator {
         if(!flag) return false;
         
         int j1 = world.getBlockId(i, j - 1, k);
-        if (j1==Block.grass.leaves.blockID) world.setBlock(i, j - 1, k, Block.dirt.leaves.blockID);
+        if (j1==Block.grass.leaves.blockID) Xie.setBlock(world, i, j - 1, k, Block.dirt.leaves.blockID);
         for(int k1 = (j - 3) + l; k1 <= j + l; k1++) {
             int j2 = k1 - (j + l);
             int i3 = 1 - j2 / 2;
@@ -122,7 +122,7 @@ public class TreeGenerator {
         if(i2 != Block.grass.leaves.blockID && i2 != Block.dirt.leaves.blockID || j >= world.getHeight() - l - 1) {
             return false;
         }
-        world.setBlock(i, j - 1, k, Block.dirt.leaves.blockID);
+        Xie.setBlock(world, i, j - 1, k, Block.dirt.leaves.blockID);
         int k2 = random.nextInt(2);
         int i3 = 1;
         boolean flag1 = false;
@@ -197,7 +197,7 @@ public class TreeGenerator {
         if(i2 != Block.grass.leaves.blockID && i2 != Block.dirt.leaves.blockID || j >= world.getHeight() - l - 1) {
             return false;
         }
-        world.setBlock(i, j - 1, k, Block.dirt.leaves.blockID);
+        Xie.setBlock(world, i, j - 1, k, Block.dirt.leaves.blockID);
         int k2 = 0;
         for(int i3 = j + l; i3 >= j + i1; i3--)
         {

@@ -425,7 +425,6 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
     
     @Override
 	public void setTex(XieTex t) {
-    	isDefaultTexture=t.getTexFile()==null;
     	tex=t;
     }
  
@@ -534,11 +533,6 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 
 	@Override
 	public String[] getNames() { return names; }
-	
-	@Override
-	public String getTextureFile() {
-		return Xie.textureWrapper(this);
-	}
 
 	@Override
 	public void setBecomesWhenDestroyed(int[] bwd) {

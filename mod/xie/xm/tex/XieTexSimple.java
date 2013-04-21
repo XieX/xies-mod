@@ -3,12 +3,13 @@ package mod.xie.xm.tex;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.util.Icon;
 
-public class XieTexSimple implements XieTex {
+public class XieTexSimple extends XieTex {
 
 	private Icon texture;
 	
 	public XieTexSimple(IconRegister register, String string) {
-		texture = register.func_94245_a(string);
+		super(register);
+		texture = register(string);
 	}
 
 	@Override

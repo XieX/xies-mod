@@ -5,11 +5,12 @@ import java.util.LinkedList;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.util.Icon;
 
-public class XieTexComplex implements XieTex {
+public class XieTexComplex extends XieTex {
 
 	// TODO FTFESAD
 	
 	public XieTexComplex(IconRegister register, String [] textureNames) {
+		super(register);
 		// TODO Auto-generated constructor stub
 	}
 
