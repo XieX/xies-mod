@@ -14,5 +14,8 @@ public enum XieTexType {
 	META_VARIABLE,
 	
 	// Different textures for sides and metavalues [blocks only] (e.g. .... no vanilla example :P)
-	COMPLEX
+	COMPLEX,
+	
+	// Just a wrapper that links up to another block or item
+	LINK
 }

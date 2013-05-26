@@ -3,6 +3,7 @@ package mod.xie.xm.blocks;
 import java.util.List;
 import java.util.Random;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
 import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
@@ -11,6 +12,7 @@ import mod.xie.xm.util.Xie;
 import net.minecraft.block.Block;
 import net.minecraft.block.StepSound;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -122,15 +124,10 @@ public class XieBlock extends Block implements IXieBlock {
 	public XieTex getTex() {
     	return tex;
     }
-    
-    @Override
-	public void setTex(XieTex t) {
-    	tex=t;
-    }
  
 	// texture IDs, tex[side][meta]
     @Override
-	public Icon getBlockTextureFromSideAndMetadata(int i, int j) {
+	public Icon getIcon(int i, int j) {
     	return tex.getTexFromSideAndMeta(i, j);
     }
     
@@ -283,5 +280,10 @@ public class XieBlock extends Block implements IXieBlock {
 	public Object getGuiElement(EntityPlayer player, World world, int i, int j, int k) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		tex = AutomagicTextureFactory.get(registrar, getUnlocalizedName2());
 	}
 }

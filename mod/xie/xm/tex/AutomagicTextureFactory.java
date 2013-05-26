@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.regex.Pattern;
 
 import mod.xie.xm.Regexie;
+import mod.xie.xm.file.PathManager;
 import mod.xie.xm.file.XieLog;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IconRegister;
@@ -14,6 +15,8 @@ import net.minecraft.util.Icon;
 
 public class AutomagicTextureFactory {
 
+	private static final String XIE = "Xie";
+	
 	public AutomagicTextureFactory() {
 		
 	}
@@ -23,6 +26,10 @@ public class AutomagicTextureFactory {
 	public static AutomagicTextureFactory getInstance() {
 		if (instance==null) instance = new AutomagicTextureFactory();
 		return instance;
+	}
+	
+	public static XieTex get(IconRegister register, String name) {
+		return get(register,name,XIE);
 	}
 	
 	public static XieTex get(IconRegister register, String name, String path) {
@@ -81,6 +88,7 @@ public class AutomagicTextureFactory {
 	}
 	
 	private String [] getTextureFileNames(String name, String path) {
+		path = PathManager.get().modsDir().toPath()+path;
 		String[] filenames = new File(path).list(new TextureFileFilter(name));
 		
 		if (filenames == null) {

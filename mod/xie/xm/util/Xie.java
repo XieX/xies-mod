@@ -46,7 +46,9 @@ import net.minecraft.src.BaseMod;
 import net.minecraft.src.ModLoader;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.WeightedRandomChestContent;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ChestGenHooks;
 import net.minecraftforge.common.DungeonHooks;
 import net.minecraftforge.common.EnumPlantType;
 import net.minecraftforge.common.ForgeDirection;
@@ -612,7 +614,7 @@ public class Xie {
 	public static void setPickaxeEffectiveness(Block block) {
 		setToolEffectiveness(ItemTool.class,Item.pickaxeWood,block);
 		setToolEffectiveness(ItemTool.class,Item.pickaxeStone,block);
-		setToolEffectiveness(ItemTool.class,Item.pickaxeSteel,block);
+		setToolEffectiveness(ItemTool.class,Item.pickaxeIron,block);
 		setToolEffectiveness(ItemTool.class,Item.pickaxeDiamond,block);
 		setToolEffectiveness(ItemTool.class,Item.pickaxeGold,block);
 	}
@@ -620,7 +622,7 @@ public class Xie {
 	public static void setAxeEffectiveness(Block block) {
 		setToolEffectiveness(ItemTool.class,Item.axeWood,block);
 		setToolEffectiveness(ItemTool.class,Item.axeStone,block);
-		setToolEffectiveness(ItemTool.class,Item.axeSteel,block);
+		setToolEffectiveness(ItemTool.class,Item.axeIron,block);
 		setToolEffectiveness(ItemTool.class,Item.axeDiamond,block);
 		setToolEffectiveness(ItemTool.class,Item.axeGold,block);
 	}
@@ -628,7 +630,7 @@ public class Xie {
 	public static void setShovelEffectiveness(Block block) {
 		setToolEffectiveness(ItemTool.class,Item.shovelWood,block);
 		setToolEffectiveness(ItemTool.class,Item.shovelStone,block);
-		setToolEffectiveness(ItemTool.class,Item.shovelSteel,block);
+		setToolEffectiveness(ItemTool.class,Item.shovelIron,block);
 		setToolEffectiveness(ItemTool.class,Item.shovelDiamond,block);
 		setToolEffectiveness(ItemTool.class,Item.shovelGold,block);
 	}
@@ -793,8 +795,9 @@ public class Xie {
 	
 	public static void setBlockAndMeta(World world, int x, int y, int z, int id, int m) {
 		if (id<0) return;
-		world.setBlockAndMetadataWithNotify(x, y, z, id, m, 2);
-		world.markBlockForRenderUpdate(x, y, z);
+		world.setBlock(x, y, z, id, m, 2);
+//		TODO check, but I think this is redundant, with the above flag (2)
+//		world.markBlockForRenderUpdate(x, y, z);
 	}
 	
 	public static void setBlockMeta(World world, int x, int y, int z, int m) {
@@ -893,8 +896,9 @@ public class Xie {
 		BonemealHandler.add(plant);
 	}
 
+	// TODO this needs to be tested and expanded
 	public static void addDungeonLoot(DungeonLootHelper l) {
-		DungeonHooks.addDungeonLoot(l.itemstack, l.rarity, l.min, l.max);
+		ChestGenHooks.getInfo(ChestGenHooks.DUNGEON_CHEST).addItem(new WeightedRandomChestContent(l.itemstack, l.rarity, l.min, l.max));
 	}
 
 	public static void addBlockDestroyEffects(int i, int j, int k, int bid, int l) {

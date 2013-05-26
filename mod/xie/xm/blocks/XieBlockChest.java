@@ -3,6 +3,7 @@ package mod.xie.xm.blocks;
 import java.util.List;
 import java.util.Random;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
 import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
@@ -10,6 +11,7 @@ import mod.xie.xm.util.Xie;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockChest;
 import net.minecraft.block.StepSound;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
@@ -423,14 +425,9 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
     	return tex;
     }
     
-    @Override
-	public void setTex(XieTex t) {
-    	tex=t;
-    }
- 
 	// texture IDs, tex[side][meta]
     @Override
-	public Icon getBlockTextureFromSideAndMetadata(int i, int j) {
+	public Icon getIcon(int i, int j) {
     	return tex.getTexFromSideAndMeta(i, j);
     }
     
@@ -450,8 +447,8 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 	public void onBlockDestroyedByPlayer(World world, int i, int j, int k, int l) {
     	if (becomesWhenDestroyed!=null) {
     		if (becomesWhenDestroyed.length>1)
-    			world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1], 2);
-    		else world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], l, 2);
+    			Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
+    		else Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], l);
     	}
     }
     
@@ -569,5 +566,10 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 	public Object getGuiElement(EntityPlayer player, World world, int i, int j, int k) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		tex = AutomagicTextureFactory.get(registrar, getUnlocalizedName2());
 	}
 }

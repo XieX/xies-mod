@@ -18,7 +18,6 @@ public interface IXieBlock {
 	void setRenderType(int r);
 	void addDrop(Drop drop);    
 	XieTex getTex();
-    void setTex(XieTex t);
     Block setStepSound(StepSound stepsound);
     Block setHardness(float f);
     String getUnlocalizedName();

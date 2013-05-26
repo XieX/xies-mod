@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
 import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
@@ -12,12 +13,14 @@ import mod.xie.xm.util.Xie;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockCrops;
 import net.minecraft.block.StepSound;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Icon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -94,7 +97,7 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
         if(!canBlockStay(world, i, j, k))
         {
             dropBlockAsItem(world, i, j, k, world.getBlockMetadata(i, j, k),0);
-            world.setBlockWithNotify(i, j, k, 0); // TODO implement "growing in" other blocks, replace 0 here with growsIn blockID
+            Xie.setBlock(world, i, j, k, 0); // TODO implement "growing in" other blocks, replace 0 here with growsIn blockID
         }
     }
     
@@ -102,7 +105,7 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
     public void onNeighborBlockChange(World world, int i, int j, int k, int l) {
     	if (!canBlockStay(world, i, j, k)) {
     		dropBlockAsItem(world, i, j, k, world.getBlockMetadata(i, j, k), 0);
-            world.setBlockWithNotify(i, j, k, 0);
+            Xie.setBlock(world, i, j, k, 0);
     	}
     }
 
@@ -228,13 +231,13 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 	}
 	
     @Override
-    public void onBlockPlacedBy(World world, int i, int j, int k, EntityLiving entityliving) {
+    public void onBlockPlacedBy(World world, int i, int j, int k, EntityLiving entityliving, ItemStack blockItem) {
     	if (world.isRemote) return;
     	
     	setBlockBoundsBasedOnState(world,i,j,k);
     	
     	if (!isVineLike) {
-    		super.onBlockPlacedBy(world, i, j, k, entityliving);
+    		super.onBlockPlacedBy(world, i, j, k, entityliving, blockItem);
     		return;
     	}
     	
@@ -272,7 +275,7 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 		   world.setBlock(i, j, k, 0);
 		   if (!((XieBlockLeaves) Block.blocksList[growsInto]).generate(world, i, j, k, meta, false)) {
 			  // failed to grow tree, replace sapling
-			   world.setBlockAndMetadata(i, j, k, blockID, meta);
+			   Xie.setBlockAndMeta(world, i, j, k, blockID, meta);
 		   }
 	   } else {
 		   Xie.setBlockAndMeta(world, i, j, k, growsInto, meta);
@@ -430,21 +433,10 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 	public XieTex getTex() {
     	return tex;
     }
-    
-    @Override
-	public void setTex(XieTex t) {
-    	isDefaultTexture=t.getTexFile()==null;
-    	tex=t;
-    }
-    
-    @Override
-	public int getBlockTextureFromSide(int i) {
-    	return getBlockTextureFromSideAndMetadata(i,0);
-    }
  
 	// texture IDs, tex[side][meta]
     @Override
-	public int getBlockTextureFromSideAndMetadata(int i, int j) {
+	public Icon getIcon(int i, int j) {
     	return tex.getTexFromSideAndMeta(i, j);
     }
     
@@ -464,8 +456,8 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 	public void onBlockDestroyedByPlayer(World world, int i, int j, int k, int l) {
     	if (becomesWhenDestroyed!=null) {
     		if (becomesWhenDestroyed.length>1)
-    			world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
-    		else world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], l);
+    			Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
+    		else Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], l);
     	}
     }
     
@@ -543,11 +535,6 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 	public String[] getNames() { return names; }
 
 	@Override
-	public String getTextureFile() {
-		return Xie.textureWrapper(this);
-	}
-
-	@Override
 	public void setBecomesWhenDestroyed(int[] bwd) {
 		becomesWhenDestroyed=bwd;
 	} 
@@ -582,5 +569,10 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 	public Object getGuiElement(EntityPlayer player, World world, int i, int j, int k) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		tex = AutomagicTextureFactory.get(registrar, getUnlocalizedName2());
 	}
 }

@@ -2,12 +2,15 @@ package mod.xie.xm.items;
 
 import java.util.LinkedList;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.ItemWrapper;
 import mod.xie.xm.util.Xie;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -18,6 +21,7 @@ import net.minecraft.item.ItemBow;
 import net.minecraft.item.ItemSeeds;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
+import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 import java.util.List;
 
@@ -36,9 +40,8 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
 	
 	protected int enchantability;
 	
-	public XieItemBow(String name, int id, int index) {
+	public XieItemBow(String name, int id) {
 		super(id - Xie.idShift);
-        setIconIndex(index);
         setUnlocalizedName(name);
         
         ammunition = new LinkedList<Item>();
@@ -187,7 +190,6 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
     
 	// XieItemInterface fields and methods
 	
-	protected int icon[];
 	protected String names[];
 	protected Droppables drops;
 	
@@ -205,17 +207,11 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
 	@Override
 	public void setNames(String n[]) { names=n; }
 	
-    public int getIconFromDamage(int i)
-    {
-    	if (icon==null) return iconIndex;
-    	
-        if (icon.length>1 && i<icon.length) {
-        	return icon[i];
-        } else return icon[0];
+	protected XieTex icon;
+	@Override
+    public Icon getIconFromDamage(int i) {
+		return icon.getIconFromDamage(i);
     }
-    
-    @Override
-	public void setIcons(int i[]) { icon=i; }
 	
 	@Override
 	public Item setHasSubtypes(boolean b) {
@@ -250,4 +246,9 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
 	public String getTextureFile() {
 		return Xie.textureWrapper(this);
 	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		icon = AutomagicTextureFactory.get(registrar, getUnlocalizedName().replace("item.", ""));
+	} 
 }

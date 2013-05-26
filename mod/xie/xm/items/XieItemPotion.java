@@ -1,11 +1,14 @@
 package mod.xie.xm.items;
 
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.Xie;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumToolMaterial;
@@ -14,18 +17,17 @@ import net.minecraft.item.ItemPotion;
 import net.minecraft.item.ItemSeeds;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
+import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 
 
 public class XieItemPotion extends ItemPotion implements XieItemInterface {
-	protected int icon[];
 	protected String names[];
 	protected Droppables drops;
 	
-    public XieItemPotion(String name, int i, int j) {
+    public XieItemPotion(String name, int i) {
         super(i-Xie.idShift);
-        setIconIndex(j);
-        setItemName(name);
+        setUnlocalizedName(name);
     }
 	
 	// copy-pasta from XieItem
@@ -43,17 +45,11 @@ public class XieItemPotion extends ItemPotion implements XieItemInterface {
 	@Override
 	public void setNames(String n[]) { names=n; }
 	
-    public int getIconFromDamage(int i)
-    {
-    	if (icon==null) return iconIndex;
-    	
-        if (icon.length>1 && i<icon.length) {
-        	return icon[i];
-        } else return icon[0];
+	protected XieTex icon;
+	@Override
+    public Icon getIconFromDamage(int i) {
+		return icon.getIconFromDamage(i);
     }
-    
-    @Override
-	public void setIcons(int i[]) { icon=i; }
 	
 	@Override
 	public Item setHasSubtypes(boolean b) {
@@ -87,5 +83,10 @@ public class XieItemPotion extends ItemPotion implements XieItemInterface {
 	@Override
 	public String getTextureFile() {
 		return Xie.textureWrapper(this);
+	} 
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		icon = AutomagicTextureFactory.get(registrar, getUnlocalizedName().replace("item.", ""));
 	} 
 }

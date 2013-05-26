@@ -22,7 +22,7 @@ public abstract class XieTex {
 	}
 	
 	protected Icon register(String textureName) {
-		return iconRegister.func_94245_a(textureName);
+		return iconRegister.registerIcon(textureName);
 	}
 	
 	protected int parseMetavalue(String filename) {
@@ -40,5 +40,10 @@ public abstract class XieTex {
 		
 		String sideName = matcher.group(Regexie.GROUP_SIDE);
 		return BlockSide.parse(sideName);
+	}
+	
+	// wrapper
+	public Icon getIcon(int i, int j) {
+		return getTexFromSideAndMeta(i,j);
 	}
 }

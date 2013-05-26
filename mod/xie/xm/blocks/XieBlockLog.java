@@ -2,6 +2,7 @@ package mod.xie.xm.blocks;
 
 import java.util.List;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
 import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
@@ -23,6 +24,7 @@ import net.minecraft.util.Icon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import java.util.Random;
 
@@ -38,8 +40,8 @@ public class XieBlockLog extends BlockLog implements IXieBlock {
 	}
 	
 	@Override
-    public Icon getBlockTextureFromSideAndMetadata(int i, int j) {
-        if (tex==null) return Block.wood.getBlockTextureFromSideAndMetadata(i, j);
+    public Icon getIcon(int i, int j) {
+        if (tex==null) return Block.wood.getIcon(i, j);
         else return tex.getTexFromSideAndMeta(i, j);
     }
 	
@@ -48,7 +50,7 @@ public class XieBlockLog extends BlockLog implements IXieBlock {
 		Xie.setToolEffectiveness(ItemTool.class, Item.axeGold, this);
 		Xie.setToolEffectiveness(ItemTool.class, Item.axeWood, this);
 		Xie.setToolEffectiveness(ItemTool.class, Item.axeStone, this);
-		Xie.setToolEffectiveness(ItemTool.class, Item.axeSteel, this);
+		Xie.setToolEffectiveness(ItemTool.class, Item.axeIron, this);
 	}
 	
     @Override
@@ -151,17 +153,6 @@ public class XieBlockLog extends BlockLog implements IXieBlock {
     	return tex;
     }
     
-    @Override
-	public void setTex(XieTex t) {
-    	isDefaultTexture=t.getTexFile()==null;
-    	tex=t;
-    }
-    
-    @Override
-	public int getBlockTextureFromSide(int i) {
-    	return getBlockTextureFromSideAndMetadata(i,0);
-    }
-    
     // not really used
     @Override
 	public int quantityDropped(Random random) {
@@ -178,8 +169,8 @@ public class XieBlockLog extends BlockLog implements IXieBlock {
 	public void onBlockDestroyedByPlayer(World world, int i, int j, int k, int l) {
     	if (becomesWhenDestroyed!=null) {
     		if (becomesWhenDestroyed.length>1)
-    			world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
-    		else world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], l);
+    			Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
+    		else Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], l);
     	}
     }
     
@@ -261,11 +252,6 @@ public class XieBlockLog extends BlockLog implements IXieBlock {
 
 	@Override
 	public String[] getNames() { return names; }
-	
-	@Override
-	public String getTextureFile() {
-		return Xie.textureWrapper(this);
-	}
 
 	@Override
 	public void setBecomesWhenDestroyed(int[] bwd) {
@@ -302,6 +288,11 @@ public class XieBlockLog extends BlockLog implements IXieBlock {
 	public Object getGuiElement(EntityPlayer player, World world, int i, int j, int k) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		tex = AutomagicTextureFactory.get(registrar, getUnlocalizedName2());
 	}
 
 }

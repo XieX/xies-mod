@@ -13,6 +13,7 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemSeeds;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
+import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 
 public class XieItemBlock extends ItemBlock {
@@ -28,8 +29,9 @@ public class XieItemBlock extends ItemBlock {
 		setHasSubtypes(true);
 	}
 	
-	public int getIconFromDamage(int i) {
-        return block.getBlockTextureFromSideAndMetadata(2, i);
+	@Override
+	public Icon getIconFromDamage(int i) {
+        return block.getIcon(2, i);
     }
 
     public int getMetadata(int i) {

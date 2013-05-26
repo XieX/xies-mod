@@ -4,6 +4,7 @@ import java.util.List;
 
 import mod.xie.xm.Work;
 import mod.xie.xm.file.XieLog;
+import mod.xie.xm.util.Xie;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
@@ -28,8 +29,8 @@ public class XieItemBucket extends XieItem {
 	
 	public boolean canHold[];
 	
-	public XieItemBucket(String name, int i, int j) {
-		super(name, i, j);
+	public XieItemBucket(String name, int i) {
+		super(name, i);
 		names = new String[] {"Bucket", "Bucket of Water", "Bucket of Lava", "Bucket of Milk"};
 		canHold = new boolean[Contents.values().length];
 		for (int n=0; n<canHold.length; n++) canHold[n]=true;
@@ -90,14 +91,14 @@ public class XieItemBucket extends XieItem {
             
             if (world.getBlockMaterial(i, j, k) == Material.water && world.getBlockMetadata(i, j, k) == 0) {
             	if (!canHold[Contents.water.ordinal()]) return itemstack;
-                world.setBlockWithNotify(i, j, k, 0);
+                Xie.setBlock(world, i, j, k, 0);
                 if (entityplayer.capabilities.isCreativeMode) return itemstack;
                 else return getItemStack(Contents.water);
             }
             
             if (world.getBlockMaterial(i, j, k) == Material.lava && world.getBlockMetadata(i, j, k) == 0) {
             	if (!canHold[Contents.lava.ordinal()]) return itemstack;
-            	world.setBlockWithNotify(i, j, k, 0);
+            	Xie.setBlock(world, i, j, k, 0);
                 if (entityplayer.capabilities.isCreativeMode) return itemstack;
                 else return getItemStack(Contents.lava);
             }
@@ -115,7 +116,7 @@ public class XieItemBucket extends XieItem {
             if (world.isAirBlock(i, j, k) || !world.getBlockMaterial(i, j, k).isSolid()) {            
                 if (world.provider.isHellWorld && isWater(itemstack))
                 	doFizzle(world, x, y, z, i, j, k);
-                else world.setBlockAndMetadataWithNotify(i, j, k, getContentsBlock(itemstack).blockID, 0);
+                else Xie.setBlockAndMeta(world, i, j, k, getContentsBlock(itemstack).blockID, 0);
                 
                 if (entityplayer.capabilities.isCreativeMode) return itemstack;
                 else return getItemStack(Contents.empty);

@@ -2,11 +2,14 @@ package mod.xie.xm.items;
 
 import java.util.LinkedList;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.Xie;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,13 +18,12 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.item.ItemTool;
+import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 import java.util.List;
 
 
 public class XieItemSword extends ItemSword implements XieItemInterface {
-	
-	protected int icon[];
 	protected String names[];
 	protected Droppables drops;
 	
@@ -31,10 +33,9 @@ public class XieItemSword extends ItemSword implements XieItemInterface {
 	protected List<Block> canCut;
 	protected boolean canBlock;
 	
-	public XieItemSword(String name, int id, int index, EnumToolMaterial material) {
+	public XieItemSword(String name, int id, EnumToolMaterial material) {
 		super(id-Xie.idShift, material);
-        setIconIndex(index);
-        setItemName(name);
+        setUnlocalizedName(name);
         
 		canCut = new LinkedList<Block>();
 		canCut.add(Block.web);
@@ -122,17 +123,11 @@ public class XieItemSword extends ItemSword implements XieItemInterface {
 	@Override
 	public void setNames(String n[]) { names=n; }
 	
-    public int getIconFromDamage(int i)
-    {
-    	if (icon==null) return iconIndex;
-    	
-        if (icon.length>1 && i<icon.length) {
-        	return icon[i];
-        } else return icon[0];
+	protected XieTex icon;
+	@Override
+    public Icon getIconFromDamage(int i) {
+		return icon.getIconFromDamage(i);
     }
-    
-    @Override
-	public void setIcons(int i[]) { icon=i; }
 	
 	@Override
 	public Item setHasSubtypes(boolean b) {
@@ -167,4 +162,9 @@ public class XieItemSword extends ItemSword implements XieItemInterface {
 	public String getTextureFile() {
 		return Xie.textureWrapper(this);
 	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		icon = AutomagicTextureFactory.get(registrar, getUnlocalizedName().replace("item.", ""));
+	} 
 }

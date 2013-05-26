@@ -255,7 +255,7 @@ public class Spawnable {
     		XieBlockLeaves leafBlock = (XieBlockLeaves) spawns;
     		leafBlock.generate(world, x, y, z, meta, true);
     	} else {
-    		world.setBlockAndMetadata(x, y, z, spawns.blockID, meta);
+    		Xie.setBlockAndMeta(world, x, y, z, spawns.blockID, meta);
     	}
 	}
 	

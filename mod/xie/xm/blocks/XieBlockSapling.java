@@ -11,6 +11,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Icon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -57,7 +58,7 @@ public class XieBlockSapling extends XieBlockPlant implements IXieBlock {
 	
 	// need to filter for decay flag
 	@Override
-	public int getBlockTextureFromSideAndMetadata(int i, int j) {
+	public Icon getIcon(int i, int j) {
 		return tex.getTexFromSideAndMeta(i, j&-9);
 	}
 

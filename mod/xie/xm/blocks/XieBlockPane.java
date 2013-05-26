@@ -2,6 +2,7 @@ package mod.xie.xm.blocks;
 
 import java.util.ArrayList;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
 import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
@@ -20,6 +21,7 @@ import net.minecraft.util.Icon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import java.util.List;
 import java.util.Random;
@@ -100,10 +102,6 @@ public class XieBlockPane extends BlockPane implements IXieBlock {
     
     protected boolean snapTo(int i) {
         return Block.opaqueCubeLookup[i] || i == blockID || i == Block.thinGlass.blockID || i == Block.glass.blockID;
-    }
-    
-    public Icon getSideTextureIndex() {
-        return tex.getTexFromSide(XieTex.EAST);
     }
 	
     // copy-pasta from XieBlock
@@ -195,16 +193,10 @@ public class XieBlockPane extends BlockPane implements IXieBlock {
 	public XieTex getTex() {
     	return tex;
     }
-    
-    @Override
-	public void setTex(XieTex t) {
-    	isDefaultTexture=t.getTexFile()==null;
-    	tex=t;
-    }
  
 	// texture IDs, tex[side][meta]
     @Override
-	public Icon getBlockTextureFromSideAndMetadata(int i, int j) {
+	public Icon getIcon(int i, int j) {
     	return tex.getTexFromSideAndMeta(i, j);
     }
     
@@ -224,8 +216,8 @@ public class XieBlockPane extends BlockPane implements IXieBlock {
 	public void onBlockDestroyedByPlayer(World world, int i, int j, int k, int l) {
     	if (becomesWhenDestroyed!=null) {
     		if (becomesWhenDestroyed.length>1)
-    			world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1],2);
-    		else world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], l,2);
+    			Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
+    		else Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], l);
     	}
     }
     
@@ -301,11 +293,6 @@ public class XieBlockPane extends BlockPane implements IXieBlock {
 
 	@Override
 	public String[] getNames() { return names; }
-	
-	@Override
-	public String getTextureFile() {
-		return Xie.textureWrapper(this);
-	}
 
 	@Override
 	public void setBecomesWhenDestroyed(int[] bwd) {
@@ -342,5 +329,10 @@ public class XieBlockPane extends BlockPane implements IXieBlock {
 	public Object getGuiElement(EntityPlayer player, World world, int i, int j, int k) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		tex = AutomagicTextureFactory.get(registrar, getUnlocalizedName2());
 	}
 }

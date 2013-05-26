@@ -3,6 +3,7 @@ package mod.xie.xm.blocks;
 import java.util.HashMap;
 
 import mod.xie.xm.XiesMod;
+import mod.xie.xm.tex.AutomagicTextureFactory;
 import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
@@ -17,9 +18,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Icon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import java.util.List;
 import java.util.Map;
@@ -377,21 +380,10 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
 	public XieTex getTex() {
     	return tex;
     }
-    
-    @Override
-	public void setTex(XieTex t) {
-    	isDefaultTexture=t.getTexFile()==null;
-    	tex=t;
-    }
-    
-    @Override
-	public int getBlockTextureFromSide(int i) {
-    	return getBlockTextureFromSideAndMetadata(i,0);
-    }
  
 	// texture IDs, tex[side][meta]
     @Override
-	public int getBlockTextureFromSideAndMetadata(int i, int j) {
+	public Icon getIcon(int i, int j) {
     	return tex.getTexFromSideAndMeta(i, j);
     }
     
@@ -412,8 +404,8 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
     	if (world.isRemote) return;
     	if (becomesWhenDestroyed!=null) {
     		if (becomesWhenDestroyed.length>1)
-    			world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
-    		else world.setBlockWithNotify(i, j, k, becomesWhenDestroyed[0]);
+    			Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
+    		else Xie.setBlock(world, i, j, k, becomesWhenDestroyed[0]);
     	}
     }
     
@@ -495,11 +487,6 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
 
 	@Override
 	public String[] getNames() { return names; }
-	
-	@Override
-	public String getTextureFile() {
-		return Xie.textureWrapper(this);
-	}
 
 	@Override
 	public void setBecomesWhenDestroyed(int[] bwd) {
@@ -529,5 +516,10 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
 	@Override
 	public TileEntity createNewTileEntity(World var1) {
 		return this.getBlockEntity();
+	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		tex = AutomagicTextureFactory.get(registrar, getUnlocalizedName2());
 	}
 }

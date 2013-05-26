@@ -2,6 +2,7 @@ package mod.xie.xm.blocks;
 
 
 import mod.xie.xm.parser.Location;
+import mod.xie.xm.tex.AutomagicTextureFactory;
 import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Xie;
 import net.minecraft.block.Block;
@@ -17,7 +18,10 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
+
+// TODO FTFESAD this is so broken
 
 public class XieBlockMounted extends XieBlock{
 
@@ -61,10 +65,10 @@ public class XieBlockMounted extends XieBlock{
 	}
 		
 	@Override
-	public void onBlockPlacedBy(World world, int i, int j, int k, EntityLiving e) {
+	public void onBlockPlacedBy(World world, int i, int j, int k, EntityLiving e, ItemStack blockItem) {
 		int facing = Xie.getFacing(e);
-        world.setBlockMetadataWithNotify(i, j, k, facing);
-        super.onBlockPlacedBy(world, i, j, k, e);
+        Xie.setBlockAndMeta(world, i, j, k, blockID, facing);
+        super.onBlockPlacedBy(world, i, j, k, e, blockItem);
     }
 	
 	public void onNeighborBlockChange(World world, int i, int j, int k, int l) {
@@ -73,7 +77,7 @@ public class XieBlockMounted extends XieBlock{
 	
 	public void dropBlock(World world, int i, int j, int k) {
 		dropBlockAsItem(world, i, j, k, world.getBlockMetadata(i, j, k), 0);
-        world.setBlockWithNotify(i, j, k, 0);
+        Xie.setBlock(world, i, j, k, 0);
 	}
 	
     @Override
@@ -107,73 +111,8 @@ public class XieBlockMounted extends XieBlock{
     	return true;
     }
 	
-	// when texture object is set, rotate and fill in metadata values for rotated versions of the block 
-    @Override
-	public void setTex(XieTex tex) {
-    	XieTex newTex = new XieTex();
-    	int topTex = tex.getTexFromSide(XieTex.TOP);
-    	int botTex = tex.getTexFromSide(XieTex.BOT);
-    	int frontTex = tex.getTexFromSide(XieTex.NORTH);
-    	int leftTex = tex.getTexFromSide(XieTex.EAST);
-    	int rightTex = tex.getTexFromSide(XieTex.WEST);
-    	int backTex = tex.getTexFromSide(XieTex.SOUTH);
-    	
-    	for (Location facing: Location.values()) {
-    		switch(facing) {
-	    		case CEILING:
-	    			newTex.setTexture(topTex, XieTex.EAST, facing.ordinal());
-	    			newTex.setTexture(botTex, XieTex.WEST, facing.ordinal());
-	    			newTex.setTexture(leftTex, XieTex.NORTH, facing.ordinal());
-	    			newTex.setTexture(rightTex, XieTex.SOUTH, facing.ordinal());
-	    			newTex.setTexture(frontTex, XieTex.BOT, facing.ordinal());
-	    			newTex.setTexture(backTex, XieTex.TOP, facing.ordinal());
-	    			break;
-	    		case FLOOR:
-	    			newTex.setTexture(topTex, XieTex.EAST, facing.ordinal());
-	    			newTex.setTexture(botTex, XieTex.WEST, facing.ordinal());
-	    			newTex.setTexture(leftTex, XieTex.NORTH, facing.ordinal());
-	    			newTex.setTexture(rightTex, XieTex.SOUTH, facing.ordinal());
-	    			newTex.setTexture(frontTex, XieTex.TOP, facing.ordinal());
-	    			newTex.setTexture(backTex, XieTex.BOT, facing.ordinal());
-	    			break;
-	    		case NORTH:
-	    			newTex.setTexture(topTex, XieTex.TOP, facing.ordinal());
-	    			newTex.setTexture(botTex, XieTex.BOT, facing.ordinal());
-	    			newTex.setTexture(frontTex, XieTex.NORTH, facing.ordinal());
-	    			newTex.setTexture(leftTex, XieTex.EAST, facing.ordinal());
-	    			newTex.setTexture(rightTex, XieTex.WEST, facing.ordinal());
-	    			newTex.setTexture(backTex, XieTex.SOUTH, facing.ordinal());
-	    			break;
-	    		case SOUTH:
-	    			newTex.setTexture(topTex, XieTex.TOP, facing.ordinal());
-	    			newTex.setTexture(botTex, XieTex.BOT, facing.ordinal());
-	    			newTex.setTexture(frontTex, XieTex.SOUTH, facing.ordinal());
-	    			newTex.setTexture(leftTex, XieTex.WEST, facing.ordinal());
-	    			newTex.setTexture(rightTex, XieTex.EAST, facing.ordinal());
-	    			newTex.setTexture(backTex, XieTex.NORTH, facing.ordinal());
-	    			break;
-	    		case EAST:
-	    			newTex.setTexture(topTex, XieTex.TOP, facing.ordinal());
-	    			newTex.setTexture(botTex, XieTex.BOT, facing.ordinal());
-	    			newTex.setTexture(frontTex, XieTex.EAST, facing.ordinal());
-	    			newTex.setTexture(leftTex, XieTex.SOUTH, facing.ordinal());
-	    			newTex.setTexture(rightTex, XieTex.NORTH, facing.ordinal());
-	    			newTex.setTexture(backTex, XieTex.WEST, facing.ordinal());
-	    			break;
-	    		case WEST:
-	    			newTex.setTexture(topTex, XieTex.TOP, facing.ordinal());
-	    			newTex.setTexture(botTex, XieTex.BOT, facing.ordinal());
-	    			newTex.setTexture(frontTex, XieTex.WEST, facing.ordinal());
-	    			newTex.setTexture(leftTex, XieTex.NORTH, facing.ordinal());
-	    			newTex.setTexture(rightTex, XieTex.SOUTH, facing.ordinal());
-	    			newTex.setTexture(backTex, XieTex.EAST, facing.ordinal());
-	    			break;
-    		}
-    	}
-    	
-    	if (tex.getTexFile()!=null)
-    		newTex.setTexFile(tex.getTexFile());
-    	
-    	super.setTex(newTex);
-    }
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		tex = AutomagicTextureFactory.get(registrar, getUnlocalizedName2());
+	}
 }

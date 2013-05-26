@@ -102,7 +102,7 @@ public class JobBlock extends Job {
 			else plant = (XieBlockPlant) block;
 			Boolean complete = setPlantProps(plant);
 			block = plant;
-			doTex();
+			
 			if (!complete) {
 				logClose();
 				return 0;
@@ -117,7 +117,7 @@ public class JobBlock extends Job {
 			else crop = (XieBlockCrop) block;	
 			Boolean complete = setPlantProps(crop);
 			block = crop;
-			doTex();
+			
 			if (!complete) {
 				logClose();
 				return 0;
@@ -138,7 +138,7 @@ public class JobBlock extends Job {
 			else bush = (XieBlockBush) block;
 			Boolean complete = setPlantProps(bush);
 			block=bush;
-			doTex();
+			
 			if (!complete) {
 				logClose();
 				return 0;
@@ -154,7 +154,7 @@ public class JobBlock extends Job {
 			} else log = (XieBlockLog)block;
 			
 			block = log;
-			doTex();
+			
 			block.setStepSound(Block.soundWoodFootstep);
 			isDone = expandCommonBlockParameters();
 		} else if (subtype.equals("sapling")) {
@@ -173,7 +173,7 @@ public class JobBlock extends Job {
 			} else b=(XieBlockPane)block;
 			
 			block = b;
-			doTex();
+			
 			isDone = expandCommonBlockParameters();
 		} else if (subtype.equals("fence")) {
 			logFiner("Init fence block with id="+id+", name="+name);
@@ -183,7 +183,7 @@ public class JobBlock extends Job {
 			} else b=(XieBlockFence)block;
 			
 			block = b;
-			doTex();
+			
 			isDone = expandCommonBlockParameters();
 		} else if(subtype.equals("glass")) {
 			logFiner("Init glass block with id="+id+", name="+name);
@@ -199,7 +199,7 @@ public class JobBlock extends Job {
 			if (isKey("inheritMeta")) b.inheritMeta=getBoolean("inheritMeta");
 			
 			block = b;
-			doTex();
+			
 			isDone = expandCommonBlockParameters();
 		} else { // if subtype=="basic"
 			// assume basic block if all else fails
@@ -213,7 +213,7 @@ public class JobBlock extends Job {
 			if (isKey("inheritMeta")) b.inheritMeta=getBoolean("inheritMeta");
 			
 			block = b;
-			doTex();		
+					
 			isDone = expandCommonBlockParameters();
 		}
 		
@@ -231,7 +231,7 @@ public class JobBlock extends Job {
 		// set provided plant properties
 		Boolean complete = setPlantProps(sapling);
 		block = sapling;
-		if (!doTex()) return false;
+		
 		if (!complete) {
 			logClose();
 			return false;
@@ -249,7 +249,7 @@ public class JobBlock extends Job {
 		boolean complete = setFurnaceProps(furnace);
 		
 		block = furnace;
-		if (!doTex()) return false;		
+				
 		if (!complete) return false;
 		isDone = expandCommonBlockParameters();
 		return true;
@@ -303,7 +303,7 @@ public class JobBlock extends Job {
 				
 		block = chest;
 		
-		if (!doTex()) return false;
+		
 		isDone = expandCommonBlockParameters();
 		return true;
 	}
@@ -349,7 +349,7 @@ public class JobBlock extends Job {
 		} else complete=true;
 		
 		block = leaves;
-		if (!doTex()) return false;
+		
 		if (!complete) {
 			logClose();
 			return false;
@@ -382,13 +382,6 @@ public class JobBlock extends Job {
 		if (!isKey("tex")) grass.useVanillaTexture=true;
 		
 		block = grass;
-		if (block.getTex()==null) {
-			XieTex tex = getBlockTextures();
-			if (tex==null) {
-				logClose();
-				return false;
-			} else block.setTex(tex);
-		}
 		
 		isDone = expandCommonBlockParameters();
 		return true;
@@ -414,13 +407,7 @@ public class JobBlock extends Job {
 		}
 		
 		block = b;
-		if (block.getTex()==null) {
-			XieTex tex = getBlockTextures();
-			if (tex==null) {
-				logClose();
-				return false;
-			} else block.setTex(tex);
-		}
+
 		isDone = expandCommonBlockParameters();
 		
 		if (!b.boundsVaryByMeta() && b.getBlockBounds()!=null) {
@@ -472,15 +459,6 @@ public class JobBlock extends Job {
 		} else b=(XieBlockStem)block;
 		
 		block = b;
-		if (isKey("tex")) {
-			if (block.getTex()==null) {
-				XieTex tex = getBlockTextures();
-				if (tex==null) {
-					logClose();
-					return false;
-				} else block.setTex(tex);
-			}
-		}
 		
 		if (isKey("growsOn")) {
 			int [] growsOn = Xie.parseBlockIDs(getStr("growsOn"));
@@ -513,13 +491,6 @@ public class JobBlock extends Job {
 			b.movableTool = iw.getItemStack();
 		}
 		
-		if (b.getTex()==null) {
-			XieTex tex = getBlockTextures();
-			if (tex==null) {
-				logClose();
-				return false;
-			} else b.setTex(tex);
-		}
 		block = b;
 		isDone = expandCommonBlockParameters();
 		
@@ -550,17 +521,6 @@ public class JobBlock extends Job {
 			b.setBlockBounds(bounds);
 		}
 		
-		return true;
-	}
-	
-	protected boolean doTex() {
-		if (block.getTex()==null) {
-			XieTex tex = getBlockTextures();
-			if (tex==null) {
-				logClose();
-				return false;
-			} else block.setTex(tex);
-		}
 		return true;
 	}
 	
@@ -877,92 +837,6 @@ public class JobBlock extends Job {
 		return material;
 	}
 	
-	protected XieTex getBlockTextures() {
-		XieTex tex = new XieTex();
-		if (!isKey("tex")) return tex;
-		
-		JsonNode texNode = getNode("tex");
-		if (texNode.getType()==JsonNodeType.STRING || texNode.getType()==JsonNodeType.NUMBER) {
-			logFiner("Applying simple texture "+texNode.getText());
-			int texID = expandTextureNode(texNode);
-			if (texID>=0) return new XieTex(texID);
-			else return null;
-		} else {
-			// assume object, and expand
-			logFiner("Expanding complex texture");
-			Map<JsonStringNode, JsonNode> texMap = texNode.getFields();
-			for (JsonNode key : texMap.keySet()) {
-				JsonNode node = texMap.get(key);
-				
-				if (key.getText().toLowerCase().equals("texfile")) {
-					String spriteSheet = node.getText();
-					if (spriteSheet.startsWith("http://")) {
-						spriteSheet = loadURLSpritesheet(spriteSheet);
-						if (spriteSheet==null) {
-							logIncomplete("Failed to download spritesheet, defaulting to vanilla");
-							continue;
-						}
-					}
-					spriteSheet=formatTextureFilepath(spriteSheet);
-					tex.setTexFile(spriteSheet);
-					logFiner("Allocating to sprite sheet: "+spriteSheet);
-				}
-				
-				String sideStr = key.getText();
-				int side = XieTex.getSide(sideStr);
-				if (side==XieTex.FAIL) {
-					logDelayed("Invalid block side "+sideStr);
-					continue;
-				} else logFiner("Prosessing textures for side "+XieTex.getSideStr(side));
-				
-				if (node.getType()==JsonNodeType.OBJECT) {
-					// complex texture, varying by meta data, requires expansion
-					Map<JsonStringNode, JsonNode> metaRanges = node.getFields();
-					for (JsonNode metaRange : metaRanges.keySet()) {
-						int texID = expandTextureNode(metaRanges.get(metaRange));
-						if (texID<0) return null;
-						if (metaRange.getText().equals("base")) {
-							// base texture, apply to meta 0 and incrememnt for other metas
-							for (int i=0; i<16; i++) {
-								tex.setTexture(texID+i, side, i); // TODO no error checking
-							}
-							logFiner("Applied texture IDs "+texID+"-"+(texID+15));
-						} else {
-							String texText = metaRanges.get(metaRange).getText()+" to side "+XieTex.getSideStr(side)+" for meta range "+metaRange.getText();
-							if (tex.setTexture(texID, side, metaRange.getText())) {
-								logFiner("Applied texture "+texText);
-							} else {
-								logDelayed("Failed to apply texture "+texText);
-								continue;
-							}
-						}
-					}
-				} else if (node.getType()==JsonNodeType.ARRAY) {
-					// array implicity stating each texID/texturefile/alias
-					// TODO untested
-					List<JsonNode> elements = node.getElements();
-					if (elements.size()!=16) {
-						logDelayed("Array metadata texture declaration requires 16 elements");
-					} else {
-						for (int i=0; i<16; i++) {
-							int texID = expandTextureNode(elements.get(i));
-							if (texID<0) return null;
-							tex.setTexture(texID, side, i);							
-						}
-					}
-				} else {
-					// simple texture
-					int texID = expandTextureNode(node);
-					if (texID<0) return null;
-					logFiner("Applying texture ("+node.getText()+")["+texID+"] to side "+sideStr+"("+side+")");
-					tex.setTexture(texID, side);
-				}
-			}
-			
-			return tex;
-		}
-	}
-	
 	// TODO add support for meta-data sensitive JSON object
 	protected boolean parseSmeltingRecipe() {
 		int id = -1;
@@ -1148,7 +1022,7 @@ public class JobBlock extends Job {
 		}
 		int max = Integer.parseInt(s);
 		
-		DungeonHooks.addDungeonLoot(new ItemStack(block.getBlock()), rarity, min, max);
+		Xie.addDungeonLoot(new DungeonLootHelper(new ItemStack(block.getBlock()), rarity, min, max));
 	}
 	
 }
