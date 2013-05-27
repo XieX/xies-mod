@@ -33,9 +33,10 @@ public abstract class XieTex {
 			XieLog.log().logFailure("Infernal Error: Could not parse meta value from filename "+filename);
 			return -1;
 		}
-		
+
+		String meta = matcher.group(Regexie.GROUP_META).replace("_", "");
 		try {
-			return Integer.parseInt(matcher.group(Regexie.GROUP_META));
+			return Integer.parseInt(meta);
 		} catch (NumberFormatException e) {
 			XieLog.log().logFailure("NumberFormatException parsing meta value from filename: "+filename);
 			return -1;
@@ -49,7 +50,7 @@ public abstract class XieTex {
 			return BlockSide.ALL;
 		}
 		
-		String sideName = matcher.group(Regexie.GROUP_SIDE);
+		String sideName = matcher.group(Regexie.GROUP_SIDE).replace("_", "");
 		return BlockSide.parse(sideName);
 	}
 	
