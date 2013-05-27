@@ -232,7 +232,6 @@ public class JobSpawn extends Job {
 	}
 
 	protected Spawnable initSpawn() {
-		Block b;
 		int meta = -1;
 		
 		String blockName = name;
@@ -244,17 +243,10 @@ public class JobSpawn extends Job {
 			if (s.length>1) meta = Integer.parseInt(s[1]);
 		}
 		
-		ItemWrapper iw = Xie.parseItemWrapper(blockName);
-		if (iw==null) {
-			logDelayed("Failed to find block named "+blockName);
-			return null;
-		}
-		
-		b = iw.getBlock();
-		if (iw.hasMeta()) meta=iw.meta;
-				
+		Block b = Xie.parseBlock(blockName);
 		if (b==null) {
 			logDelayed("Failed to find block named "+blockName);
+			return null;
 		}
 		
 		if (meta<0) return new Spawnable(b);

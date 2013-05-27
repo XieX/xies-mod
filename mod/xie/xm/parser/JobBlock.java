@@ -39,6 +39,8 @@ import net.minecraft.item.ItemStack;
 import java.util.List;
 import java.util.Map;
 
+import cpw.mods.fml.common.registry.GameRegistry;
+
 
 
 import net.minecraft.block.Block;
@@ -723,9 +725,9 @@ public class JobBlock extends Job {
 	
 	protected void finaliseBlock() {
 		logFiner("Finalising block");
-		ModLoader.addName(block.getBlock(), getStr("name"));
+		ModLoader.addName(block.getBlock(), name);
 		if (block.hasSubTypes()) {
-			ModLoader.registerBlock(block.getBlock(), XieItemBlock.class);
+			GameRegistry.registerBlock(block.getBlock(), XieItemBlock.class, name);
 			String names[] = block.getNames();
 			if (names!=null) {
 				int d = 0;
@@ -733,7 +735,7 @@ public class JobBlock extends Job {
 					ModLoader.addName(new ItemStack(block.getBlock().blockID,1,d++),name);
 			}
 		}
-		else ModLoader.registerBlock(block.getBlock());
+		else GameRegistry.registerBlock(block.getBlock(), name);
 		Work.instance().blockAdded(id);
 		logInfo(" === Block Job done! === ");
 	}

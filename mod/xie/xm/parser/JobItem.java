@@ -756,10 +756,6 @@ public class JobItem extends Job  {
 			return EnumToolMaterial.WOOD;
 		}
 	}
-
-	protected String getDefaultTextureFile() {
-		return "/gui/items.png";
-	}
 	
 	protected String[] getSetNames(String [] suffixes) {
 		int n = suffixes.length;

@@ -570,6 +570,6 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 	
 	@Override
 	public void registerIcons(IconRegister registrar) {
-		tex = AutomagicTextureFactory.get(registrar, getUnlocalizedName2());
+		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName2());
 	}
 }

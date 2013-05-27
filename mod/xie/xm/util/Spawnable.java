@@ -225,8 +225,6 @@ public class Spawnable {
                             if (canSpawnHere(world,xx,yy,zz)) {
                             	if (clusterMetas!=null) meta = getClusterMeta(random);
                             	spawn(world, xx, yy, zz, meta);
-                            	if (!spawned) 
-                            		System.out.println("Spawning "+spawns.getUnlocalizedName()+" meta ["+meta+"] @ ("+xx+","+yy+","+zz+")");
                             	spawned=true;
                             }
                         }

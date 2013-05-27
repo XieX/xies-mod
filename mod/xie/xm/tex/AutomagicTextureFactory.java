@@ -11,11 +11,14 @@ import mod.xie.xm.file.XieLog;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.item.Item;
+import net.minecraft.src.ModLoader;
 import net.minecraft.util.Icon;
 
 public class AutomagicTextureFactory {
 
 	private static final String XIE = "Xie";
+	private static final String BLOCKS = "/textures/blocks";
+	private static final String ITEMS = "/textures/items";
 	
 	public AutomagicTextureFactory() {
 		
@@ -28,15 +31,24 @@ public class AutomagicTextureFactory {
 		return instance;
 	}
 	
-	public static XieTex get(IconRegister register, String name) {
-		return get(register,name,XIE);
+	public static XieTex getBlock(IconRegister register, String name) {
+		return getBlock(register,name,XIE);
 	}
 	
-	public static XieTex get(IconRegister register, String name, String path) {
-		return getInstance().makeXieTex(register, name, path);
+	public static XieTex getBlock(IconRegister register, String name, String path) {
+		return getInstance().makeXieTex(register, name, path+BLOCKS);
 	}
 	
-	public XieTex makeXieTex(IconRegister register, String name, String path) {
+	public static XieTex getItem(IconRegister register, String name) {
+		return getItem(register,name,XIE);
+	}
+	
+	public static XieTex getItem(IconRegister register, String name, String path) {
+		return getInstance().makeXieTex(register, name, path+ITEMS);
+	}
+	
+	public XieTex makeXieTex(IconRegister register, String name, String pathSuffix) {
+		String path = PathManager.get().modsDir().toPath()+"/"+pathSuffix;
 		String [] files = getTextureFileNames(name, path);
 		
 		if (files != null) {
@@ -88,13 +100,13 @@ public class AutomagicTextureFactory {
 	}
 	
 	private String [] getTextureFileNames(String name, String path) {
-		path = PathManager.get().modsDir().toPath()+path;
-		String[] filenames = new File(path).list(new TextureFileFilter(name));
+		File texDir = new File(PathManager.cleanPath(path));
+		String[] filenames = texDir.list(new TextureFileFilter(name));
 		
 		if (filenames == null) {
-			// TODO throw an error (not a directory or IO error)
+			XieLog.log().logFailure("Error locating path "+path+" for block "+name);
 		} else if (filenames.length == 0) {
-			// TODO throw an error (directory empty or no matching files)
+			XieLog.log().logFailure("Found no matches for block "+name+" @ "+path);
 		} else return filenames;
 		
 		return null;

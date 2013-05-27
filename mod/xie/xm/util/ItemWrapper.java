@@ -54,7 +54,11 @@ public class ItemWrapper implements Comparable {
 			ItemStack is = (ItemStack)object;
 			id=is.itemID;
 			count=is.stackSize;
-			meta=is.getItemDamage();
+			try {
+				meta=is.getItemDamage();
+			} catch (NullPointerException e) {
+				// do nothing
+			}
 		} else if (object instanceof Integer) {
 			id = (Integer)object;
 		} else throw new ClassCastException("Object cannot be identified as a Minecraft block or item");

@@ -9,7 +9,7 @@ public class TextureFileFilter implements FilenameFilter {
 	private Pattern regex;
 	
 	public TextureFileFilter(String name) {
-		regex = Pattern.compile("\\A"+name+"(_.*)?\\.png\\z", Pattern.CASE_INSENSITIVE);
+		regex = Pattern.compile(name+"(_.*)?\\.png", Pattern.CASE_INSENSITIVE);
 	}
 
 	@Override

@@ -108,6 +108,6 @@ public class XieItem extends Item implements XieItemInterface {
 	
 	@Override
 	public void registerIcons(IconRegister registrar) {
-		icon = AutomagicTextureFactory.get(registrar, getUnlocalizedName().replace("item.", ""));
+		icon = AutomagicTextureFactory.getItem(registrar, getUnlocalizedName().replace("item.", ""));
 	} 
 }

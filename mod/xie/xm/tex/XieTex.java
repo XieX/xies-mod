@@ -21,12 +21,19 @@ public abstract class XieTex {
 		iconRegister = registrar;
 	}
 	
-	protected Icon register(String textureName) {
-		return iconRegister.registerIcon(textureName);
+	protected Icon register(String str) {
+		// TODO HACK this could me more elegant
+		if (str.toLowerCase().endsWith(".png")) str = str.substring(0,str.length()-4);
+		return iconRegister.registerIcon("Xie:"+str);
 	}
 	
 	protected int parseMetavalue(String filename) {
 		Matcher matcher = Regexie.X_FILENAME.matcher(filename);
+		if (!matcher.matches()) {
+			XieLog.log().logFailure("Infernal Error: Could not parse meta value from filename "+filename);
+			return -1;
+		}
+		
 		try {
 			return Integer.parseInt(matcher.group(Regexie.GROUP_META));
 		} catch (NumberFormatException e) {
@@ -37,6 +44,10 @@ public abstract class XieTex {
 	
 	protected BlockSide parseSideValue(String filename) {
 		Matcher matcher = Regexie.X_FILENAME.matcher(filename);
+		if (!matcher.matches()) {
+			XieLog.log().logFailure("Infernal Error: Could not parse side value from filename "+filename);
+			return BlockSide.ALL;
+		}
 		
 		String sideName = matcher.group(Regexie.GROUP_SIDE);
 		return BlockSide.parse(sideName);

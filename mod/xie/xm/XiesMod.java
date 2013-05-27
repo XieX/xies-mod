@@ -97,8 +97,7 @@ public class XiesMod {
 	private GameState localContent;
 	
 	@PreInit
-	public void init(FMLPreInitializationEvent event) {		
-		//System.out.println("MCPath ==> "+proxy.getMinecraftPath());
+	public void init(FMLPreInitializationEvent event) {
 		// register handlers etc
 		GameRegistry.registerFuelHandler(XieFuelManager.get());
 		GameRegistry.registerCraftingHandler(XieCraftingManager.get());
