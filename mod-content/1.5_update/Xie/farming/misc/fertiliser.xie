@@ -1,0 +1,14 @@
+{
+  "__requires": "campfire.xie",
+  "items": {
+    "fertiliser": {
+      "name": "Fertiliser",
+      "texFile": "xie_misc.png",
+      "icon": 32,
+      "type": "fertiliser"
+    }
+  },
+  "recipes": {
+    "fertiliser:2": "bonemeal,potash"
+  }
+}

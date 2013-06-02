@@ -1,0 +1,22 @@
+{
+  "aliases": {
+    "saucy": "guacamole",
+	"guacstuffs": "tomato,lemon,onion,salt"
+  },
+  "items": {
+    "guacamole": {
+      "name": "Guacamole",
+      "type": "food",
+      "hunger": 8,
+      "nourishment": 0.6,
+      "container": "bowl",
+      "texFile": "xie_foods.png",
+      "icon": 66
+    }
+  },
+  "recipes": {
+    "guacamole": "bowl,avocado,$guacstuffs",
+    "guacamole:2": "bowl,avocado,$guacstuffs,bowl,avocado,$guacstuffs",
+    "guacamole:3": "bowl,avocado,$guacstuffs,bowl,avocado,$guacstuffs,bowl,avocado,$guacstuffs"
+  }
+}

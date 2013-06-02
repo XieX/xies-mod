@@ -1,0 +1,72 @@
+{
+  "blocks": {
+    "ashpile": {
+      "name": "Ashpile",
+      "blockBounds": "0,0,0,1,0.01,1",
+      "renderType": 0,
+      "material": "sand",
+      "stepSound": "powder",
+      "tex": {
+        "texFile": "xie_misc.png",
+        "all": 21
+      },
+      "drops": "potash"
+    },
+    "campfire": {
+      "name": "Campfire",
+      "type": "furnace",
+      "naked": true,
+      "renderType": "billboard",
+      "material": "wood",
+      "becomesWhenDestroyed": "ashpile",
+      "cookTime": 400,
+      "initialBurnTime": 800,
+      "burnLevels": "1,2,0,3,4",
+      "fuels": {
+        "stick": 200,
+        "wood": 600,
+        "doorWood": 600,
+        "trapdoor": 600,
+        "sign": 600,
+        "workbench": 600,
+        "chest": 600,
+        "fence": 600,
+        "fenceGate": 600,
+        "log": 1200,
+        "sapling": 200
+      },
+      "smelts": "#food,log",
+      "blockBounds": {
+        "0": "0,0,0,1,0.2,1",
+        "1": "0,0,0,1,0.4,1",
+        "2": "0,0,0,1,0.6,1",
+        "3": "0,0,0,1,0.8,1",
+        "4": "0,0,0,1,1,1"
+      },
+      "tex": {
+        "texFile": "xie_misc.png",
+        "all": {
+          "0": 16,
+          "1": 17,
+          "2": 18,
+          "3": 19,
+          "4": 20
+        }
+      }
+    }
+  },
+  "items": {
+    "potash": {
+      "name": "Pot Ash",
+      "texFile": "xie_misc.png",
+      "icon": 21
+    }
+  },
+  "recipes": {
+    "potash": "charcoal",
+    "campfire": {
+      "pattern": "XX,XX",
+      "content": "stick"
+    }
+  }
+}
