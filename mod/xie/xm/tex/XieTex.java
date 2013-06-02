@@ -27,8 +27,9 @@ public abstract class XieTex {
 		return this;
 	}
 	
-	public void setTextureBase(Item textureBase) {
+	public XieTex setTextureBase(Item textureBase) {
 		if (textureBase!=null) base = new XieTexLink(iconRegister, textureBase);
+		return this;
 	}
 	
 	protected Icon register(String str) {

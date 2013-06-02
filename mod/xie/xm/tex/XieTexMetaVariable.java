@@ -30,7 +30,7 @@ public class XieTexMetaVariable extends XieTex {
 		if (meta<textures.length && textures[meta]!=null) {
 			return textures[meta];
 		} else if (defaultTexture!=null) return defaultTexture;
-		else return super.getIcon(i,meta);
+		else return textures[textures.length-1];
 	}
 
 	@Override
@@ -38,7 +38,7 @@ public class XieTexMetaVariable extends XieTex {
 		if (meta<textures.length && textures[meta]!=null) {
 			return textures[meta];
 		} else if (defaultTexture!=null) return defaultTexture;
-		else return super.getIconFromDamage(meta);
+		else return textures[0];
 	}
 
 	@Override

@@ -827,14 +827,21 @@ public class JobBlock extends Job {
 		
 		if (isKey("dungeonLoot")) doDungeonLoot(getNode("dungeonLoot"));
 		
-		if (isKey("textureBase")) {
-			Block b = Xie.parseBlock(getStr("textureBase"));
-			if (b!=null) {
-				block.setTextureBase(b);
-			}
-		}
+		if (isKey("textureBase")) doTextureBase();
 		
 		return isDone;
+	}
+	
+	protected void doTextureBase() {
+		String base = getStr("textureBase");
+		
+		Block b;
+		// SHAMELESS HACK
+		if (base.equals("crops")) b = Block.crops;
+		else b = Xie.parseBlock(base);
+		if (b!=null) {
+			block.setTextureBase(b);
+		}
 	}
 
 	// returns material if present, otherwise returns a default

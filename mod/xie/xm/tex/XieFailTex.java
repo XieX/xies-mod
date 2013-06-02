@@ -2,6 +2,7 @@ package mod.xie.xm.tex;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.item.Item;
 import net.minecraft.util.Icon;
 
 public class XieFailTex extends XieTex {
@@ -25,5 +26,20 @@ public class XieFailTex extends XieTex {
 	public XieTex setTextureBase(Block textureBase) {
 		if (textureBase!=null) base = new XieTexLink(iconRegister, textureBase);
 		return base;
+	}
+
+	public XieTex setTextureBase(Item textureBase) {
+		if (textureBase!=null) base = new XieTexLink(iconRegister, textureBase);
+		return base;
+	}
+	
+	public int getMaxMeta() {
+		for (int i = 0; i<16; i++) {
+			Icon icon = base.getIconFromDamage(i);
+			if (icon==null) {
+				return i-1;
+			}
+		}
+		return super.getMaxMeta();
 	}
 }
