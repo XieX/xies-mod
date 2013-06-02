@@ -64,7 +64,9 @@ public class XieItem extends Item implements XieItemInterface {
 	}
 	
 	@Override
-	public void setNames(String n[]) { names=n; }
+	public void setNames(String n[]) { 
+		names=n;
+	}
 	
 	protected XieTex icon;
 	@Override

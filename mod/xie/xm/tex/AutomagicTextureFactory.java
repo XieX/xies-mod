@@ -52,12 +52,6 @@ public class AutomagicTextureFactory {
 		String [] files = getTextureFileNames(name, path);
 		
 		if (files != null) {
-		
-			// If there is only one texture file, assume it's simple
-			if (files.length == 1) {
-				return new XieTexSimple(register, files[0]);
-			}
-			
 			// Sort found texture files into categories
 			String simple = null; // used as the default to fill gaps in non-simple texture objects
 			LinkedList<String> meta = new LinkedList<String>(); // metavariant textures
@@ -90,9 +84,7 @@ public class AutomagicTextureFactory {
 				if (simple == null) return new XieTexSideVariable(register, sided.toArray(new String[0]));
 				else return new XieTexSideVariable(register, sided.toArray(new String[0]), simple);
 			} else if (simple != null) {
-				// likely files were incorrectly named
-				XieLog.log().logIncomplete("Texture file "+simple+" is being used as a simple texture for "+name+", but multiple texture files were found for block.");
-				// TODO that's a terrible error message
+				return new XieTexSimple(register, simple);
 			}
 			XieLog.log().logFailure("Failed miserably to assign texture files for "+name+" from "+path);
 		}

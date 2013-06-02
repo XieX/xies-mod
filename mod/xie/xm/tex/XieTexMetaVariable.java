@@ -18,8 +18,6 @@ public class XieTexMetaVariable extends XieTex {
 	public XieTexMetaVariable(IconRegister registrar, String[] textureFiles) {
 		super(registrar);
 		textures = parseMetavariantTextures(textureFiles);
-		
-		defaultTexture=textures[0];
 	}
 
 	public XieTexMetaVariable(IconRegister registrar, String[] textureFiles, String defaultTextureName) {
@@ -28,18 +26,19 @@ public class XieTexMetaVariable extends XieTex {
 	}
 
 	@Override
-	public Icon getTexFromSideAndMeta(int i, int j) {
-		return this.getIconFromDamage(j);
+	public Icon getIcon(int i, int meta) {
+		if (meta<textures.length && textures[meta]!=null) {
+			return textures[meta];
+		} else if (defaultTexture!=null) return defaultTexture;
+		else return super.getIcon(i,meta);
 	}
 
 	@Override
 	public Icon getIconFromDamage(int meta) {
-		if (meta<textures.length) {
-			Icon i = textures[meta];
-			if (i!=null) return i;
-		}
-		// if all else fails
-		return defaultTexture;
+		if (meta<textures.length && textures[meta]!=null) {
+			return textures[meta];
+		} else if (defaultTexture!=null) return defaultTexture;
+		else return super.getIconFromDamage(meta);
 	}
 
 	@Override
@@ -71,4 +70,8 @@ public class XieTexMetaVariable extends XieTex {
 		return returnTextures;
 	}
 
+	public int getMaxMeta() {
+		if (textures==null) return super.getMaxMeta();
+		return textures.length;
+	}
 }

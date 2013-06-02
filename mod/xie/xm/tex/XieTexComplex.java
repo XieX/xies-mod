@@ -15,7 +15,7 @@ public class XieTexComplex extends XieTex {
 	}
 
 	@Override
-	public Icon getTexFromSideAndMeta(int i, int j) {
+	public Icon getIcon(int i, int j) {
 		// TODO Auto-generated method stub
 		return null;
 	}

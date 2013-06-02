@@ -42,7 +42,7 @@ public class XieBlockLog extends BlockLog implements IXieBlock {
 	@Override
     public Icon getIcon(int i, int j) {
         if (tex==null) return Block.wood.getIcon(i, j);
-        else return tex.getTexFromSideAndMeta(i, j);
+        else return tex.getIcon(i, j);
     }
 	
 	protected void setToolEffectiveness() {
@@ -293,6 +293,13 @@ public class XieBlockLog extends BlockLog implements IXieBlock {
 	@Override
 	public void registerIcons(IconRegister registrar) {
 		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName2());
+		if (textureBase!=null) tex = tex.setTextureBase(textureBase);
 	}
+
+	@Override
+	public void setTextureBase(Block b) {
+		textureBase = b;
+	}
+	protected Block textureBase;
 
 }

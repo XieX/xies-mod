@@ -98,7 +98,7 @@ public class XieBlockGrass extends BlockGrass implements IXieBlock {
 	// texture IDs, tex[side][meta]
     public Icon getIcon(int i, int j) {
     	if (useVanillaTexture) Block.grass.getIcon(i, j);
-    	return tex.getTexFromSideAndMeta(i, j);
+    	return tex.getIcon(i, j);
     }
 	
 	// vanilla grass block texturisation
@@ -330,5 +330,12 @@ public class XieBlockGrass extends BlockGrass implements IXieBlock {
 	@Override
 	public void registerIcons(IconRegister registrar) {
 		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName2());
+		if (textureBase!=null) tex = tex.setTextureBase(textureBase);
 	}
+
+	@Override
+	public void setTextureBase(Block b) {
+		textureBase = b;
+	}
+	protected Block textureBase;
 }

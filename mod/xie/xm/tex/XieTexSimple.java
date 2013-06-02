@@ -13,7 +13,7 @@ public class XieTexSimple extends XieTex {
 	}
 
 	@Override
-	public Icon getTexFromSideAndMeta(int i, int j) {
+	public Icon getIcon(int i, int j) {
 		return texture;
 	}
 

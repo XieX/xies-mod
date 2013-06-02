@@ -428,7 +428,7 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 	// texture IDs, tex[side][meta]
     @Override
 	public Icon getIcon(int i, int j) {
-    	return tex.getTexFromSideAndMeta(i, j);
+    	return tex.getIcon(i, j);
     }
     
     // not really used
@@ -571,5 +571,12 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 	@Override
 	public void registerIcons(IconRegister registrar) {
 		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName2());
+		if (textureBase!=null) tex = tex.setTextureBase(textureBase);
 	}
+	
+	@Override
+	public void setTextureBase(Block b) {
+		textureBase = b;
+	}
+	protected Block textureBase;
 }

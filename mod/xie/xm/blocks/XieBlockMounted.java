@@ -114,5 +114,6 @@ public class XieBlockMounted extends XieBlock{
 	@Override
 	public void registerIcons(IconRegister registrar) {
 		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName2());
+		if (textureBase!=null) tex = tex.setTextureBase(textureBase);
 	}
 }

@@ -39,7 +39,7 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 	public boolean reproductive = false;
 	public int reproductionRate = 20;
 	public int growsInto = -1;
-	public int maxGrowth = 15;
+	public int maxGrowth = -1;
 	public int growsNearWater = 0;
 	public int lightLevel = 8;
 	public int growsOn[] = null;
@@ -208,6 +208,8 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 
     @Override
     public void updateTick(World world, int i, int j, int k, Random random) {
+    	if (maxGrowth<0) determineMaxGrowth();
+    	
         // super.updateTick(world, i, j, k, random);
 	    testThatBlockCanStillGrowHere(world, i, j, k);
     	
@@ -229,6 +231,10 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 	    
 	    setBlockBoundsBasedOnState(world, i, j, k);
 	}
+    
+    protected void determineMaxGrowth() {
+    	tex.getMaxMeta();
+    }
 	
     @Override
     public void onBlockPlacedBy(World world, int i, int j, int k, EntityLiving entityliving, ItemStack blockItem) {
@@ -437,7 +443,7 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 	// texture IDs, tex[side][meta]
     @Override
 	public Icon getIcon(int i, int j) {
-    	return tex.getTexFromSideAndMeta(i, j);
+    	return tex.getIcon(i, j);
     }
     
     // not really used
@@ -574,5 +580,12 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 	@Override
 	public void registerIcons(IconRegister registrar) {
 		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName2());
+		if (textureBase!=null) tex = tex.setTextureBase(textureBase);
 	}
+
+	@Override
+	public void setTextureBase(Block b) {
+		textureBase = b;
+	}
+	protected Block textureBase;
 }

@@ -59,7 +59,7 @@ public class XieBlockSapling extends XieBlockPlant implements IXieBlock {
 	// need to filter for decay flag
 	@Override
 	public Icon getIcon(int i, int j) {
-		return tex.getTexFromSideAndMeta(i, j&-9);
+		return tex.getIcon(i, j&-9);
 	}
 
 	public void dropBlockAsItemWithChance(World world, int i, int j, int k, int l, float f, int multiplier) {

@@ -12,15 +12,11 @@ public class XieTexSideVariable extends XieTex {
 	private Icon [] textures;
 	private Icon defaultTexture;
 
-	public XieTexSideVariable(IconRegister register, String[] textureFiles) {
+	public XieTexSideVariable(IconRegister register, String[] textureNames) {
 		super(register);
 		textures = new Icon[6];
 		defaultTexture = null;
-		parseSideVariantTextures(textureFiles);
-		
-		for (int i=0; i<6 && defaultTexture==null; i++) {
-			if (textures[i]!=null) defaultTexture = textures[i];
-		}
+		parseSideVariantTextures(textureNames);
 	}
 
 	public XieTexSideVariable(IconRegister register, String[] textureNames, String defaultTextureName) {
@@ -29,15 +25,16 @@ public class XieTexSideVariable extends XieTex {
 	}
 
 	@Override
-	public Icon getTexFromSideAndMeta(int i, int j) {
-		// ignore meta
-		if (textures[i]==null) return defaultTexture;
-		else return textures[i];
+	public Icon getIcon(int i, int j) {
+		if (i<6 && textures[i]!=null) return textures[i];
+		else if (defaultTexture!=null) return defaultTexture;
+		else return super.getIcon(i, j);
 	}
 
 	@Override
 	public Icon getIconFromDamage(int meta) {
-		return defaultTexture;
+		if (defaultTexture!=null) return defaultTexture;
+		else return super.getIconFromDamage(meta);
 	}
 
 	@Override
@@ -59,15 +56,15 @@ public class XieTexSideVariable extends XieTex {
 		if (side==BlockSide.ALL) {
 			for (int i=0; i<6; i++) textures[i] = tex;
 		} else if (side==BlockSide.ENDS) {
-			textures[BlockSide.TOP.ordinal()] = tex;
-			textures[BlockSide.BOTTOM.ordinal()] = tex;
+			textures[BlockSide.TOP.value()] = tex;
+			textures[BlockSide.BOTTOM.value()] = tex;
 		} else if (side==BlockSide.SIDES) {
-			textures[BlockSide.NORTH.ordinal()] = tex;
-			textures[BlockSide.EAST.ordinal()] = tex;
-			textures[BlockSide.SOUTH.ordinal()] = tex;
-			textures[BlockSide.WEST.ordinal()] = tex;
+			textures[BlockSide.NORTH.value()] = tex;
+			textures[BlockSide.EAST.value()] = tex;
+			textures[BlockSide.SOUTH.value()] = tex;
+			textures[BlockSide.WEST.value()] = tex;
 		} else {
-			textures[side.ordinal()] = tex;
+			textures[side.value()] = tex;
 		}
 	}
 

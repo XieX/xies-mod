@@ -16,7 +16,7 @@ import net.minecraft.world.World;
 public interface IXieBlock {
 	Block getBlock();
 	void setRenderType(int r);
-	void addDrop(Drop drop);    
+	void addDrop(Drop drop);
 	XieTex getTex();
     Block setStepSound(StepSound stepsound);
     Block setHardness(float f);
@@ -36,4 +36,5 @@ public interface IXieBlock {
 	void setCanBePlacedOn(List<Block> l);
 	void setIsSpikey(boolean b);
 	Object getGuiElement(EntityPlayer player, World world, int i, int j, int k);
+	void setTextureBase(Block b);
 }

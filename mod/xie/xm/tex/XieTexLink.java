@@ -21,11 +21,11 @@ public class XieTexLink extends XieTex {
 	}
 
 	@Override
-	public Icon getTexFromSideAndMeta(int i, int j) {
+	public Icon getIcon(int i, int j) {
 		if (block != null) {
-			block.getIcon(i, j);
+			return block.getIcon(i, j);
 		} else if (item != null) {
-			item.getIconFromDamage(j);
+			return item.getIconFromDamage(j);
 		}
 		
 		return null;
@@ -34,9 +34,9 @@ public class XieTexLink extends XieTex {
 	@Override
 	public Icon getIconFromDamage(int j) {
 		if (block != null) {
-			block.getIcon(2, j);
+			return block.getIcon(2, j);
 		} else if (item != null) {
-			item.getIconFromDamage(j);
+			return item.getIconFromDamage(j);
 		}
 		
 		return null;

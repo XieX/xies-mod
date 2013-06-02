@@ -5,13 +5,12 @@ import mod.xie.xm.file.XieLog;
 public enum BlockSide {
 	ALL(-1), ENDS(-2), SIDES(-3),
 	
-	// TODO FTFESAD check these numbers
 	BOTTOM(0), 
 	TOP(1), 
-	LEFT(2), EAST(2),
-	RIGHT(3), WEST(3),
-	FRONT(4), NORTH(4), 
-	BACK(5), SOUTH(5);
+	LEFT(5), EAST(5),
+	RIGHT(4), WEST(4),
+	FRONT(2), NORTH(2), 
+	BACK(3), SOUTH(3);
 	
 	private int value;
 	
@@ -32,6 +31,10 @@ public enum BlockSide {
 		// else
 		XieLog.log().logFailure("Failed to parse side "+sideName);
 		return null;
+	}
+	
+	public int value() {
+		return value;
 	}
 
 }

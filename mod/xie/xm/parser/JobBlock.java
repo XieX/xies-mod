@@ -827,6 +827,13 @@ public class JobBlock extends Job {
 		
 		if (isKey("dungeonLoot")) doDungeonLoot(getNode("dungeonLoot"));
 		
+		if (isKey("textureBase")) {
+			Block b = Xie.parseBlock(getStr("textureBase"));
+			if (b!=null) {
+				block.setTextureBase(b);
+			}
+		}
+		
 		return isDone;
 	}
 

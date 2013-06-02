@@ -6,19 +6,29 @@ import java.util.regex.Pattern;
 
 import mod.xie.xm.Regexie;
 import mod.xie.xm.file.XieLog;
+import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.item.Item;
 import net.minecraft.util.Icon;
 import mod.xie.xm.blocks.BlockSide;
 
 public abstract class XieTex {
-	public abstract Icon getTexFromSideAndMeta(int i, int j);
-	public abstract Icon getIconFromDamage(int par1);
 	public abstract XieTexType getType();
+	protected XieTexLink base;
 	
 	protected IconRegister iconRegister;
 	
 	protected XieTex(IconRegister registrar) {
 		iconRegister = registrar;
+	}
+	
+	public XieTex setTextureBase(Block textureBase) {
+		if (textureBase!=null) base = new XieTexLink(iconRegister, textureBase);
+		return this;
+	}
+	
+	public void setTextureBase(Item textureBase) {
+		if (textureBase!=null) base = new XieTexLink(iconRegister, textureBase);
 	}
 	
 	protected Icon register(String str) {
@@ -54,8 +64,18 @@ public abstract class XieTex {
 		return BlockSide.parse(sideName);
 	}
 	
-	// wrapper
+	// defaults
 	public Icon getIcon(int i, int j) {
-		return getTexFromSideAndMeta(i,j);
+		if (base!=null) return base.getIcon(i,j);
+		else return null;
+	}
+	
+	public Icon getIconFromDamage(int j) {
+		if (base!=null) return base.getIconFromDamage(j);
+		else return null;
+	}
+
+	public int getMaxMeta() {
+		return 0;
 	}
 }
