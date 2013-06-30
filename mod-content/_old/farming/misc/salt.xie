@@ -6,7 +6,12 @@
       "drops": "salt",
       "material": "sand",
       "stepSound": "powder",
-      "textureBase": "sand"
+      "tex": {
+        "texFile": "xie_misc.png",
+        "top": 1,
+        "bottom": 0,
+        "sides": 0
+      }
     }
   },
   "items": {
