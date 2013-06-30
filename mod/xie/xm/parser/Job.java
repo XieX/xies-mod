@@ -7,13 +7,13 @@ import mod.xie.xm.file.FileManager;
 import mod.xie.xm.file.PathManager;
 import mod.xie.xm.file.SpritesheetManager;
 import mod.xie.xm.file.XieLog;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.ContentManager;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.ItemWrapper;
 import mod.xie.xm.util.JobType;
 import mod.xie.xm.util.Xie;
-import mod.xie.xm.util.XieTex;
 import net.minecraft.block.Block;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
@@ -34,16 +34,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 import javax.imageio.ImageIO;
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-
-
-
 import net.minecraft.block.StepSound;
-import net.minecraft.src.ModTextureStatic;
 import argo.jdom.JsonNode;
 import argo.jdom.JsonNodeType;
 import argo.jdom.JsonStringNode;
@@ -331,38 +325,8 @@ public abstract class Job {
 		return n;
 	}
 	
-	protected int expandTextureNode(JsonNode texNode) {
-		if (texNode.getType()==JsonNodeType.STRING) {
-			if (texNode.getText().startsWith("#")) {
-				// reference to existing block texture
-				String texReference = texNode.getText().substring(1);
-				int side = 0;
-				if (texReference.contains(":")) {
-					String refSplit[] = texReference.split(":");
-					texReference=refSplit[0];
-					side = Xie.parseSide(refSplit[1]);
-				}
-				Block b = Xie.parseBlock(texReference);
-				if (b==null) {
-					logIncomplete("Failed to identify referenced block "+texReference);
-					return XieTex.failTex; // TODO FTFESAD return failtex or -1?
-				} else return b.getBlockTextureFromSide(side);
-			} else {
-				String texFile = formatTextureFilepath(texNode.getText());
-				int texID = -1;
-				if (texFile.startsWith("http://")) {
-					texID = loadURLTexture(texFile, true);
-				} else if (texFile!=null) texID = Xie.getBlockTexOverride(texFile);
-				
-				if (texID<0) {
-					logIncomplete("Texture missing: "+texNode.getText());
-					return XieTex.failTex;
-				} else return texID;
-			}
-		} else if (texNode.getType()==JsonNodeType.NUMBER) {
-			int texID = Integer.parseInt(texNode.getText());
-			return texID;
-		} else return XieTex.failTex;
+	protected void expandTextureNode(JsonNode texNode) {
+		// TODO FTFESAD should check for alternate path perhaps
 	}
 	
 	protected String formatTextureFilepath(String text) {

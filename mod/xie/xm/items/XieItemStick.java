@@ -22,8 +22,8 @@ public class XieItemStick extends XieItem implements XieItemInterface {
 	protected List<Droppables> drops;
 	protected int destroyChance = 66;
 	
-	public XieItemStick(String name, int id, int icon) {
-		super(name, id, icon);
+	public XieItemStick(String name, int id) {
+		super(name, id);
         setMaxStackSize(1);
         setMaxDamage(16);
         blocksAffected = new LinkedList<BlockID>();
@@ -45,7 +45,7 @@ public class XieItemStick extends XieItem implements XieItemInterface {
 					Xie.spawnItems(drops.get(index).getDrops(),world,i,j,k);
 					if (world.rand.nextInt(100)<destroyChance) {
 						//Block.blocksList[bid].harvestBlock(world, entityplayer, i, j, k, l);
-						world.setBlockWithNotify(i, j, k, 0);
+						Xie.setBlock(world, i, j, k, 0);
 					}
 					itemstack.damageItem(1, entityplayer);
 				}

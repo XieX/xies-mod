@@ -17,6 +17,8 @@ import mod.xie.xm.items.XieItemSet;
 import mod.xie.xm.items.XieItemStick;
 import mod.xie.xm.items.XieItemSword;
 import mod.xie.xm.items.XieItemTool;
+import mod.xie.xm.tex.XieTex;
+import mod.xie.xm.tex.XieTexLink;
 import mod.xie.xm.util.BlockID;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
@@ -55,8 +57,6 @@ public class JobItem extends Job  {
 	private static final int FAIL_ICON = 15;
 	
 	protected XieItemInterface item;
-	protected int iconID = FAIL_ICON;
-	protected int icons[];
 	protected int id=-1;
 	
 	public JobItem(String n, JsonNode node, String path) {
@@ -83,8 +83,8 @@ public class JobItem extends Job  {
 				return 0;
 			} else if (Item.itemsList[id]!=null && item==null) {
 				if (isKey("overide") || isKey("override")) {
-					logInfo("Item id "+id+" is in use. Overriding "+Item.itemsList[id].getItemName());
-					if (!isKey("icon")) copyIconsFrom(Item.itemsList[id]);
+					logInfo("Item id "+id+" is in use. Overriding "+Item.itemsList[id].getUnlocalizedName());
+//					if (!isKey("icon")) copyIconsFrom(Item.itemsList[id]);
 					Item.itemsList[id]=null;
 				} else {
 					logFailure("ID "+id+": is in use (unshifted id="+(id-256)+"). Use a different ID or use 'override' to replace existing block or item.");
@@ -93,9 +93,7 @@ public class JobItem extends Job  {
 				
 			}
 		}
-		
-		if (iconID==FAIL_ICON) iconID = expandIconNode(getNode("icon"));	
-		
+				
 		String subtype="basic"; // default
 		if (isKey("type")) subtype = getStr("type").toLowerCase();
 		
@@ -133,13 +131,7 @@ public class JobItem extends Job  {
 			namess=namess.substring(0,namess.length()-1);
 			logFiner("Set names: "+namess);
 			for (int i=0; i<names.length; i++) 
-				ModLoader.addName(new ItemStack(item.getItem().shiftedIndex,1,i), names[i]);
-			item.setHasSubtypes(true);
-		}
-
-		if (icons!=null) {
-			item.setIcons(icons);
-			logFiner("Set icons: "+icons);
+				ModLoader.addName(new ItemStack(item.getItem().itemID,1,i), names[i]);
 			item.setHasSubtypes(true);
 		}
 		
@@ -207,10 +199,10 @@ public class JobItem extends Job  {
 			float nourishment = 0.6F;
 			if (isKey("nourishment")) {
 				nourishment = getFloat(getNode("nourishment"));
-				item = new XieItemFood(name, id, iconID, hunger, nourishment, isDogFood());
+				item = new XieItemFood(name, id, hunger, nourishment, isDogFood());
 				((XieItemFood)item).setThirstAmount(thirst);
-			} else item = new XieItemFood(name, id, iconID, hunger, isDogFood());
-			logFiner("Added food: "+name+"("+id+") icon="+iconID+" hunger: "+hunger+" nourishment: "+nourishment);
+			} else item = new XieItemFood(name, id, hunger, isDogFood());
+			logFiner("Added food: "+name+"("+id+") hunger: "+hunger+" nourishment: "+nourishment);
 			
 			if (isKey("action")) ((XieItemFood)item).setAction(getStr("action"));
 			
@@ -251,12 +243,12 @@ public class JobItem extends Job  {
 		Block growsInto = Xie.parseBlock(getStr("growsInto"));
 		if (growsInto!=null) {
 			XieItemSeeds seeds;
-			if (item==null) seeds = new XieItemSeeds(id, iconID, growsInto, name);
+			if (item==null) seeds = new XieItemSeeds(id, growsInto, name);
 			else seeds = (XieItemSeeds) item;
 			if (isKey("inheritMeta")) seeds.setGrowsIntoMeta(-1);
 			if (isKey("growsIntoMeta")) seeds.setGrowsIntoMeta(getInt(getNode("growsIntoMeta")));
 			item = seeds;
-			logFiner("Added seeds: "+name+"("+id+") icon="+iconID+" grows "+growsInto.getBlockName());
+			logFiner("Added seeds: "+name+"("+id+") grows "+growsInto.getUnlocalizedName());
 			isDone = true;
 		} else {
 			logDelayed("Failed to identify 'growsInto' block");
@@ -268,7 +260,7 @@ public class JobItem extends Job  {
 		logFiner("Processing bucket item");
 		
 		XieItemBucket bucket;
-		if (item==null) bucket = new XieItemBucket(name, id, iconID);
+		if (item==null) bucket = new XieItemBucket(name, id);
 		else bucket = (XieItemBucket) item;
 
 		if (isKey("canHoldWater")) bucket.setCanHold(XieItemBucket.Contents.water,getBoolean("canHoldWater"));
@@ -297,15 +289,15 @@ public class JobItem extends Job  {
 				return false;
 			} else {
 				String worksOnList = " which works on ";
-				for (Block b : l) worksOnList+=b.getBlockName();
-				logFiner("Added fertiliser "+name+"("+id+") icon="+iconID+worksOnList);
-				if (item==null) item = new XieItemFertiliser(name, id, iconID, l);
+				for (Block b : l) worksOnList+=b.getUnlocalizedName();
+				logFiner("Added fertiliser "+name+"("+id+") "+worksOnList);
+				if (item==null) item = new XieItemFertiliser(name, id, l);
 			}
 		}
 		
 		if (defaultFertiliser) {
-			logFiner("Added fertiliser: "+name+"("+id+") icon="+iconID);
-			item = new XieItemFertiliser(name, id, iconID);
+			logFiner("Added fertiliser: "+name+"("+id+")");
+			item = new XieItemFertiliser(name, id);
 		}
 		
 		return true;
@@ -315,7 +307,7 @@ public class JobItem extends Job  {
 		logFiner("Processing stick item");
 		XieItemStick stick;
 		if (item==null) {
-			stick = new XieItemStick(name,id,iconID);
+			stick = new XieItemStick(name,id);
 		} else {
 			stick = (XieItemStick)item;
 		}
@@ -345,7 +337,7 @@ public class JobItem extends Job  {
 		}
 		
 		item=stick;
-		logFiner("Added stick: "+name+"("+id+") icon="+iconID);
+		logFiner("Added stick: "+name+"("+id+")");
 		if (problemFlag) {
 			isDone=false;
 			logFiner("Job incomplete, some drops remain unresolved");
@@ -363,7 +355,7 @@ public class JobItem extends Job  {
 		}
 		
 		if (item==null) { 
-			item = new XieItemTool(name, id, iconID, getToolDamage(), toolMaterial);
+			item = new XieItemTool(name, id, getToolDamage(), toolMaterial);
 			logFiner("Initialised tool object, "+name+" id: "+id);
 		}
 		
@@ -417,7 +409,7 @@ public class JobItem extends Job  {
 		}
 		
 		if (item==null) { 
-			item = new XieItemSword(name, id, iconID, toolMaterial);
+			item = new XieItemSword(name, id, toolMaterial);
 			logFiner("Initialised sword object, "+name+" id: "+id);
 		}
 		
@@ -444,7 +436,7 @@ public class JobItem extends Job  {
 	protected void doBow() {
 		logFiner("Processing bow item");
 		if (item==null) { 
-			item = new XieItemBow(name, id, iconID);
+			item = new XieItemBow(name, id);
 			logFiner("Initialised bow object, "+name+" id: "+id);
 		}
 		
@@ -520,11 +512,10 @@ public class JobItem extends Job  {
 		if (armorType<0) {
 			String names[] = getSetNames(new String[] {"Helm", "Chestplate", "Leggings", "Boots"});
 			int ids[] = getSetIds(4);
-			int icons[] = getSetIcons(XieItemArmor.SUFFIXES);
 			
 			XieItemSet itemSet = new XieItemSet(name);
 			for (int i=0; i<4; i++) {
-				XieItemArmor armor = doArmor(name,names[i],ids[i],icons[i],material,i,
+				XieItemArmor armor = doArmor(name,names[i],ids[i],material,i,
 						i!=2?armorTexture:armorTextureBottom,ingredient);
 				
 				armor.setProperties(properties);
@@ -538,7 +529,7 @@ public class JobItem extends Job  {
 
 		} else {
 			if (item==null) {
-				XieItemArmor armor = new XieItemArmor(name,id,iconID,material,armorType);
+				XieItemArmor armor = new XieItemArmor(name, id, material,armorType);
 				if (ingredient!=null) {
 					addArmorRecipe(armorType,ingredient,armor);
 				}
@@ -588,9 +579,9 @@ public class JobItem extends Job  {
 		return new String[]{armorTexture,armorTextureBottom};
 	}
 	
-	protected XieItemArmor doArmor(String basename, String fullname, int id, int icon, EnumArmorMaterial mat, int type, String tex, ItemStack ingredient) {
+	protected XieItemArmor doArmor(String basename, String fullname, int id, EnumArmorMaterial mat, int type, String tex, ItemStack ingredient) {
 		String name = basename+"."+XieItemArmor.SUFFIXES[type];
-		XieItemArmor armor = new XieItemArmor(name, id, icon, mat, type);
+		XieItemArmor armor = new XieItemArmor(name, id, mat, type);
 		armor.setArmorTextureFile(tex);
 		ModLoader.addName(armor, fullname);
 		if (ingredient!=null) {
@@ -630,8 +621,8 @@ public class JobItem extends Job  {
 	
 	protected void doBasic() { 	
 		if (item==null) {
-			logFiner("Added basic item: "+name+"("+id+") icon="+iconID);
-			item = new XieItem(name, id, iconID);
+			logFiner("Added basic item: "+name+"("+id+")");
+			item = new XieItem(name, id);
 		}
 		// Do some other stuff?
 		isDone = true;
@@ -708,7 +699,7 @@ public class JobItem extends Job  {
 		
 		ItemWrapper cookedStack = Xie.parseItemWrapper(cooked);
 		if (cookedStack!=null) {
-			logFiner("Cooks/smelts into "+cookedStack.getItemName());
+			logFiner("Cooks/smelts into "+cookedStack.getUnlocalizedName());
 			Xie.addSmeltingRecipe(id, cookedStack);
 			if (cookedStack.getItem() instanceof ItemFood) {
 				foodSmeltsSoFar.put(new ItemWrapper(id),cookedStack);
@@ -721,81 +712,24 @@ public class JobItem extends Job  {
 		}
 	}
 	
-	protected int expandIconNode(JsonNode iconNode) {
-		if (!isKey("icon")) {
-			logIncomplete("No icon node found");
-			return FAIL_ICON;
-		}
-		
-		if (iconNode.getType()==JsonNodeType.STRING) {
-			String iconText = iconNode.getText();
-			if (iconText.startsWith("#")) {
-				// steal icon(s) from another item
-				Item it = Xie.parseItem(iconText.substring(1));
-				if (it!=null) copyIconsFrom(it);
-				else {
-					logDelayed("Failed to find reference item "+iconText);
-					isDone=false;
-					return FAIL_ICON;
-				}
-				return iconID;
-			} else if (iconText.startsWith("http://")) {
-				int i = loadURLTexture(iconText, false);
-				if (i<0) return FAIL_ICON;
-				else return i;
-			} else {
-				// assume this is a filepath
-				String filepath = formatTextureFilepath(iconText);
-				int iconID = -1;
-				iconID = Xie.getItemSpriteOverride(filepath);
-				if (iconID<0) {
-					logIncomplete("Icon missing: "+iconText);
-					return FAIL_ICON;
-				} else return iconID;
-			}
-		} else if (iconNode.getType()==JsonNodeType.NUMBER) {
-			return Integer.parseInt(iconNode.getText());
-		} else if (iconNode.getType()==JsonNodeType.OBJECT) {
-			Map<Integer,Integer> iconIDs = new HashMap<Integer,Integer>();
-			// expand
-			Map<JsonStringNode, JsonNode> metaRanges = iconNode.getFields();
-			for (JsonNode metaRange : metaRanges.keySet()) {
-				int range[] = Xie.parseMetaRange(metaRange.getText());
-							
-				if (range==null) {
-					logIncomplete("Invalid meta range "+metaRange.getText());
-					continue;
-				} else {
-					int iID = expandIconNode(metaRanges.get(metaRange));
-					for (int i=range[0]; i<=range[1]; i++) {
-						iconIDs.put(i, iID);
-					}
-				}
-			}
-			int max = 0;
-			for (int damage : iconIDs.keySet()) if (damage>max) max=damage;
-			icons = new int[max+1];
-			for (int damage : iconIDs.keySet()) icons[damage]=iconIDs.get(damage);
-			
-			return icons[0];
-		} else {
-			logIncomplete("Failed to correctly set icon(s)");
-			return FAIL_ICON;
-		}
-	}
-
-	protected void copyIconsFrom(Item i) {
-		if (FMLClientHandler.instance().getSide()==Side.SERVER) return;
-		if (i.getHasSubtypes()) {
-			int N = i.getMaxDamage();
-			icons = new int[N];
-			for (int n=0; n<N; n++) icons[n]=i.getIconFromDamage(n);
-		} else {
-			int iID=i.getIconIndex(new ItemStack(i));
-			logFine("Using id from "+i.getItemName()+", icon ID "+iID);
-			iconID=iID;
-		}
-	}
+	// TODO FTFESAD
+//	protected XieTex expandIconNode(JsonNode iconNode) {
+//		if (iconNode.getType()==JsonNodeType.STRING) {
+//			String iconText = iconNode.getText();
+//			if (iconText.startsWith("#")) {
+//				// steal icon(s) from another item
+//				Item it = Xie.parseItem(iconText.substring(1));
+//				if (it!=null) {
+//					return new XieTexLink(it);
+//				}
+//				else {
+//					logDelayed("Failed to find reference item "+iconText);
+//					isDone=false;
+//					return null;
+//				}
+//			}
+//		}
+//	}
 	
 	protected int getToolDamage() {
 		if (isKey("damage")) return getInt("damage");
@@ -821,10 +755,6 @@ public class JobItem extends Job  {
 			logIncomplete("Failed to parse tool material "+s+", defaulting to wood");
 			return EnumToolMaterial.WOOD;
 		}
-	}
-
-	protected String getDefaultTextureFile() {
-		return "/gui/items.png";
 	}
 	
 	protected String[] getSetNames(String [] suffixes) {
@@ -863,33 +793,6 @@ public class JobItem extends Job  {
 		}
 		
 		return ids;
-	}
-	
-	protected int[] getSetIcons(String names[]) {
-		int n = names.length;
-		int icons[] = null;
-		
-		if (isKey("icons")) {
-			icons = new int[n];
-			Map<JsonStringNode,JsonNode> map = getNode("icons").getFields();
-			int i=0;
-			for (String name : names) {
-				if (map.containsKey(name)) {
-					icons[i++]=expandTextureNode(map.get(name));
-				} else {
-					logIncomplete("Incomplete icons array, failed to find "+name);
-					icons=null;
-					break;
-				}
-			}
-		}
-		
-		if (icons==null) {
-			icons = new int[n];
-			for (int i=0; i<n; i++) icons[i]=iconID+i;
-		}
-		
-		return icons;
 	}
 	
 	protected void doDungeonLoot(JsonNode j) {

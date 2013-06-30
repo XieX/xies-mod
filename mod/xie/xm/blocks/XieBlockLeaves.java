@@ -7,20 +7,23 @@ import java.util.Random;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.Xie;
-import mod.xie.xm.util.XieTex;
 import mod.xie.xm.world.TreeGenerator;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLeaves;
 import net.minecraft.block.StepSound;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Icon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
@@ -37,7 +40,7 @@ public class XieBlockLeaves extends BlockLeaves implements IXieBlock {
     public enum Shape { OAK, TALL, CONIFER, BIRCH };
     
 	public XieBlockLeaves(String name, int leafID) {
-		super(leafID, Block.leaves.blockIndexInTexture);
+		super(leafID);
 		
 		setLightOpacity(1);
 		disableStats();
@@ -46,7 +49,7 @@ public class XieBlockLeaves extends BlockLeaves implements IXieBlock {
 		setGraphicsLevel(true);
 		renderType=0;
 		trunkID = Block.wood.blockID;
-		setBlockName(name);
+		setUnlocalizedName(name);
 		setStepSound(Block.soundGrassFootstep);
 		setHardness(0.2F);
     }
@@ -104,7 +107,7 @@ public class XieBlockLeaves extends BlockLeaves implements IXieBlock {
     		int targetID = world.getBlockId(i+dx,j+dy,k+dz);
     		int targetMeta = metaFilter(world.getBlockMetadata(i+dx,j+dy,k+dz));
     		if (targetID==blockID && targetMeta==meta) {
-    			world.setBlockAndMetadata(i+dx, j+dy, k+dz, targetID, targetMeta | keyStoneBit);
+    			Xie.setBlockAndMeta(world, i+dx, j+dy, k+dz, targetID, targetMeta | keyStoneBit);
     			return;
     		}
     		if (++count==ADJ.length) dy=-1;
@@ -213,7 +216,8 @@ public class XieBlockLeaves extends BlockLeaves implements IXieBlock {
             }
             int j2 = adjacentTreeBlocks[k1 * j1 + k1 * size + k1];
             if(j2 >= 0) {
-            	world.setBlockMetadata(i, j, k, meta & -9);
+            	// TODO not actually sure what this last parameter does :P
+            	world.setBlockMetadataWithNotify(i, j, k, meta & -9, 2);
             } else {
             	removeLeaves(world, i, j, k);
             }
@@ -270,7 +274,7 @@ public class XieBlockLeaves extends BlockLeaves implements IXieBlock {
     
 	protected void removeLeaves(World world, int i, int j, int k) {
         dropBlockAsItem(world, i, j, k, world.getBlockMetadata(i, j, k), 0);
-        world.setBlockWithNotify(i, j, k, 0);
+        Xie.setBlock(world, i, j, k, 0);
     }
 
 	@Override
@@ -390,22 +394,11 @@ public class XieBlockLeaves extends BlockLeaves implements IXieBlock {
 	public XieTex getTex() {
     	return tex;
     }
-    
-    @Override
-	public void setTex(XieTex t) {
-    	isDefaultTexture=t.getTexFile()==null;
-    	tex=t;
-    }
-    
-    @Override
-	public int getBlockTextureFromSide(int i) {
-    	return getBlockTextureFromSideAndMetadata(i,0);
-    }
  
 	// texture IDs, tex[side][meta]
     @Override
-	public int getBlockTextureFromSideAndMetadata(int i, int j) {
-    	return tex.getTexFromSideAndMeta(i, metaFilter(j));
+	public Icon getIcon(int i, int j) {
+    	return tex.getIcon(i, metaFilter(j));
     }
     
     // not really used
@@ -424,8 +417,8 @@ public class XieBlockLeaves extends BlockLeaves implements IXieBlock {
 	public void onBlockDestroyedByPlayer(World world, int i, int j, int k, int l) {
     	if (becomesWhenDestroyed!=null) {
     		if (becomesWhenDestroyed.length>1)
-    			world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
-    		else world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], l);
+    			Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
+    		else Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], l);
     	}
     }
     
@@ -482,7 +475,7 @@ public class XieBlockLeaves extends BlockLeaves implements IXieBlock {
 	@Override
 	public String getBlockNameIS(ItemStack itemstack) {
 		int i = itemstack.getItemDamage();
-		if (names==null || names.length <= i) return getBlockName();
+		if (names==null || names.length <= i) return getUnlocalizedName();
 		else return names[i];
 	}
 
@@ -493,11 +486,6 @@ public class XieBlockLeaves extends BlockLeaves implements IXieBlock {
 
 	@Override
 	public String[] getNames() { return names; }
-	
-	@Override
-	public String getTextureFile() {
-		return Xie.textureWrapper(this);
-	}
 
 	@Override
 	public void setBecomesWhenDestroyed(int[] bwd) {
@@ -549,4 +537,16 @@ public class XieBlockLeaves extends BlockLeaves implements IXieBlock {
     	int i=0;
     	while (++i<names.length) list.add(new ItemStack(id, 1, i));
     }
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName2());
+		if (textureBase!=null) tex = tex.setTextureBase(textureBase);
+	}
+
+	@Override
+	public void setTextureBase(Block b) {
+		textureBase = b;
+	}
+	protected Block textureBase;
 }

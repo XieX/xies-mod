@@ -2,6 +2,8 @@ package mod.xie.xm.items;
 
 import java.util.HashMap;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.PotionEffectWrapper;
@@ -9,6 +11,7 @@ import mod.xie.xm.util.Thirsty;
 import mod.xie.xm.util.Xie;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumAction;
@@ -19,6 +22,7 @@ import net.minecraft.item.ItemSeeds;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
 import net.minecraft.potion.PotionEffect;
+import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,7 +35,6 @@ import java.util.Map;
 
 // TODO serious work on fixing the potential for multiple items with the same damage
 public class XieItemFood extends ItemFood implements XieItemInterface {
-	protected int icon[];
 	protected Droppables drops;
 	protected String names[];
 	protected EnumAction useAction;
@@ -40,21 +43,20 @@ public class XieItemFood extends ItemFood implements XieItemInterface {
 	protected int thirst;
 	protected int hunger;
 
-    public XieItemFood(String name, int i, int iconID, int healing, float nourishment, boolean isDogFood) {
+    public XieItemFood(String name, int i, int healing, float nourishment, boolean isDogFood) {
         super(i-Xie.idShift,healing, nourishment, isDogFood);
         hunger=healing;
         thirst=0;
-        setItemName(name);
-        setIconIndex(iconID);
+        setUnlocalizedName(name);
         useAction = EnumAction.eat;
     }
     
-    public XieItemFood(String name, int i, int icon, int healing, float nourishment) {
-    	this(name, i, icon, healing, nourishment, false);
+    public XieItemFood(String name, int i, int healing, float nourishment) {
+    	this(name, i, healing, nourishment, false);
     }
     
-    public XieItemFood(String name, int i, int iconID, int healing, boolean isDogFood) {
-    	this(name, i, iconID, healing, 0.6F, isDogFood);
+    public XieItemFood(String name, int i, int healing, boolean isDogFood) {
+    	this(name, i, healing, 0.6F, isDogFood);
     }
     
     public EnumAction getItemUseAction(ItemStack itemstack) { return useAction; }
@@ -75,24 +77,18 @@ public class XieItemFood extends ItemFood implements XieItemInterface {
     	effects.put(meta, l); 
     }
  
-    public int getIconFromDamage(int i)
-    {
-    	if (icon==null) return iconIndex;
-    	
-        if (icon.length>1 && i<icon.length) {
-        	return icon[i];
-        } else return icon[0];
+	protected XieTex icon;
+	@Override
+    public Icon getIconFromDamage(int i) {
+		return icon.getIconFromDamage(i);
     }
-    
-    @Override
-	public void setIcons(int i[]) { icon=i; }
     
     /*public void setPotionEffect(PotionEffectWrapper e) {
     	if (e==null) return;
     	setPotionEffect(e.getPotionID(),e.getDuration(),e.getAmplifier(),e.getChance());
     }*/
     
-    public ItemStack onFoodEaten(ItemStack itemstack, World world, EntityPlayer entityplayer) {        	
+    public void onFoodEaten(ItemStack itemstack, World world, EntityPlayer entityplayer) {        	
     	itemstack.stackSize--;
     	world.playSoundAtEntity(entityplayer, "random.burp", 0.5F, world.rand.nextFloat() * 0.1F + 0.9F);
     	
@@ -105,7 +101,7 @@ public class XieItemFood extends ItemFood implements XieItemInterface {
     	}
         
     	
-        if (world.isRemote) return itemstack;
+        if (world.isRemote) return;
     	// check potion effects
     	if (effects!=null && !effects.isEmpty()) {
     		List<PotionEffectWrapper> list = new LinkedList();
@@ -117,20 +113,18 @@ public class XieItemFood extends ItemFood implements XieItemInterface {
             		entityplayer.addPotionEffect(new PotionEffect(e));
         }
 
-        if (drops==null || drops.isEmpty()) return itemstack;
+        if (drops==null || drops.isEmpty()) return;
         
         int x = (int)entityplayer.posX;
         int y = (int)entityplayer.posY;
         int z = (int)entityplayer.posZ;
         
         LinkedList<ItemStack> drop = new LinkedList(drops.getDrops());
-        if (drop==null || drop.isEmpty()) return itemstack;
+        if (drop==null || drop.isEmpty()) return;
         
         if ((itemstack==null || itemstack.stackSize==0)) itemstack = drop.pop();
     	
         Xie.giveItemsToPlayer(world, entityplayer, drop);
-    	
-    	return itemstack;
     }
  
     @Override
@@ -157,14 +151,14 @@ public class XieItemFood extends ItemFood implements XieItemInterface {
 	}
 	
 	public String getSubName(int damage) {
-		if (names==null) return super.getItemName();
-		if (damage>=names.length) return super.getItemName();
+		if (names==null) return super.getUnlocalizedName();
+		if (damage>=names.length) return super.getUnlocalizedName();
 		return names[damage];
 	}
 	
 	public String getItemNameIS(ItemStack itemstack) {
-		if (names==null) return super.getItemName();
-		else return (new StringBuilder()).append(super.getItemName()).append(".").append(getSubName(itemstack.getItemDamage())).toString();
+		if (names==null) return super.getUnlocalizedName();
+		else return (new StringBuilder()).append(super.getUnlocalizedName()).append(".").append(getSubName(itemstack.getItemDamage())).toString();
 	}
 
 	@Override
@@ -180,5 +174,10 @@ public class XieItemFood extends ItemFood implements XieItemInterface {
 	@Override
 	public String getTextureFile() {
 		return Xie.textureWrapper(this);
+	} 
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		icon = AutomagicTextureFactory.getItem(registrar, getUnlocalizedName().replace("item.", ""));
 	} 
 }

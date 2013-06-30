@@ -22,7 +22,7 @@ public class XieTileEntityChest extends TileEntityChest {
 	public XieTileEntityChest(XieBlockChest chestBlock) {
 		super();
 		chest = chestBlock;
-		blockIdentifier = chestBlock.getBlockName();
+		blockIdentifier = chestBlock.getUnlocalizedName();
 	}
 	
     public String getInvName() { 

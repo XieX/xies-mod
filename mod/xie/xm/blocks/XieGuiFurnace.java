@@ -22,11 +22,9 @@ public class XieGuiFurnace extends GuiContainer {
     }
 
     // copy-pasta from GuiFurnace
-    protected void drawGuiContainerBackgroundLayer(float f, int i, int j)
-    {
-        int k = mc.renderEngine.getTexture("/gui/furnace.png");
+    protected void drawGuiContainerBackgroundLayer(float f, int i, int j) {
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        mc.renderEngine.bindTexture(k);
+        mc.renderEngine.bindTexture("/gui/furnace.png");
         int l = (width - xSize) / 2;
         int i1 = (height - ySize) / 2;
         drawTexturedModalRect(l, i1, 0, 0, xSize, ySize);

@@ -263,7 +263,7 @@ public class JobRecipe extends Job  {
 			if (o instanceof IRecipe) {
 				IRecipe r = (IRecipe)o;
 				if (Xie.itemstacksEqual(is,r.getRecipeOutput())) {
-					logFiner("Culling recipe for "+is.getItem().getItemName()+":"+is.stackSize+":"+is.getItemDamage());
+					logFiner("Culling recipe for "+is.getItem().getUnlocalizedName()+":"+is.stackSize+":"+is.getItemDamage());
 					cullVictims.add(o);
 				}
 			}
@@ -276,7 +276,7 @@ public class JobRecipe extends Job  {
 	}
 	
 	protected int doSmelting(ItemWrapper product) {
-		logFiner("Processing smelting recipe for "+product.getItemName());
+		logFiner("Processing smelting recipe for "+product.getUnlocalizedName());
 		
 		String smelt = getStr("smelt");
 		int smeltable = Xie.parseItemID(smelt);

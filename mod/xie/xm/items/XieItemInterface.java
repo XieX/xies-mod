@@ -9,9 +9,8 @@ public interface XieItemInterface {
 	void setDrops(Droppables drops);
 	void addDrop(Drop drop);
 	void setNames(String n[]);
-	void setIcons(int i[]);
 	public Item setHasSubtypes(boolean b);
-    String getItemName();
+    String getUnlocalizedName();
 	Droppables getDrops();
 	String getTexFile();
 	void setTexFile(String texFile);

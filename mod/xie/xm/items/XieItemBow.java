@@ -2,12 +2,15 @@ package mod.xie.xm.items;
 
 import java.util.LinkedList;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.ItemWrapper;
 import mod.xie.xm.util.Xie;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -18,6 +21,7 @@ import net.minecraft.item.ItemBow;
 import net.minecraft.item.ItemSeeds;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
+import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 import java.util.List;
 
@@ -36,10 +40,9 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
 	
 	protected int enchantability;
 	
-	public XieItemBow(String name, int id, int index) {
+	public XieItemBow(String name, int id) {
 		super(id - Xie.idShift);
-        setIconIndex(index);
-        setItemName(name);
+        setUnlocalizedName(name);
         
         ammunition = new LinkedList<Item>();
         ammunition.add(Item.arrow);
@@ -99,7 +102,7 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
 		if (ammunition.isEmpty()) return false;
 		
 		for (Item i : ammunition) {
-			if (player.inventory.hasItem(i.shiftedIndex)) return true;
+			if (player.inventory.hasItem(i.itemID)) return true;
 		}
 		
 		return false;
@@ -109,7 +112,7 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
 		if (ammunition.isEmpty()) return Item.arrow;
 		
 		for (Item i : ammunition) {
-			if (player.inventory.hasItem(i.shiftedIndex)) return i;
+			if (player.inventory.hasItem(i.itemID)) return i;
 		}
 		
 		return ammunition.get(0);
@@ -159,7 +162,7 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
             world.playSoundAtEntity(player, "random.bow", 1.0F, 1.0F / (itemRand.nextFloat() * 0.4F + 1.2F) + force * 0.5F);
 
             if (!freeFire) {
-                player.inventory.consumeInventoryItem(ammo.shiftedIndex);
+                player.inventory.consumeInventoryItem(ammo.itemID);
                 if (ammoConsumed) entityarrow.canBePickedUp = 0;
             } else {
                 entityarrow.canBePickedUp = 0;
@@ -187,7 +190,6 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
     
 	// XieItemInterface fields and methods
 	
-	protected int icon[];
 	protected String names[];
 	protected Droppables drops;
 	
@@ -205,17 +207,11 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
 	@Override
 	public void setNames(String n[]) { names=n; }
 	
-    public int getIconFromDamage(int i)
-    {
-    	if (icon==null) return iconIndex;
-    	
-        if (icon.length>1 && i<icon.length) {
-        	return icon[i];
-        } else return icon[0];
+	protected XieTex icon;
+	@Override
+    public Icon getIconFromDamage(int i) {
+		return icon.getIconFromDamage(i);
     }
-    
-    @Override
-	public void setIcons(int i[]) { icon=i; }
 	
 	@Override
 	public Item setHasSubtypes(boolean b) {
@@ -223,14 +219,14 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
 	}
 	
 	public String getSubName(int damage) {
-		if (names==null) return super.getItemName();
-		if (damage>=names.length) return super.getItemName();
+		if (names==null) return super.getUnlocalizedName();
+		if (damage>=names.length) return super.getUnlocalizedName();
 		return names[damage];
 	}
 	
 	public String getItemNameIS(ItemStack itemstack) {
-		if (names==null) return super.getItemName();
-		else return (new StringBuilder()).append(super.getItemName()).append(".").append(getSubName(itemstack.getItemDamage())).toString();
+		if (names==null) return super.getUnlocalizedName();
+		else return (new StringBuilder()).append(super.getUnlocalizedName()).append(".").append(getSubName(itemstack.getItemDamage())).toString();
 	}
 	
 	@Override
@@ -250,4 +246,9 @@ public class XieItemBow extends ItemBow implements XieItemInterface {
 	public String getTextureFile() {
 		return Xie.textureWrapper(this);
 	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		icon = AutomagicTextureFactory.getItem(registrar, getUnlocalizedName().replace("item.", ""));
+	} 
 }

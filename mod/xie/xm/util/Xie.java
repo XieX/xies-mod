@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 
 
@@ -17,6 +18,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 
 import mod.xie.xm.Work;
 import mod.xie.xm.XiesMod;
+import mod.xie.xm.blocks.BlockSide;
 import mod.xie.xm.blocks.IXieBlock;
 import mod.xie.xm.blocks.XieBlockPlant;
 import mod.xie.xm.blocks.XieChestRenderer;
@@ -25,6 +27,7 @@ import mod.xie.xm.file.XieLog;
 import mod.xie.xm.items.XieItemBucket;
 import mod.xie.xm.items.XieItemInterface;
 import mod.xie.xm.parser.DungeonLootHelper;
+import mod.xie.xm.tex.XieTex;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFire;
 import net.minecraft.block.BlockLeaves;
@@ -41,12 +44,14 @@ import net.minecraft.item.ItemTool;
 import net.minecraft.potion.Potion;
 import net.minecraft.src.BaseMod;
 import net.minecraft.src.ModLoader;
-import net.minecraft.src.ModTextureStatic;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.WeightedRandomChestContent;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ChestGenHooks;
 import net.minecraftforge.common.DungeonHooks;
 import net.minecraftforge.common.EnumPlantType;
+import net.minecraftforge.common.ForgeDirection;
 import net.minecraftforge.common.MinecraftForge;
 
 public class Xie {
@@ -98,9 +103,9 @@ public class Xie {
 		
 		for (int i=0; i<Block.blocksList.length; i++) {
 			if (Block.blocksList[i]==null) continue;
-			if (Block.blocksList[i].getBlockName()==null) continue;
-			if (Block.blocksList[i].getBlockName().equals(string)) return Block.blocksList[i];
-			String test = cleanName(Block.blocksList[i].getBlockName());
+			if (Block.blocksList[i].getUnlocalizedName()==null) continue;
+			if (Block.blocksList[i].getUnlocalizedName().equals(string)) return Block.blocksList[i];
+			String test = cleanName(Block.blocksList[i].getUnlocalizedName());
 			if (test.equals(string)) {
 				return Block.blocksList[i];
 			}
@@ -190,7 +195,7 @@ public class Xie {
 	
 	public static int parseItemID(String string) {
 		Item it = parseItem(string);
-		if (it!=null) return it.shiftedIndex;
+		if (it!=null) return it.itemID;
 		else return -1;
 	}
 	
@@ -217,9 +222,9 @@ public class Xie {
 		for (int i=0; i<Item.itemsList.length; i++) {
 			if (Item.itemsList[i]==null) continue;
 			try {
-				if (Item.itemsList[i].getItemName()==null) continue;
-				if (Item.itemsList[i].getItemName().equals(string)) return Item.itemsList[i];
-				String test = cleanName(Item.itemsList[i].getItemName());
+				if (Item.itemsList[i].getUnlocalizedName()==null) continue;
+				if (Item.itemsList[i].getUnlocalizedName().equals(string)) return Item.itemsList[i];
+				String test = cleanName(Item.itemsList[i].getUnlocalizedName());
 				if (test.equals(string)) {
 					return Item.itemsList[i];
 				}
@@ -232,8 +237,12 @@ public class Xie {
 		return null;
 	}
 	
+	// TODO FTFESAD strongly consider deleting
+	@Deprecated
 	public static int parseSide(String string) {
-		return XieTex.getSide(string);
+		BlockSide side = BlockSide.parse(string);
+		if (side!=null) return side.ordinal();
+		else return -4;
 	}
 	
 	// removes the "tile." or "item." from a name if present
@@ -422,7 +431,7 @@ public class Xie {
 		if (b!=null) return b.blockID;
 
 		Item it = parseItem(string);
-		if (it!=null) return it.shiftedIndex;
+		if (it!=null) return it.itemID;
 		
 		return -1;		
 	}
@@ -597,7 +606,7 @@ public class Xie {
 			// reroute pointer to new array
 			field.set(o, newEffectiveAgainst);
 		} catch (Exception e) {
-			System.out.println("Exception setting tool effectiveness for "+block.getBlockName());
+			System.out.println("Exception setting tool effectiveness for "+block.getUnlocalizedName());
 			e.printStackTrace();
 		}
 	}
@@ -605,7 +614,7 @@ public class Xie {
 	public static void setPickaxeEffectiveness(Block block) {
 		setToolEffectiveness(ItemTool.class,Item.pickaxeWood,block);
 		setToolEffectiveness(ItemTool.class,Item.pickaxeStone,block);
-		setToolEffectiveness(ItemTool.class,Item.pickaxeSteel,block);
+		setToolEffectiveness(ItemTool.class,Item.pickaxeIron,block);
 		setToolEffectiveness(ItemTool.class,Item.pickaxeDiamond,block);
 		setToolEffectiveness(ItemTool.class,Item.pickaxeGold,block);
 	}
@@ -613,7 +622,7 @@ public class Xie {
 	public static void setAxeEffectiveness(Block block) {
 		setToolEffectiveness(ItemTool.class,Item.axeWood,block);
 		setToolEffectiveness(ItemTool.class,Item.axeStone,block);
-		setToolEffectiveness(ItemTool.class,Item.axeSteel,block);
+		setToolEffectiveness(ItemTool.class,Item.axeIron,block);
 		setToolEffectiveness(ItemTool.class,Item.axeDiamond,block);
 		setToolEffectiveness(ItemTool.class,Item.axeGold,block);
 	}
@@ -621,7 +630,7 @@ public class Xie {
 	public static void setShovelEffectiveness(Block block) {
 		setToolEffectiveness(ItemTool.class,Item.shovelWood,block);
 		setToolEffectiveness(ItemTool.class,Item.shovelStone,block);
-		setToolEffectiveness(ItemTool.class,Item.shovelSteel,block);
+		setToolEffectiveness(ItemTool.class,Item.shovelIron,block);
 		setToolEffectiveness(ItemTool.class,Item.shovelDiamond,block);
 		setToolEffectiveness(ItemTool.class,Item.shovelGold,block);
 	}
@@ -724,7 +733,7 @@ public class Xie {
 	
 	public static void setDecayFlag(World world, int i, int j, int k) {
 		int meta = world.getBlockMetadata(i, j, k);
-        if(!isDecayFlagSet(meta)) world.setBlockMetadata(i, j, k, meta | 8);
+        if(!isDecayFlagSet(meta)) setBlockMeta(world, i, j, k, meta | 8);
 	}
 
 	public static boolean isDecayFlagSet(int meta) {
@@ -733,7 +742,7 @@ public class Xie {
 	
 	public static void unsetDecayFlag(World world, int i, int j, int k) {
 		int meta = world.getBlockMetadata(i, j, k);
-        if(isDecayFlagSet(meta)) world.setBlockMetadata(i, j, k, meta & -9);
+        if(isDecayFlagSet(meta)) setBlockMeta(world, i, j, k, meta & -9);
 	}
 	
 	private static final float mag = 0.7f;
@@ -771,7 +780,7 @@ public class Xie {
 		List<EntityItem> itemEntities = world.getEntitiesWithinAABB(EntityItem.class, AxisAlignedBB.getBoundingBox(i-d,j-d,k-d,i+d,j+d,k+d));
 		for (EntityItem e : itemEntities) 
 			for (ItemStack is : items) {
-				ItemStack it = e.func_92014_d();
+				ItemStack it = e.getEntityItem();
 				if (it!=null && it.itemID == is.itemID 
 					&& it.getItemDamage() == is.getItemDamage()) count++;
 			}
@@ -781,18 +790,18 @@ public class Xie {
 	// wrapper methods
 	public static void setBlock(World world, int x, int y, int z, int id) {
 		if (id<0) return;
-		world.setBlockWithNotify(x, y, z, id);
-		world.markBlockForRenderUpdate(x, y, z);
+		setBlockAndMeta(world, x, y, z, id, 0);
 	}
 	
 	public static void setBlockAndMeta(World world, int x, int y, int z, int id, int m) {
 		if (id<0) return;
-		world.setBlockAndMetadataWithNotify(x, y, z, id, m);
-		world.markBlockForRenderUpdate(x, y, z);
+		world.setBlock(x, y, z, id, m, 2);
+//		TODO check, but I think this is redundant, with the above flag (2)
+//		world.markBlockForRenderUpdate(x, y, z);
 	}
 	
 	public static void setBlockMeta(World world, int x, int y, int z, int m) {
-		world.setBlockMetadataWithNotify(x, y, z, m);
+		world.setBlockMetadataWithNotify(x, y, z, m, 2);
 		world.markBlockForRenderUpdate(x, y, z);
 	}
 	
@@ -829,10 +838,9 @@ public class Xie {
     	return XieFuelManager.getItemBurnTime(new ItemStack(id, 1, meta));
     }
     
+    @Deprecated
 	public static String textureWrapper(IXieBlock block) {
-		if (block.getTex()==null) return "/terrain.png";
-		if (block.getTex().getTexFile()==null) return "/terrain.png";
-		else return block.getTex().getTexFile();
+		return "";
 	}
 	
 	public static String textureWrapper(XieItemInterface item) {
@@ -888,8 +896,9 @@ public class Xie {
 		BonemealHandler.add(plant);
 	}
 
+	// TODO this needs to be tested and expanded
 	public static void addDungeonLoot(DungeonLootHelper l) {
-		DungeonHooks.addDungeonLoot(l.itemstack, l.rarity, l.min, l.max);
+		ChestGenHooks.getInfo(ChestGenHooks.DUNGEON_CHEST).addItem(new WeightedRandomChestContent(l.itemstack, l.rarity, l.min, l.max));
 	}
 
 	public static void addBlockDestroyEffects(int i, int j, int k, int bid, int l) {
@@ -910,5 +919,9 @@ public class Xie {
 		}
 		
 		return null;
+	}
+
+	public static ForgeDirection getRandomDir(Random r) {
+		return ForgeDirection.VALID_DIRECTIONS[r.nextInt(ForgeDirection.VALID_DIRECTIONS.length)];
 	}
 }

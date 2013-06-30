@@ -4,23 +4,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.BlockID;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.Xie;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumToolMaterial;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
+import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 
 
 
 public class XieItemTool extends ItemTool implements XieItemInterface {
-	protected int icon[];
 	protected String names[];
 	protected Droppables drops;
 	
@@ -34,10 +37,9 @@ public class XieItemTool extends ItemTool implements XieItemInterface {
 	public Map<BlockID,BlockID> transforms = new HashMap();
 	
 	// constructors
-	public XieItemTool(String name, int id, int index, int dmg, EnumToolMaterial toolMaterial) {
+	public XieItemTool(String name, int id, int dmg, EnumToolMaterial toolMaterial) {
 		super(id-Xie.idShift,dmg,toolMaterial,null);
-        setIconIndex(index);
-        setItemName(name);
+        setUnlocalizedName(name);
 	}
 	
 	// setters
@@ -105,8 +107,8 @@ public class XieItemTool extends ItemTool implements XieItemInterface {
 	    		else block = blockID.getBlock();
 	    		Xie.playBreakSoundEffect(world, block, i + 0.5F, j + 0.5F, k + 0.5F);
 	    		if (world.isRemote) return true;
-	    		if (blockID.hasMeta()) world.setBlockAndMetadataWithNotify(i, j, k, blockID.blockID, blockID.metadata);
-	    		else world.setBlockWithNotify(i, j, k, blockID.blockID);
+	    		if (blockID.hasMeta()) Xie.setBlockAndMeta(world, i, j, k, blockID.blockID, blockID.metadata);
+	    		else Xie.setBlock(world, i, j, k, blockID.blockID);
 	    		itemstack.damageItem(1, entityplayer);
 	            return true;
 	    	}
@@ -146,17 +148,11 @@ public class XieItemTool extends ItemTool implements XieItemInterface {
 	@Override
 	public void setNames(String n[]) { names=n; }
 	
-    public int getIconFromDamage(int i)
-    {
-    	if (icon==null) return iconIndex;
-    	
-        if (icon.length>1 && i<icon.length) {
-        	return icon[i];
-        } else return icon[0];
+	protected XieTex icon;
+	@Override
+    public Icon getIconFromDamage(int i) {
+		return icon.getIconFromDamage(i);
     }
-    
-    @Override
-	public void setIcons(int i[]) { icon=i; }
 	
 	@Override
 	public Item setHasSubtypes(boolean b) {
@@ -164,14 +160,14 @@ public class XieItemTool extends ItemTool implements XieItemInterface {
 	}
 	
 	public String getSubName(int damage) {
-		if (names==null) return super.getItemName();
-		if (damage>=names.length) return super.getItemName();
+		if (names==null) return super.getUnlocalizedName();
+		if (damage>=names.length) return super.getUnlocalizedName();
 		return names[damage];
 	}
 	
 	public String getItemNameIS(ItemStack itemstack) {
-		if (names==null) return super.getItemName();
-		else return (new StringBuilder()).append(super.getItemName()).append(".").append(getSubName(itemstack.getItemDamage())).toString();
+		if (names==null) return super.getUnlocalizedName();
+		else return (new StringBuilder()).append(super.getUnlocalizedName()).append(".").append(getSubName(itemstack.getItemDamage())).toString();
 	}
 	
 	@Override
@@ -191,4 +187,9 @@ public class XieItemTool extends ItemTool implements XieItemInterface {
 	public String getTextureFile() {
 		return Xie.textureWrapper(this);
 	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		icon = AutomagicTextureFactory.getItem(registrar, getUnlocalizedName().replace("item.", ""));
+	} 
 }

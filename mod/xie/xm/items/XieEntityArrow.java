@@ -32,7 +32,7 @@ public class XieEntityArrow extends EntityArrow {
     {
         super.writeEntityToNBT(compound);
         
-        compound.setInteger("itemId", item.shiftedIndex);
+        compound.setInteger("itemId", item.itemID);
     }
 
     /**

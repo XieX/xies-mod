@@ -3,11 +3,12 @@ package mod.xie.xm.blocks;
 import java.util.HashMap;
 
 import mod.xie.xm.XiesMod;
+import mod.xie.xm.tex.AutomagicTextureFactory;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.ItemWrapper;
 import mod.xie.xm.util.Xie;
-import mod.xie.xm.util.XieTex;
 import net.minecraft.block.Block;
 import net.minecraft.block.StepSound;
 import net.minecraft.entity.Entity;
@@ -17,9 +18,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Icon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +33,7 @@ import java.util.Random;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.src.ModLoader;
+import net.minecraftforge.common.ForgeDirection;
 
 
 public class XieBlockFurnace extends BlockContainer implements IXieBlock {
@@ -58,7 +62,7 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
 	public XieBlockFurnace(String blockName, int id, String displayName, boolean active) {
 		super(id, Material.rock);
 		name = blockName;
-		setBlockName(blockName);
+		setUnlocalizedName(blockName);
 		this.displayName=displayName;
 		isActive=active;
 		if (isActive) this.active = this;
@@ -117,7 +121,7 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
     	
     	// scale and set meta based on burn level
     	if (world.getBlockMetadata(i,j,k)!=burnLevel) {
-    		world.setBlockMetadataWithNotify(i,j,k,metaByBurnTime[burnLevel<0?0:burnLevel]);
+    		world.setBlockMetadataWithNotify(i,j,k,metaByBurnTime[burnLevel<0?0:burnLevel], 3);
     		setBlockBoundsBasedOnState(world, i, j, k);
     	}
     		
@@ -147,14 +151,13 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
       	Random random = new Random();
     	if (random.nextInt(10)>=volatility) return;
     		for (int n=0; n<volatility; n++) {
-	    		int dx = random.nextInt(3) - 1;
-	    		int dy = random.nextInt(3) - 1;
-	    		int dz = random.nextInt(3) - 1;
-	    		if (dx!=0 || dy!=0 || dz!=0) {
-	    			
-	    			if (Block.fire.canBlockCatchFire(world, i+dx, j+dy, k+dz))
-	    				world.setBlock(i+dx, j+dy, k+dz, Block.fire.blockID);
-	    		}
+    			ForgeDirection dir = Xie.getRandomDir(random);
+    			int x = i + dir.offsetX;
+    			int y = j + dir.offsetY;
+    			int z = k + dir.offsetZ;
+					    			
+    			if (Block.fire.canBlockCatchFire(world, x, y, z, dir))
+    				Xie.setBlockAndMeta(world, x, y, z, Block.fire.blockID, 0);
     		}
     	}
     }
@@ -250,9 +253,8 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
     		Xie.setBlock(world, i, j, k, 0);
     	}
     }
-    
-    // entity.func_40046_d(int i) ==> set's the entity on fire by amount 20*i
-    @Override
+
+	@Override
 	public void onEntityCollidedWithBlock(World world, int i, int j, int k, Entity entity)
     {
     	if (isSpikey && !world.isRemote) entity.attackEntityFrom(DamageSource.generic, 1);
@@ -294,7 +296,7 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
         	if(Block.opaqueCubeLookup[west] && !Block.opaqueCubeLookup[east]) direction = 4;
         }
         
-        world.setBlockMetadataWithNotify(i, j, k, direction);
+        Xie.setBlockMeta(world, i, j, k, direction);
     }
     
     /* Xie Basic Block copy-pasta */
@@ -378,22 +380,11 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
 	public XieTex getTex() {
     	return tex;
     }
-    
-    @Override
-	public void setTex(XieTex t) {
-    	isDefaultTexture=t.getTexFile()==null;
-    	tex=t;
-    }
-    
-    @Override
-	public int getBlockTextureFromSide(int i) {
-    	return getBlockTextureFromSideAndMetadata(i,0);
-    }
  
 	// texture IDs, tex[side][meta]
     @Override
-	public int getBlockTextureFromSideAndMetadata(int i, int j) {
-    	return tex.getTexFromSideAndMeta(i, j);
+	public Icon getIcon(int i, int j) {
+    	return tex.getIcon(i, j);
     }
     
     // not really used
@@ -413,8 +404,8 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
     	if (world.isRemote) return;
     	if (becomesWhenDestroyed!=null) {
     		if (becomesWhenDestroyed.length>1)
-    			world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
-    		else world.setBlockWithNotify(i, j, k, becomesWhenDestroyed[0]);
+    			Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
+    		else Xie.setBlock(world, i, j, k, becomesWhenDestroyed[0]);
     	}
     }
     
@@ -485,7 +476,7 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
 	@Override
 	public String getBlockNameIS(ItemStack itemstack) {
 		int i = itemstack.getItemDamage();
-		if (names==null || names.length <= i || i < 0) return getBlockName();
+		if (names==null || names.length <= i || i < 0) return getUnlocalizedName();
 		else return names[i];
 	}
 
@@ -496,11 +487,6 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
 
 	@Override
 	public String[] getNames() { return names; }
-	
-	@Override
-	public String getTextureFile() {
-		return Xie.textureWrapper(this);
-	}
 
 	@Override
 	public void setBecomesWhenDestroyed(int[] bwd) {
@@ -531,4 +517,16 @@ public class XieBlockFurnace extends BlockContainer implements IXieBlock {
 	public TileEntity createNewTileEntity(World var1) {
 		return this.getBlockEntity();
 	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName2());
+		if (textureBase!=null) tex = tex.setTextureBase(textureBase);
+	}
+
+	@Override
+	public void setTextureBase(Block b) {
+		textureBase = b;
+	}
+	protected Block textureBase;
 }
