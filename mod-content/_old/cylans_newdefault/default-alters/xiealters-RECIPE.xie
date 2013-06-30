@@ -1,9 +1,0 @@
-{
-	"recipes": {
-		"cull": "pumpkinSeeds:4",
-		"melonjuice": "item.melon,glassBottle",
-		"pumpkinpiece:4": "pumpkin",
-		"pumpkincooked": "pumpkinpiece",
-		"pumpkinseeds": "pumpkinpiece"
-	}
-}
