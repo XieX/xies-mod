@@ -8,6 +8,7 @@ import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Icon;
 
 
 // Simple wrapper for items that contains an equals override
@@ -32,7 +33,7 @@ public class ItemWrapper implements Comparable {
 	}
 	
 	public ItemWrapper(Item i) {
-		this(i.shiftedIndex);
+		this(i.itemID);
 	}
 	
 	public ItemWrapper(Block b) {
@@ -48,12 +49,16 @@ public class ItemWrapper implements Comparable {
 			id=b.blockID;
 		} else if (object instanceof Item) {
 			Item i = (Item)object;
-			id=i.shiftedIndex;
+			id=i.itemID;
 		} else if (object instanceof ItemStack) {
 			ItemStack is = (ItemStack)object;
 			id=is.itemID;
 			count=is.stackSize;
-			meta=is.getItemDamage();
+			try {
+				meta=is.getItemDamage();
+			} catch (NullPointerException e) {
+				// do nothing
+			}
 		} else if (object instanceof Integer) {
 			id = (Integer)object;
 		} else throw new ClassCastException("Object cannot be identified as a Minecraft block or item");
@@ -88,8 +93,8 @@ public class ItemWrapper implements Comparable {
 		else return id==other.itemID;
 	}
 
-	public String getItemName() {
-		if (exists()) return Item.itemsList[id].getItemName();
+	public String getUnlocalizedName() {
+		if (exists()) return Item.itemsList[id].getUnlocalizedName();
 		else return "null";
 	}
 
@@ -98,16 +103,23 @@ public class ItemWrapper implements Comparable {
 	}
 
 	public Block getBlock() {
-		if (Item.itemsList[id] instanceof ItemBlock) {
-			return Block.blocksList[id];
-		}
-		
-		return null;
+		if (isBlock()) return Block.blocksList[id];
+		else return null;
+	}
+	
+	public boolean isBlock() {
+		if (Item.itemsList[id] instanceof ItemBlock) return true;
+		if (id < Block.blocksList.length && Block.blocksList[id] != null) return true;
+		return false;
+	}
+	
+	public boolean isItem() {
+		return !isBlock();
 	}
 	
 	@Override
 	public String toString() {
-		String s = getItemName();
+		String s = getUnlocalizedName();
 		if (hasMeta()) s+=":"+count+":"+meta;
 		else if (count>1) s+="*"+count;
 		return s;

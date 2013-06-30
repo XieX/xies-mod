@@ -3,13 +3,15 @@ package mod.xie.xm.blocks;
 import java.util.List;
 import java.util.Random;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.Xie;
-import mod.xie.xm.util.XieTex;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockChest;
 import net.minecraft.block.StepSound;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
@@ -19,6 +21,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Icon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -41,8 +44,8 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 	protected String smallTex = "/item/chest.png";
 	
 	public XieBlockChest(String name, int id, String displayName) {
-		super(id);
-		setBlockName(name);
+		super(id, 1);
+		setUnlocalizedName(name);
 		renderType=22;
 		this.displayName=displayName;
 		renderer = new XieChestRenderer();
@@ -130,32 +133,32 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
         if (mergeHorizontal) {
 	    	if (world.getBlockId(i, j, k - 1) == blockID) {
 	    		if (meta==4 || meta==5) {
-	    			world.setBlockMetadataWithNotify(i, j, k, meta);
-	    			world.setBlockMetadataWithNotify(i, j, k - 1, meta);
+	    			world.setBlockMetadataWithNotify(i, j, k, meta, 3);
+	    			world.setBlockMetadataWithNotify(i, j, k - 1, meta, 3);
 	    			return;
 	    		}
 	    	}
 	    	
 	    	if (world.getBlockId(i, j, k + 1) == blockID) {
 	    		if (meta==4 || meta==5) {
-	    			world.setBlockMetadataWithNotify(i, j, k, meta);
-	    			world.setBlockMetadataWithNotify(i, j, k + 1, meta);
+	    			world.setBlockMetadataWithNotify(i, j, k, meta, 3);
+	    			world.setBlockMetadataWithNotify(i, j, k + 1, meta, 3);
 	    			return;
 	    		}
 	    	}
 	    	
 	    	if (world.getBlockId(i - 1, j, k) == blockID) {
 	    		if (meta==2 || meta==3) {
-	    			world.setBlockMetadataWithNotify(i, j, k, meta);
-	    			world.setBlockMetadataWithNotify(i - 1, j, k, meta);
+	    			world.setBlockMetadataWithNotify(i, j, k, meta, 3);
+	    			world.setBlockMetadataWithNotify(i - 1, j, k, meta, 3);
 	    			return;
 	    		}
 	    	}
 	    	
 	    	if (world.getBlockId(i + 1, j, k) == blockID) {
 	    		if (meta==2 || meta==3) {
-	    			world.setBlockMetadataWithNotify(i, j, k, meta);
-	    			world.setBlockMetadataWithNotify(i + 1, j, k, meta);
+	    			world.setBlockMetadataWithNotify(i, j, k, meta, 3);
+	    			world.setBlockMetadataWithNotify(i + 1, j, k, meta, 3);
 	    			return;
 	    		}
 	    	}
@@ -178,12 +181,12 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 	    		if (meta==4) meta=6;
 	    		if (meta==5) meta=7;
 	    		
-	    		if (below) world.setBlockMetadataWithNotify(i, j - 1, k, meta);
-	        	if (above) world.setBlockMetadataWithNotify(i, j + 1, k, meta);
+	    		if (below) world.setBlockMetadataWithNotify(i, j - 1, k, meta, 3);
+	        	if (above) world.setBlockMetadataWithNotify(i, j + 1, k, meta, 3);
         	}
         }
         
-        world.setBlockMetadataWithNotify(i, j, k, meta);
+        world.setBlockMetadataWithNotify(i, j, k, meta, 3);
     }
     
     public void unifyAdjacentChests(World world, int i, int j, int k) {
@@ -236,7 +239,7 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
             }
         }
         
-        world.setBlockMetadataWithNotify(i, j, k, meta);
+        world.setBlockMetadataWithNotify(i, j, k, meta, 3);
     }
 	
 	public String getDisplayName() { return displayName; }
@@ -336,7 +339,7 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 		else return new InventoryLargeChest(largeName, base, (IInventory)world.getBlockTileEntity(i, j, k));
 	}
 	
-	public int getBlockTexture(IBlockAccess iblockaccess, int i, int j, int k, int l) {
+	public Icon getBlockTexture(IBlockAccess iblockaccess, int i, int j, int k, int l) {
 		return getBlockTextureFromSide(l);
 	}
 	
@@ -422,21 +425,10 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
     	return tex;
     }
     
-    @Override
-	public void setTex(XieTex t) {
-    	isDefaultTexture=t.getTexFile()==null;
-    	tex=t;
-    }
-    
-    @Override
-	public int getBlockTextureFromSide(int i) {
-    	return getBlockTextureFromSideAndMetadata(i,0);
-    }
- 
 	// texture IDs, tex[side][meta]
     @Override
-	public int getBlockTextureFromSideAndMetadata(int i, int j) {
-    	return tex.getTexFromSideAndMeta(i, j);
+	public Icon getIcon(int i, int j) {
+    	return tex.getIcon(i, j);
     }
     
     // not really used
@@ -455,8 +447,8 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 	public void onBlockDestroyedByPlayer(World world, int i, int j, int k, int l) {
     	if (becomesWhenDestroyed!=null) {
     		if (becomesWhenDestroyed.length>1)
-    			world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
-    		else world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], l);
+    			Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
+    		else Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], l);
     	}
     }
     
@@ -527,7 +519,7 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 	@Override
 	public String getBlockNameIS(ItemStack itemstack) {
 		int i = itemstack.getItemDamage();
-		if (names==null || names.length <= i) return getBlockName();
+		if (names==null || names.length <= i) return getUnlocalizedName();
 		else return names[i];
 	}
 
@@ -538,11 +530,6 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 
 	@Override
 	public String[] getNames() { return names; }
-	
-	@Override
-	public String getTextureFile() {
-		return Xie.textureWrapper(this);
-	}
 
 	@Override
 	public void setBecomesWhenDestroyed(int[] bwd) {
@@ -580,4 +567,16 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName2());
+		if (textureBase!=null) tex = tex.setTextureBase(textureBase);
+	}
+	
+	@Override
+	public void setTextureBase(Block b) {
+		textureBase = b;
+	}
+	protected Block textureBase;
 }

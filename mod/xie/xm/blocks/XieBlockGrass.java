@@ -2,11 +2,12 @@ package mod.xie.xm.blocks;
 
 import java.util.List;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.BlockID;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.Xie;
-import mod.xie.xm.util.XieTex;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockGrass;
 import net.minecraft.block.BlockPane;
@@ -18,9 +19,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Icon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import java.util.Random;
 
@@ -35,7 +38,7 @@ public class XieBlockGrass extends BlockGrass implements IXieBlock {
 	
 	public XieBlockGrass(String name, int id) {
 		super(id);
-		setBlockName(name);
+		setUnlocalizedName(name);
 		setStepSound(Block.soundGrassFootstep);
 		setHardness(0.6F);
 		dirtBlock = new BlockID(Block.dirt.blockID);
@@ -62,20 +65,10 @@ public class XieBlockGrass extends BlockGrass implements IXieBlock {
                 int z = (k + random.nextInt(3)) - 1;
                 int aboveBlock = world.getBlockId(x, y + 1, z);
                 if (world.getBlockId(x, y, z) == dirtBlock.blockID && world.getBlockLightValue(x, y + 1, z) >= 4 && Block.lightOpacity[aboveBlock] <= 2)
-                	world.setBlockWithNotify(x, y, z, blockID);
+                	Xie.setBlock(world, x, y, z, blockID);
             }
         }
 	}
-	
-	public int getBlockTexture(IBlockAccess block, int i, int j, int k, int l) {
-		if (useVanillaTexture) return getVanillaBlockTexture(block,i,j,k,l);
-		else return super.getBlockTexture(block, i, j, k, l);
-	}
-    
-    public int getBlockTextureFromSide(int i) {
-    	if (useVanillaTexture) Block.grass.getBlockTextureFromSide(i);
-    	return getBlockTextureFromSideAndMetadata(i,0);
-    }
     
     public void dropBlockAsItemWithChance(World world, int i, int j, int k, int l, float f, int multiplier) {
         if (world.isRemote) return;
@@ -103,9 +96,9 @@ public class XieBlockGrass extends BlockGrass implements IXieBlock {
     }
     
 	// texture IDs, tex[side][meta]
-    public int getBlockTextureFromSideAndMetadata(int i, int j) {
-    	if (useVanillaTexture) Block.grass.getBlockTextureFromSideAndMetadata(i, j);
-    	return tex.getTexFromSideAndMeta(i, j);
+    public Icon getIcon(int i, int j) {
+    	if (useVanillaTexture) Block.grass.getIcon(i, j);
+    	return tex.getIcon(i, j);
     }
 	
 	// vanilla grass block texturisation
@@ -211,12 +204,6 @@ public class XieBlockGrass extends BlockGrass implements IXieBlock {
     	return tex;
     }
     
-    @Override
-	public void setTex(XieTex t) {
-    	isDefaultTexture=t.getTexFile()==null;
-    	tex=t;
-    }
-    
     // not really used
     @Override
 	public int quantityDropped(Random random) {
@@ -233,8 +220,8 @@ public class XieBlockGrass extends BlockGrass implements IXieBlock {
 	public void onBlockDestroyedByPlayer(World world, int i, int j, int k, int l) {
     	if (becomesWhenDestroyed!=null) {
     		if (becomesWhenDestroyed.length>1)
-    			world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
-    		else world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], l);
+    			Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
+    		else Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], l);
     	}
     }
     
@@ -291,7 +278,7 @@ public class XieBlockGrass extends BlockGrass implements IXieBlock {
 	@Override
 	public String getBlockNameIS(ItemStack itemstack) {
 		int i = itemstack.getItemDamage();
-		if (names==null || names.length <= i) return getBlockName();
+		if (names==null || names.length <= i) return getUnlocalizedName();
 		else return names[i];
 	}
 
@@ -302,11 +289,6 @@ public class XieBlockGrass extends BlockGrass implements IXieBlock {
 
 	@Override
 	public String[] getNames() { return names; }
-	
-	@Override
-	public String getTextureFile() {
-		return Xie.textureWrapper(this);
-	}
 
 	@Override
 	public void setBecomesWhenDestroyed(int[] bwd) {
@@ -344,4 +326,16 @@ public class XieBlockGrass extends BlockGrass implements IXieBlock {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName2());
+		if (textureBase!=null) tex = tex.setTextureBase(textureBase);
+	}
+
+	@Override
+	public void setTextureBase(Block b) {
+		textureBase = b;
+	}
+	protected Block textureBase;
 }

@@ -39,7 +39,7 @@ public class XieBlockFacing extends XieBlockMounted {
         if (playerFacing == 1) meta = Location.SOUTH.ordinal();
         if (playerFacing == 2) meta = Location.WEST.ordinal();
         if (playerFacing == 3) meta = Location.NORTH.ordinal();
-        world.setBlockMetadataWithNotify(i, j, k, meta);
+        Xie.setBlockMeta(world, i, j, k, meta);
     }
 	
 	public boolean blockActivated(World world, int i, int j, int k, EntityPlayer entityplayer) {

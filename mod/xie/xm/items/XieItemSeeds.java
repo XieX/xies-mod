@@ -1,11 +1,14 @@
 package mod.xie.xm.items;
 
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.Xie;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumToolMaterial;
@@ -13,6 +16,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemSeeds;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
+import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 
 // Referenced classes of package net.minecraft.src:
@@ -24,17 +28,13 @@ public class XieItemSeeds extends ItemSeeds implements XieItemInterface {
     protected int growsIntoMeta;
     protected Droppables drops;
     protected String[] names;
-    protected int icon[];
     
-    public XieItemSeeds(int id, int iconIndex, Block plant, String name)
+    public XieItemSeeds(int id, Block plant, String name)
     {
         super(id-Xie.idShift,plant.blockID,0);
         growsInto = plant;
         growsIntoMeta = 0;
-        setIconIndex(iconIndex);
-        setItemName(name);
-        icon = new int[1];
-        icon[0]=iconIndex;
+        setUnlocalizedName(name);
         drops=null;
     }
     
@@ -60,7 +60,7 @@ public class XieItemSeeds extends ItemSeeds implements XieItemInterface {
             return false;
         }
         if(growsInto.canPlaceBlockAt(world, i, j + 1, k)) {
-            world.setBlockAndMetadataWithNotify(i, j + 1, k, growsInto.blockID, (growsIntoMeta<0)?itemstack.getItemDamage():growsIntoMeta);
+           Xie.setBlockAndMeta(world, i, j + 1, k, growsInto.blockID, (growsIntoMeta<0)?itemstack.getItemDamage():growsIntoMeta);
             growsInto.setBlockBoundsBasedOnState(world,i,j,k);
             itemstack.stackSize--;
             if (drops!=null) Xie.giveItemsToPlayer(world, entityplayer, drops.getDrops());
@@ -93,14 +93,14 @@ public class XieItemSeeds extends ItemSeeds implements XieItemInterface {
 	}
 	
 	public String getSubName(int damage) {
-		if (names==null) return super.getItemName();
-		if (damage>=names.length) return super.getItemName();
+		if (names==null) return super.getUnlocalizedName();
+		if (damage>=names.length) return super.getUnlocalizedName();
 		return names[damage];
 	}
 	
 	public String getItemNameIS(ItemStack itemstack) {
-		if (names==null) return super.getItemName();
-		else return (new StringBuilder()).append(super.getItemName()).append(".").append(getSubName(itemstack.getItemDamage())).toString();
+		if (names==null) return super.getUnlocalizedName();
+		else return (new StringBuilder()).append(super.getUnlocalizedName()).append(".").append(getSubName(itemstack.getItemDamage())).toString();
 	}
 	
 	@Override
@@ -108,20 +108,14 @@ public class XieItemSeeds extends ItemSeeds implements XieItemInterface {
 		return super.setHasSubtypes(b);
 	}
 	
-    public int getIconFromDamage(int i)
-    {
-    	if (icon==null) return iconIndex;
-    	
-        if (icon.length>1 && i<icon.length) {
-        	return icon[i];
-        } else return icon[0];
+	protected XieTex icon;
+	@Override
+    public Icon getIconFromDamage(int i) {
+		return icon.getIconFromDamage(i);
     }
 	
 	@Override
 	public Droppables getDrops() { return drops; }
-    
-    @Override
-	public void setIcons(int i[]) { icon=i; }
 
 	public String texFile;
 	@Override
@@ -131,5 +125,10 @@ public class XieItemSeeds extends ItemSeeds implements XieItemInterface {
 	@Override
 	public String getTextureFile() {
 		return Xie.textureWrapper(this);
+	} 
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		icon = AutomagicTextureFactory.getItem(registrar, getUnlocalizedName().replace("item.", ""));
 	} 
 }

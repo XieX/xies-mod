@@ -2,10 +2,11 @@ package mod.xie.xm.blocks;
 
 import java.util.List;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.Xie;
-import mod.xie.xm.util.XieTex;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStem;
 import net.minecraft.block.StepSound;
@@ -15,9 +16,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Icon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraftforge.common.EnumPlantType;
 
@@ -31,7 +34,7 @@ public class XieBlockStem extends BlockStem implements IXieBlock {
 	
 	public XieBlockStem(String name, int id, Block growsBlock) {
 		super(id, growsBlock);
-		setBlockName(name);
+		setUnlocalizedName(name);
 	}
 	
 	@Override
@@ -143,22 +146,11 @@ public class XieBlockStem extends BlockStem implements IXieBlock {
 	public XieTex getTex() {
     	return tex;
     }
-    
-    @Override
-	public void setTex(XieTex t) {
-    	isDefaultTexture=t.getTexFile()==null;
-    	tex=t;
-    }
-    
-    @Override
-	public int getBlockTextureFromSide(int i) {
-    	return getBlockTextureFromSideAndMetadata(i,0);
-    }
- 
+       
 	// texture IDs, tex[side][meta]
     @Override
-	public int getBlockTextureFromSideAndMetadata(int i, int j) {
-    	return tex.getTexFromSideAndMeta(i, j);
+	public Icon getIcon(int i, int j) {
+    	return tex.getIcon(i, j);
     }
     
     // not really used
@@ -177,8 +169,8 @@ public class XieBlockStem extends BlockStem implements IXieBlock {
 	public void onBlockDestroyedByPlayer(World world, int i, int j, int k, int l) {
     	if (becomesWhenDestroyed!=null) {
     		if (becomesWhenDestroyed.length>1)
-    			world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
-    		else world.setBlockAndMetadataWithNotify(i, j, k, becomesWhenDestroyed[0], l);
+    			Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], becomesWhenDestroyed[1]);
+    		else Xie.setBlockAndMeta(world, i, j, k, becomesWhenDestroyed[0], l);
     	}
     }
     
@@ -245,7 +237,7 @@ public class XieBlockStem extends BlockStem implements IXieBlock {
 	@Override
 	public String getBlockNameIS(ItemStack itemstack) {
 		int i = itemstack.getItemDamage();
-		if (names==null || names.length <= i) return getBlockName();
+		if (names==null || names.length <= i) return getUnlocalizedName();
 		else return names[i];
 	}
 
@@ -256,11 +248,6 @@ public class XieBlockStem extends BlockStem implements IXieBlock {
 
 	@Override
 	public String[] getNames() { return names; }
-	
-	@Override
-	public String getTextureFile() {
-		return Xie.textureWrapper(this);
-	}
 
 	@Override
 	public void setBecomesWhenDestroyed(int[] bwd) {
@@ -298,4 +285,16 @@ public class XieBlockStem extends BlockStem implements IXieBlock {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName2());
+		if (textureBase!=null) tex = tex.setTextureBase(textureBase);
+	}
+
+	@Override
+	public void setTextureBase(Block b) {
+		textureBase = b;
+	}
+	protected Block textureBase;
 }

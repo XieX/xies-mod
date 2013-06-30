@@ -2,17 +2,21 @@ package mod.xie.xm.items;
 
 import java.util.LinkedList;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.Xie;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumToolMaterial;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
+import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 
 
@@ -21,15 +25,12 @@ import net.minecraft.world.World;
 //            EntityPlayer
 
 public class XieItem extends Item implements XieItemInterface {
-	protected int icon[];
 	protected String names[];
 	protected Droppables drops;
 
-    public XieItem(String name, int i, int j)
-    {
+    public XieItem(String name, int i) {
         super(i-Xie.idShift);
-        setIconIndex(j);
-        setItemName(name);
+        setUnlocalizedName(name);
         this.setCreativeTab(CreativeTabs.tabMisc);
     }
 
@@ -63,19 +64,15 @@ public class XieItem extends Item implements XieItemInterface {
 	}
 	
 	@Override
-	public void setNames(String n[]) { names=n; }
+	public void setNames(String n[]) { 
+		names=n;
+	}
 	
-    public int getIconFromDamage(int i)
-    {
-    	if (icon==null) return iconIndex;
-    	
-        if (icon.length>1 && i<icon.length) {
-        	return icon[i];
-        } else return icon[0];
+	protected XieTex icon;
+	@Override
+    public Icon getIconFromDamage(int i) {
+		return icon.getIconFromDamage(i);
     }
-    
-    @Override
-	public void setIcons(int i[]) { icon=i; }
 	
 	@Override
 	public Item setHasSubtypes(boolean b) {
@@ -83,14 +80,14 @@ public class XieItem extends Item implements XieItemInterface {
 	}
 	
 	public String getSubName(int damage) {
-		if (names==null) return super.getItemName();
-		if (damage>=names.length) return super.getItemName();
+		if (names==null) return super.getUnlocalizedName();
+		if (damage>=names.length) return super.getUnlocalizedName();
 		return names[damage];
 	}
 	
 	public String getItemNameIS(ItemStack itemstack) {
-		if (names==null) return super.getItemName();
-		else return (new StringBuilder()).append(super.getItemName()).append(".").append(getSubName(itemstack.getItemDamage())).toString();
+		if (names==null) return super.getUnlocalizedName();
+		else return (new StringBuilder()).append(super.getUnlocalizedName()).append(".").append(getSubName(itemstack.getItemDamage())).toString();
 	}
 	
 	@Override
@@ -109,5 +106,10 @@ public class XieItem extends Item implements XieItemInterface {
 	@Override
 	public String getTextureFile() {
 		return Xie.textureWrapper(this);
+	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		icon = AutomagicTextureFactory.getItem(registrar, getUnlocalizedName().replace("item.", ""));
 	} 
 }

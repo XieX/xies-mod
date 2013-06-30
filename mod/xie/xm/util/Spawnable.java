@@ -225,8 +225,6 @@ public class Spawnable {
                             if (canSpawnHere(world,xx,yy,zz)) {
                             	if (clusterMetas!=null) meta = getClusterMeta(random);
                             	spawn(world, xx, yy, zz, meta);
-                            	if (!spawned) 
-                            		System.out.println("Spawning "+spawns.getBlockName()+" meta ["+meta+"] @ ("+xx+","+yy+","+zz+")");
                             	spawned=true;
                             }
                         }
@@ -255,14 +253,14 @@ public class Spawnable {
     		XieBlockLeaves leafBlock = (XieBlockLeaves) spawns;
     		leafBlock.generate(world, x, y, z, meta, true);
     	} else {
-    		world.setBlockAndMetadata(x, y, z, spawns.blockID, meta);
+    		Xie.setBlockAndMeta(world, x, y, z, spawns.blockID, meta);
     	}
 	}
 	
 	@Override
 	public String toString() {
 		if (spawns == null) return "null";
-		String rtn="Spawnable: "+spawns.getBlockName()+" factor: "+spawnFactor+"\nSpawns On: ";
+		String rtn="Spawnable: "+spawns.getUnlocalizedName()+" factor: "+spawnFactor+"\nSpawns On: ";
 		for (int i : spawnsOn) rtn+=i+" ";
 		rtn+="\nSpawns In: ";
 		for (int i : spawnsIn) rtn+=i+" ";

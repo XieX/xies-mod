@@ -261,11 +261,11 @@ public class XieTileEntityFurnace extends TileEntityFurnace {
 
     public int getFurnaceBurnTime(ItemStack itemstack) {
         if(itemstack == null) return 0;
-        int i = itemstack.getItem().shiftedIndex;
+        int i = itemstack.getItem().itemID;
         if(i < Xie.idShift && Block.blocksList[i].blockMaterial == Material.wood) return 300;
-        if(i == Item.stick.shiftedIndex)  return 100;
-        if(i == Item.coal.shiftedIndex) return 1600;
-        if(i == Item.bucketLava.shiftedIndex) return 20000;
+        if(i == Item.stick.itemID)  return 100;
+        if(i == Item.coal.itemID) return 1600;
+        if(i == Item.bucketLava.itemID) return 20000;
         if(i == Block.sapling.blockID) return 100;
         else return ModLoader.addAllFuel(i, itemstack.getItemDamage());
     }

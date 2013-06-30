@@ -2,11 +2,14 @@ package mod.xie.xm.items;
 
 import java.util.HashMap;
 
+import mod.xie.xm.tex.AutomagicTextureFactory;
+import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
 import mod.xie.xm.util.Droppables;
 import mod.xie.xm.util.Xie;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
@@ -18,6 +21,7 @@ import net.minecraft.item.ItemSeeds;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,13 +39,14 @@ public class XieItemArmor extends ItemArmor implements XieItemInterface, IArmorT
     protected String armorTexture;
     protected ArmorEffects properties;
 	
-	public XieItemArmor(String name, int id, int index, EnumArmorMaterial material, int type) {
+    protected XieTex icon;
+    
+	public XieItemArmor(String name, int id, EnumArmorMaterial material, int type) {
 		super(id-Xie.idShift, material, 0, type);
         maxStackSize = 1;
         armorTexture="/armor/cloth_1.png";
 
-        setIconIndex(index);
-        setItemName(name);
+        setUnlocalizedName(name);
         
         properties = new ArmorEffects();
 	}
@@ -90,7 +95,6 @@ public class XieItemArmor extends ItemArmor implements XieItemInterface, IArmorT
 	}
 	
 	// XieItemInterface fields and methods
-	protected int icon[];
 	protected String names[];
 	protected Droppables drops;
 	
@@ -108,17 +112,10 @@ public class XieItemArmor extends ItemArmor implements XieItemInterface, IArmorT
 	@Override
 	public void setNames(String n[]) { names=n; }
 	
-    public int getIconFromDamage(int i)
-    {
-    	if (icon==null) return iconIndex;
-    	
-        if (icon.length>1 && i<icon.length) {
-        	return icon[i];
-        } else return icon[0];
+	@Override
+    public Icon getIconFromDamage(int i) {
+    	return icon.getIconFromDamage(i);
     }
-    
-    @Override
-	public void setIcons(int i[]) { icon=i; }
 	
 	@Override
 	public Item setHasSubtypes(boolean b) {
@@ -126,14 +123,14 @@ public class XieItemArmor extends ItemArmor implements XieItemInterface, IArmorT
 	}
 	
 	public String getSubName(int damage) {
-		if (names==null) return super.getItemName();
-		if (damage>=names.length) return super.getItemName();
+		if (names==null) return super.getUnlocalizedName();
+		if (damage>=names.length) return super.getUnlocalizedName();
 		return names[damage];
 	}
 	
 	public String getItemNameIS(ItemStack itemstack) {
-		if (names==null) return super.getItemName();
-		else return (new StringBuilder()).append(super.getItemName()).append(".").append(getSubName(itemstack.getItemDamage())).toString();
+		if (names==null) return super.getUnlocalizedName();
+		else return (new StringBuilder()).append(super.getUnlocalizedName()).append(".").append(getSubName(itemstack.getItemDamage())).toString();
 	}
 	
 	@Override
@@ -153,4 +150,9 @@ public class XieItemArmor extends ItemArmor implements XieItemInterface, IArmorT
 	public String getTextureFile() {
 		return Xie.textureWrapper(this);
 	}
+	
+	@Override
+	public void registerIcons(IconRegister registrar) {
+		icon = AutomagicTextureFactory.getItem(registrar, getUnlocalizedName().replace("item.", ""));
+	} 
 }
