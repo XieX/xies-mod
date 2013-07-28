@@ -193,17 +193,30 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 	
     @Override
     public void fertilize(World world, int i, int j, int k) {
+    	int growthBefore = world.getBlockMetadata(i, j, k);
+    	
 		if (growsInto>0) growIntoSomethingElse(world, i, j, k);
-		else {
-			if (growthHeight>1) {
-				if (getHeight(world, i, j, k)==1) {
-					for (int h=0; h<(growthHeight-1); h++) {
-						Xie.setBlockMeta(world, i, j+h, k, maxGrowth);
-						attemptToGrowHigher(world, i, j+h, k);
-					}
-					Xie.setBlockMeta(world, i, j+growthHeight-1, k, maxGrowth);
-				}
-			} else Xie.setBlockMeta(world, i, j, k, maxGrowth);
+		else if (growthBefore == maxGrowth && growthHeight > 1) {
+			// if the plant is already max'd out and it can grow higher, pass it up!
+			int blockAbove = world.getBlockId(i,j+1,k);
+			if (blockAbove == 0) {
+				attemptToGrowHigher(world,i,j,k,MathHelper.getRandomIntegerInRange(world.rand, 2, 5));
+			} else if (blockAbove == blockID) {
+				fertilize(world,i,j+1,k);
+			} // else fall through and do nothing
+		} else {
+			int growthAfter = growthBefore + MathHelper.getRandomIntegerInRange(world.rand, 2, 5);
+			int growthLeftOver = growthAfter - maxGrowth;
+					
+			if (growthAfter > maxGrowth) {
+				growthAfter = maxGrowth;
+			}
+			
+			Xie.setBlockMeta(world, i, j, k, growthAfter);
+			
+			if (growthLeftOver > 0 && growthHeight > 1) {
+				attemptToGrowHigher(world,i,j,k,growthLeftOver-1);
+			}
 		}
 	}
 
@@ -283,11 +296,16 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 	   }
    }
    
-   // attempts to spawn a newly grown block at i,j+1,k. Returns true if its grown all that it can.
    protected void attemptToGrowHigher(World world, int i, int j, int k) {
+	   attemptToGrowHigher(world,i,j,k,0);
+   }
+   
+   // attempts to spawn a newly grown block at i,j+1,k with meta growth
+   protected void attemptToGrowHigher(World world, int i, int j, int k, int growth) {
 	   if (getHeight(world, i, j, k)>=growthHeight) return;
 	   if (world.getBlockId(i, j+1, k)==0) {
-		   Xie.setBlockAndMeta(world, i, j+1, k, blockID, 0);
+		   if (growth > maxGrowth) growth = maxGrowth;
+		   Xie.setBlockAndMeta(world, i, j+1, k, blockID, growth);
 	   }
    }
    
