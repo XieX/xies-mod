@@ -795,9 +795,7 @@ public class Xie {
 	
 	public static void setBlockAndMeta(World world, int x, int y, int z, int id, int m) {
 		if (id<0) return;
-		world.setBlock(x, y, z, id, m, 2);
-//		TODO check, but I think this is redundant, with the above flag (2)
-//		world.markBlockForRenderUpdate(x, y, z);
+		world.setBlock(x, y, z, id, m, 3);
 	}
 	
 	public static void setBlockMeta(World world, int x, int y, int z, int m) {
