@@ -34,6 +34,7 @@ public class XieFailTex extends XieTex {
 	}
 	
 	public int getMaxMeta() {
+		if (base==null) return 0;
 		for (int i = 0; i<16; i++) {
 			Icon icon = base.getIconFromDamage(i);
 			if (icon==null) {

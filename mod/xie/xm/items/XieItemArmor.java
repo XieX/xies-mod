@@ -1,7 +1,6 @@
 package mod.xie.xm.items;
 
 import java.util.HashMap;
-
 import mod.xie.xm.tex.AutomagicTextureFactory;
 import mod.xie.xm.tex.XieTex;
 import mod.xie.xm.util.Drop;
@@ -12,6 +11,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumArmorMaterial;
 import net.minecraft.item.EnumToolMaterial;
@@ -26,13 +26,9 @@ import net.minecraft.world.World;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-
-
-import net.minecraftforge.common.IArmorTextureProvider;
 import net.minecraftforge.common.ISpecialArmor;
 
-public class XieItemArmor extends ItemArmor implements XieItemInterface, IArmorTextureProvider, ISpecialArmor {
+public class XieItemArmor extends ItemArmor implements XieItemInterface, ISpecialArmor {
 	
 	public static final String SUFFIXES[] = new String[] {"helm", "chest", "legs", "boots"};
 	
@@ -59,13 +55,12 @@ public class XieItemArmor extends ItemArmor implements XieItemInterface, IArmorT
 		properties=props;
 	}
 	
-	@Override
 	public String getArmorTextureFile(ItemStack itemstack) {
 		return armorTexture;
 	}
-
+	
 	@Override
-	public ArmorProperties getProperties(EntityLiving player, ItemStack armor, DamageSource source, double damage, int slot) {
+	public ArmorProperties getProperties(EntityLivingBase player, ItemStack armor, DamageSource source, double damage, int slot) {
 		int resistanceFactor = properties.getResistanceTo(source);
 		
 		if (resistanceFactor==0) {
@@ -89,7 +84,7 @@ public class XieItemArmor extends ItemArmor implements XieItemInterface, IArmorT
 	}
 
 	@Override
-	public void damageArmor(EntityLiving entity, ItemStack stack, DamageSource source, int damage, int slot) {
+	public void damageArmor(EntityLivingBase entity, ItemStack stack, DamageSource source, int damage, int slot) {
 		// TODO incorporate special properties
 		stack.damageItem(damage, entity);
 	}
@@ -110,17 +105,17 @@ public class XieItemArmor extends ItemArmor implements XieItemInterface, IArmorT
 	}
 	
 	@Override
-	public void setNames(String n[]) { names=n; }
+	public void setNames(String n[]) { 
+		names=n;
+		if (n.length>0) {
+			this.setHasSubtypes(true);
+		}
+	}
 	
 	@Override
     public Icon getIconFromDamage(int i) {
     	return icon.getIconFromDamage(i);
     }
-	
-	@Override
-	public Item setHasSubtypes(boolean b) {
-		return super.setHasSubtypes(b);
-	}
 	
 	public String getSubName(int damage) {
 		if (names==null) return super.getUnlocalizedName();
@@ -154,5 +149,5 @@ public class XieItemArmor extends ItemArmor implements XieItemInterface, IArmorT
 	@Override
 	public void registerIcons(IconRegister registrar) {
 		icon = AutomagicTextureFactory.getItem(registrar, getUnlocalizedName().replace("item.", ""));
-	} 
+	}
 }

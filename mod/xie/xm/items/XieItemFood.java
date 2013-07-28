@@ -139,15 +139,13 @@ public class XieItemFood extends ItemFood implements XieItemInterface {
 	
 	@Override
 	public Droppables getDrops() { return drops; }
-	
+		
 	@Override
-	public Item setHasSubtypes(boolean b) {
-		return super.setHasSubtypes(b);
-	}
-	
-	@Override
-	public void setNames(String n[]) {
+	public void setNames(String n[]) { 
 		names=n;
+		if (n.length>0) {
+			this.setHasSubtypes(true);
+		}
 	}
 	
 	public String getSubName(int damage) {

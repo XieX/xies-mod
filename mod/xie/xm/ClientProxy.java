@@ -6,14 +6,13 @@ import java.io.InputStream;
 import mod.xie.xm.file.SpritesheetManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.src.ModLoader;
-import net.minecraft.client.texturepacks.TexturePackList;
 import net.minecraft.world.World;
 
 public class ClientProxy extends XieProxy {
 
 	@Override
 	public String getMinecraftPath() {
-		return ModLoader.getMinecraftInstance().getMinecraftDir().getPath();
+		return ".";
 	}
 	
 	@Override
@@ -26,11 +25,6 @@ public class ClientProxy extends XieProxy {
 	@Deprecated
 	public int addOverride(String type, String path) {
 		return ModLoader.addOverride(type,path);
-	}
-
-	@Override
-	public void preloadTextures() {
-		SpritesheetManager.get().preloadTextures();
 	}
 
 	@Override

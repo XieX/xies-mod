@@ -20,6 +20,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.src.ModLoader;
 import net.minecraftforge.client.MinecraftForgeClient;
 
+@Deprecated
 public class SpritesheetManager {
 
 	private List<String> spritesheets;
@@ -35,13 +36,6 @@ public class SpritesheetManager {
 	public static SpritesheetManager get() {
 		if (instance==null) instance = new SpritesheetManager();
 		return instance;
-	}
-	
-	@SideOnly(Side.CLIENT)
-	public void preloadTextures() {
-		for (String s : get().spritesheets) {
-			MinecraftForgeClient.preloadTexture(s);
-		}
 	}
 
 	public String getTextureFilepath(String fullname, String path, String filename, boolean addToTextureRecord) {

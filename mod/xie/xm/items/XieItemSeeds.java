@@ -88,8 +88,11 @@ public class XieItemSeeds extends ItemSeeds implements XieItemInterface {
 	}
 	
 	@Override
-	public void setNames(String n[]) {
+	public void setNames(String n[]) { 
 		names=n;
+		if (n.length>0) {
+			this.setHasSubtypes(true);
+		}
 	}
 	
 	public String getSubName(int damage) {
@@ -101,11 +104,6 @@ public class XieItemSeeds extends ItemSeeds implements XieItemInterface {
 	public String getItemNameIS(ItemStack itemstack) {
 		if (names==null) return super.getUnlocalizedName();
 		else return (new StringBuilder()).append(super.getUnlocalizedName()).append(".").append(getSubName(itemstack.getItemDamage())).toString();
-	}
-	
-	@Override
-	public Item setHasSubtypes(boolean b) {
-		return super.setHasSubtypes(b);
 	}
 	
 	protected XieTex icon;

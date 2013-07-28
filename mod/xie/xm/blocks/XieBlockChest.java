@@ -23,6 +23,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Icon;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
@@ -40,8 +41,8 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 	
 	protected XieChestRenderer renderer;
 	
-	protected String largeTex = "/item/largechest.png";
-	protected String smallTex = "/item/chest.png";
+	protected ResourceLocation largeTex = new ResourceLocation("/item/largechest.png");
+	protected ResourceLocation smallTex = new ResourceLocation("/item/chest.png");
 	
 	public XieBlockChest(String name, int id, String displayName) {
 		super(id, 1);
@@ -245,10 +246,14 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 	public String getDisplayName() { return displayName; }
 	public void setLargeName(String s) { largeName = s; }
 	
-	public void setSmallTex(String s) { smallTex = s; }
-	public void setLargeTex(String s) { largeTex = s; }
-	public String getSmallTex() { return smallTex; }
-	public String getLargeTex() { return largeTex; }
+	public void setSmallTex(String s) { 
+		smallTex = new ResourceLocation(s); 
+	}
+	public void setLargeTex(String s) { 
+		largeTex = new ResourceLocation(s); 
+	}
+	public ResourceLocation getSmallTex() { return smallTex; }
+	public ResourceLocation getLargeTex() { return largeTex; }
 	
 	public TileEntity getBlockEntity() {
 		return new XieTileEntityChest(this);
@@ -570,7 +575,7 @@ public class XieBlockChest extends BlockChest implements IXieBlock {
 	
 	@Override
 	public void registerIcons(IconRegister registrar) {
-		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName2());
+		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName());
 		if (textureBase!=null) tex = tex.setTextureBase(textureBase);
 	}
 	

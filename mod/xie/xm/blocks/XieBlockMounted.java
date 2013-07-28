@@ -11,6 +11,7 @@ import net.minecraft.block.StepSound;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
@@ -65,7 +66,7 @@ public class XieBlockMounted extends XieBlock{
 	}
 		
 	@Override
-	public void onBlockPlacedBy(World world, int i, int j, int k, EntityLiving e, ItemStack blockItem) {
+	public void onBlockPlacedBy(World world, int i, int j, int k, EntityLivingBase e, ItemStack blockItem) {
 		int facing = Xie.getFacing(e);
         Xie.setBlockAndMeta(world, i, j, k, blockID, facing);
         super.onBlockPlacedBy(world, i, j, k, e, blockItem);
@@ -113,7 +114,7 @@ public class XieBlockMounted extends XieBlock{
 	
 	@Override
 	public void registerIcons(IconRegister registrar) {
-		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName2());
+		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName());
 		if (textureBase!=null) tex = tex.setTextureBase(textureBase);
 	}
 }

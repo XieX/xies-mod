@@ -17,12 +17,8 @@ public class XieChestRenderer extends TileEntitySpecialRenderer {
 	        doubleChestModel = new ModelLargeChest();
 	    }
 
-	    public void renderTileEntityAt(TileEntity tileentity, double d, double d1, double d2, float f) {
-	    	renderTileEntityChestAt((TileEntityChest)tileentity, d, d1, d2, f);
-	    }
-
-	    public void renderTileEntityChestAt(TileEntityChest tileEntityChest, double d, double d1, double d2, float f) {
-	    	XieTileEntityChest chestEntity = (XieTileEntityChest)tileEntityChest;
+	    public void renderTileEntityAt(TileEntity tileEntity, double x, double y, double z, float f) {
+	    	XieTileEntityChest chestEntity = (XieTileEntityChest)tileEntity;
 	    	XieBlockChest chestBlock = chestEntity.chest;
 	    	
 	        // determine metadata
@@ -46,17 +42,17 @@ public class XieChestRenderer extends TileEntitySpecialRenderer {
 	        ModelChest modelchest;
 	        if (chestEntity.adjacentChestXPos != null || chestEntity.adjacentChestZPosition != null || chestEntity.adjacentChestYNeg != null) {
 	            modelchest = doubleChestModel;
-	            bindTextureByName(chestBlock.getLargeTex());
+	            this.func_110628_a(chestBlock.getLargeTex());
 	        } else {
 	            modelchest = chestModel;
-	            bindTextureByName(chestBlock.getSmallTex());
+	            this.func_110628_a(chestBlock.getSmallTex());
 	        }
 
 	        // start render
 	        GL11.glPushMatrix();
 	        GL11.glEnable(32826 /*GL_RESCALE_NORMAL_EXT*/);
 	        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-	        GL11.glTranslatef((float)d, (float)d1 + 1.0F, (float)d2 + 1.0F);
+	        GL11.glTranslatef((float)x, (float)y + 1.0F, (float)z + 1.0F);
 	        GL11.glScalef(1.0F, -1F, -1F);
 	        GL11.glTranslatef(0.5F, 0.5F, 0.5F);
 	        

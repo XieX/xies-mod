@@ -749,13 +749,13 @@ public class JobBlock extends Job {
 		if (block==null) return false;
 		
 		if (isKey("stepsound")) {
-			block.setStepSound(identifyStepSound(getStr("stepsound")));
+			block.getBlock().setStepSound(identifyStepSound(getStr("stepsound")));
 		} else if (block.getBlock().stepSound==null) block.setStepSound(Block.soundGrassFootstep); // arbitrary default
 		
-		if (isKey("hardness")) block.setHardness(getFloat("hardness"));
+		if (isKey("hardness")) block.getBlock().setHardness(getFloat("hardness"));
 		
 		if (isKey("spawn") && !addedSpawn) {
-			Work.instance().addSpawnJob(block.getUnlocalizedName(),getNode("spawn"));
+			Work.instance().addSpawnJob(block.getBlock().getUnlocalizedName(),getNode("spawn"));
 			addedSpawn=true;
 		}
 		
@@ -788,12 +788,12 @@ public class JobBlock extends Job {
 		
 		if (isKey("blockBounds")) expandBlockBoundsNode(getNode("blockBounds"));
 
-		if (isKey("lightValue")) block.setLightValue(getFloat("lightValue"));
+		if (isKey("lightValue")) block.getBlock().setLightValue(getFloat("lightValue"));
 		
 		if (isKey("lightOpacity")) {
 			float f = getFloat("lightOpacity");
-			if (f>1) block.setLightOpacity((int)f);
-			else block.setLightOpacity((int)(255*f));
+			if (f>1) block.getBlock().setLightOpacity((int)f);
+			else block.getBlock().setLightOpacity((int)(255*f));
 		}
 		
 		if (isKey("cooked") || isKey("smelted")) {

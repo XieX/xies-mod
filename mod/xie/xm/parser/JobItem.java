@@ -132,7 +132,6 @@ public class JobItem extends Job  {
 			logFiner("Set names: "+namess);
 			for (int i=0; i<names.length; i++) 
 				ModLoader.addName(new ItemStack(item.getItem().itemID,1,i), names[i]);
-			item.setHasSubtypes(true);
 		}
 		
 		if (isKey("drops")) {

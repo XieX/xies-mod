@@ -33,7 +33,7 @@ import net.minecraft.block.BlockFire;
 import net.minecraft.block.BlockLeaves;
 import net.minecraft.block.BlockLog;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.renderer.RenderEngine;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
@@ -606,7 +606,7 @@ public class Xie {
 			// reroute pointer to new array
 			field.set(o, newEffectiveAgainst);
 		} catch (Exception e) {
-			System.out.println("Exception setting tool effectiveness for "+block.getUnlocalizedName());
+			XieLog.log().logIncomplete("Exception setting tool effectiveness for "+block.getUnlocalizedName());
 			e.printStackTrace();
 		}
 	}
@@ -856,7 +856,7 @@ public class Xie {
 		return ModLoader.getUniqueSpriteIndex(string);
 	}
 
-	public static RenderEngine getRenderEngine() {
+	public static TextureManager getRenderEngine() {
 		return ModLoader.getMinecraftInstance().renderEngine;
 	}
 

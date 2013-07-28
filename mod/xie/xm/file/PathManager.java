@@ -107,7 +107,7 @@ public class PathManager {
 		if (f.contains(CACHE_DIR)) {
 			return f.substring(f.indexOf(CACHE_DIR)+CACHE_DIR.length());
 		} else {
-			System.err.println("XIE: Expecing cache directory in path "+f+", but didn't find it");
+			System.err.println("XIE: Expecting cache directory in path "+f+", but didn't find it");
 			return f;
 		}
 	}
@@ -116,7 +116,7 @@ public class PathManager {
 		if (f.contains(CONTENT_DIR)) {
 			return f.substring(f.indexOf(CONTENT_DIR)+CONTENT_DIR.length());
 		} else {
-			System.err.println("XIE: Expecing content directory in path "+f+", but didn't find it");
+			System.err.println("XIE: Expecting content directory in path "+f+", but didn't find it");
 			return f;
 		}
 	}

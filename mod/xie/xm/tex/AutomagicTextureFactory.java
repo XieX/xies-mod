@@ -17,8 +17,8 @@ import net.minecraft.util.Icon;
 public class AutomagicTextureFactory {
 
 	private static final String XIE = "Xie";
-	private static final String BLOCKS = "/textures/blocks";
-	private static final String ITEMS = "/textures/items";
+	private static final String BLOCKS = "/assets/xie/textures/blocks";
+	private static final String ITEMS = "/assets/xie/textures/items";
 	
 	public AutomagicTextureFactory() {
 		
@@ -36,6 +36,7 @@ public class AutomagicTextureFactory {
 	}
 	
 	public static XieTex getBlock(IconRegister register, String name, String path) {
+		if (name.startsWith("tile.")) name = name.substring(5); // TODO isn't this a bit of a HACK?
 		return getInstance().makeXieTex(register, name, path+BLOCKS);
 	}
 	

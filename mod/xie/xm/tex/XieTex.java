@@ -35,7 +35,10 @@ public abstract class XieTex {
 	protected Icon register(String str) {
 		// TODO HACK this could me more elegant
 		if (str.toLowerCase().endsWith(".png")) str = str.substring(0,str.length()-4);
-		return iconRegister.registerIcon("Xie:"+str);
+		if (str.contains("/")) {
+			str = str.substring(str.lastIndexOf("/"));
+		}
+		return iconRegister.registerIcon("xie:"+str);
 	}
 	
 	protected int parseMetavalue(String filename) {

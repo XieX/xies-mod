@@ -43,18 +43,18 @@ public class XieItemPotion extends ItemPotion implements XieItemInterface {
 	}
 	
 	@Override
-	public void setNames(String n[]) { names=n; }
+	public void setNames(String n[]) { 
+		names=n;
+		if (n.length>0) {
+			this.setHasSubtypes(true);
+		}
+	}
 	
 	protected XieTex icon;
 	@Override
     public Icon getIconFromDamage(int i) {
 		return icon.getIconFromDamage(i);
     }
-	
-	@Override
-	public Item setHasSubtypes(boolean b) {
-		return super.setHasSubtypes(b);
-	}
 	
 	public String getSubName(int damage) {
 		if (names==null) return super.getUnlocalizedName();

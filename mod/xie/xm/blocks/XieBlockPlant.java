@@ -16,6 +16,7 @@ import net.minecraft.block.StepSound;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
@@ -231,7 +232,7 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 	}
 	
     @Override
-    public void onBlockPlacedBy(World world, int i, int j, int k, EntityLiving entityliving, ItemStack blockItem) {
+    public void onBlockPlacedBy(World world, int i, int j, int k, EntityLivingBase entityliving, ItemStack blockItem) {
     	if (world.isRemote) return;
     	
     	setBlockBoundsBasedOnState(world,i,j,k);
@@ -573,7 +574,7 @@ public class XieBlockPlant extends BlockCrops implements IXieBlock {
 	
 	@Override
 	public void registerIcons(IconRegister registrar) {
-		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName2());
+		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName());
 		if (textureBase!=null) tex = tex.setTextureBase(textureBase);
 		maxGrowth = tex.getMaxMeta() - 1;
 	}

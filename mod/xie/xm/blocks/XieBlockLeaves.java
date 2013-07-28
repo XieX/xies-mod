@@ -540,7 +540,7 @@ public class XieBlockLeaves extends BlockLeaves implements IXieBlock {
 	
 	@Override
 	public void registerIcons(IconRegister registrar) {
-		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName2());
+		tex = AutomagicTextureFactory.getBlock(registrar, getUnlocalizedName());
 		if (textureBase!=null) tex = tex.setTextureBase(textureBase);
 	}
 

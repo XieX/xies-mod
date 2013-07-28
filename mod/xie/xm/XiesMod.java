@@ -106,10 +106,7 @@ public class XiesMod {
 		
 		// read in files and populate work queue
 		loadConfigFiles();
-	}
-	
-	@Init
-	public void load(FMLInitializationEvent event) {
+		
 		// Process work queue
 		try {
 			success = Work.instance().doWork();
@@ -117,6 +114,11 @@ public class XiesMod {
 			XieLog.log().logFailure(e.toString());
 			e.printStackTrace();
 		}
+	}
+	
+	@Init
+	public void load(FMLInitializationEvent event) {
+
 	}
 		
 	@PostInit

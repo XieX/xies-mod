@@ -61,11 +61,6 @@ public class XieItemSet implements XieItemInterface {
 	}
 
 	@Override
-	public Item setHasSubtypes(boolean b) {
-		return this.getItem();
-	}
-
-	@Override
 	public String getUnlocalizedName() {
 		return name;
 	}
