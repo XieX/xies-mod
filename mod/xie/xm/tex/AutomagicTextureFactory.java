@@ -49,7 +49,7 @@ public class AutomagicTextureFactory {
 	}
 	
 	public XieTex makeXieTex(IconRegister register, String name, String pathSuffix) {
-		String path = PathManager.get().modsDir().toPath()+"/"+pathSuffix;
+		String path = PathManager.get().modsDir().getPath()+"/"+pathSuffix;
 		String [] files = getTextureFileNames(name, path);
 		
 		if (files != null) {
