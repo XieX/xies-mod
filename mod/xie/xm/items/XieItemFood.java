@@ -89,7 +89,6 @@ public class XieItemFood extends ItemFood implements XieItemInterface {
     }*/
     
     public void onFoodEaten(ItemStack itemstack, World world, EntityPlayer entityplayer) {        	
-    	itemstack.stackSize--;
     	world.playSoundAtEntity(entityplayer, "random.burp", 0.5F, world.rand.nextFloat() * 0.1F + 0.9F);
     	
     	// satisfy hunger and/or quench thirst as appropriate
