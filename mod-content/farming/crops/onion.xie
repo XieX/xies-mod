@@ -17,7 +17,7 @@
         "onionSeeds": {
           "chance": {
             "0": 0,
-            "1": 40
+            "1+": 40
           },
           "amount": 3
         }
