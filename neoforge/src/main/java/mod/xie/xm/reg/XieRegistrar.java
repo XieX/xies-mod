@@ -68,6 +68,9 @@ public final class XieRegistrar {
     /** Display names to emit into the language file, keyed by translation key. */
     private final Map<String, String> translations = new TreeMap<>();
 
+    /** Definition name to highest age, so the emitter knows how many variants to write. */
+    private final Map<String, Integer> blockMaxAges = new LinkedHashMap<>();
+
     private final List<DeferredItem<Item>> tabContents = new ArrayList<>();
 
     public void register(IEventBus modEventBus, List<ContentPack> packs) {
@@ -113,6 +116,7 @@ public final class XieRegistrar {
         );
 
         registeredBlocks.put(def.name(), holder);
+        blockMaxAges.put(def.name(), config.maxAge());
         translations.put("block." + XiesMod.MOD_ID + "." + path,
             pack.displayNameFor(def.name()).orElse(def.displayName()));
     }
@@ -230,6 +234,11 @@ public final class XieRegistrar {
 
     public Map<String, DeferredBlock<Block>> registeredBlocks() {
         return Map.copyOf(registeredBlocks);
+    }
+
+    /** Definition name to highest age, for blockstate variant generation. */
+    public Map<String, Integer> blockMaxAges() {
+        return Map.copyOf(blockMaxAges);
     }
 
     public Map<String, DeferredItem<Item>> registeredItems() {

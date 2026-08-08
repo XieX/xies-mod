@@ -5,6 +5,7 @@ import com.mojang.logging.LogUtils;
 import mod.xie.xm.content.model.ContentPack;
 import mod.xie.xm.content.parse.Diagnostic;
 import mod.xie.xm.content.parse.XieParser;
+import mod.xie.xm.pack.XiePackProvider;
 import mod.xie.xm.reg.XieRegistrar;
 
 import net.neoforged.bus.api.IEventBus;
@@ -50,9 +51,10 @@ public class XiesMod {
     public XiesMod(IEventBus modEventBus, ModContainer container) {
         loadContentPacks();
         REGISTRAR.register(modEventBus, PACKS);
+        modEventBus.addListener(XiePackProvider::addPackFinders);
 
-        // Next step: emit the generated resource and data packs (models, lang,
-        // loot tables, recipes) from AddPackFindersEvent.
+        // Still to come: the datapack half — loot tables from "drops" and recipes
+        // from the "recipes" section.
     }
 
     public static XieRegistrar registrar() {

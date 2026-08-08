@@ -79,9 +79,15 @@ Port status
 - [x] Gradle build targeting NeoForge
 - [x] Content model and parser, with tests over the real content repo
 - [x] Registrar: definitions to `DeferredRegister` (`bush` blocks, `food`/`seeds` items)
-- [ ] Emitter: generated resource pack and datapack (models, lang, loot, recipes)
+- [x] Emitter: generated resource pack (blockstates, models, textures, lang)
+- [ ] Emitter: datapack half (loot tables from `drops`, recipes)
+- [ ] Multi-variant items (`names` + `inheritMeta`) as separate items
 - [ ] Remaining block and item archetypes
 - [ ] Vanilla overrides
+
+The generated pack is written to `<gamedir>/xiecontent/_generated/` on every launch
+rather than served from memory, so you can open it and see exactly what a `.xie`
+file produced.
 
 Textures need no migration: the `.xie` files still address spritesheet indices, but
 `textures/` is already one PNG per sprite named `<definition>[_<meta>].png`. The
