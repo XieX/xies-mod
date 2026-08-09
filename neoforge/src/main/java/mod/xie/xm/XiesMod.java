@@ -51,10 +51,10 @@ public class XiesMod {
     public XiesMod(IEventBus modEventBus, ModContainer container) {
         loadContentPacks();
         REGISTRAR.register(modEventBus, PACKS);
-        modEventBus.addListener(XiePackProvider::addPackFinders);
 
-        // Still to come: the datapack half — loot tables from "drops" and recipes
-        // from the "recipes" section.
+        // Fires once for resources and once for data; the same generated directory
+        // is registered as both a resource pack and a datapack.
+        modEventBus.addListener(XiePackProvider::addPackFinders);
     }
 
     public static XieRegistrar registrar() {

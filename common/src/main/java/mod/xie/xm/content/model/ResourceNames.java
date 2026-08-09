@@ -66,7 +66,24 @@ public final class ResourceNames {
      */
     public static String toVanillaPath(ItemRef ref) {
         String name = ref.isVanilla() ? ref.vanillaName() : ref.name();
-        return switch (name.toLowerCase(Locale.ROOT)) {
+        String lower = name.toLowerCase(Locale.ROOT);
+
+        // A block and an item could share a name in 1.6 and mean different things,
+        // which is exactly what the tile./item. prefixes were for. Modern ids have
+        // no such pairing, so the prefix has to be consulted before the name.
+        // "tile.melon" is the block and "item.melon" is a slice; resolving both to
+        // "melon" turns the vanilla melon recipe into an item duplicator.
+        if (ref.isVanilla() && ref.name().toLowerCase(Locale.ROOT).startsWith("item.")) {
+            String asItem = switch (lower) {
+                case "melon" -> "melon_slice";
+                default -> null;
+            };
+            if (asItem != null) {
+                return asItem;
+            }
+        }
+
+        return switch (lower) {
             // "grass" meant the grass *block* in 1.6; it now means the tall plant.
             case "grass" -> "grass_block";
             case "tallgrass" -> "short_grass";

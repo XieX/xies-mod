@@ -1,6 +1,5 @@
 package mod.xie.xm.pack;
 
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
@@ -14,7 +13,6 @@ import mod.xie.xm.content.model.ResourceNames;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -37,6 +35,9 @@ import java.util.stream.Stream;
  * content author who writes a {@code .xie} file and gets a purple-and-black block
  * needs to see what was generated for it, and the underscore prefix keeps the
  * parser from trying to load the output back in as a content pack.
+ *
+ * <p>One directory serves as both resource pack and datapack. This half writes
+ * {@code assets/}; {@link XieDataEmitter} writes {@code data/}.
  */
 public final class XiePackEmitter {
 
@@ -44,9 +45,6 @@ public final class XiePackEmitter {
 
     /** Under {@code <gamedir>/xiecontent/}; the underscore keeps the parser out. */
     public static final String OUTPUT_DIR_NAME = "_generated";
-
-    private static final com.google.gson.Gson GSON =
-        new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     /**
      * Bushes render as a cross, matching the original's {@code setRenderType(1)}.
@@ -58,12 +56,21 @@ public final class XiePackEmitter {
         "crop", "minecraft:block/crop"
     );
 
+    /**
+     * The pack formats the running game expects. Resource packs and datapacks are
+     * versioned separately — 84.0 and 101.1 in 26.1.2 — and one {@code pack.mcmeta}
+     * has to satisfy both readers, so the declared range spans them.
+     */
+    public record PackFormats(int resourceMajor, int resourceMinor, int dataMajor, int dataMinor) { }
+
     private final Path outputRoot;
     private final Path contentRoot;
+    private final XieDataEmitter dataEmitter;
 
-    public XiePackEmitter(Path contentRoot) {
+    public XiePackEmitter(Path contentRoot, XieDataEmitter.ItemLookup itemLookup) {
         this.contentRoot = contentRoot;
         this.outputRoot = contentRoot.resolve(OUTPUT_DIR_NAME);
+        this.dataEmitter = new XieDataEmitter(outputRoot, itemLookup);
     }
 
     public Path outputRoot() {
@@ -76,18 +83,17 @@ public final class XiePackEmitter {
      * @param packs        the loaded content
      * @param blockMaxAges definition name to highest age, for blockstate variants
      * @param translations translation key to display name
-     * @param packFormat   the pack format the running game expects
+     * @param formats      the pack formats the running game expects
      */
     public void emit(List<ContentPack> packs,
                      Map<String, Integer> blockMaxAges,
                      Map<String, String> translations,
-                     int packFormatMajor,
-                     int packFormatMinor) throws IOException {
+                     PackFormats formats) throws IOException {
 
         deleteRecursively(outputRoot);
         Files.createDirectories(outputRoot);
 
-        writePackMeta(packFormatMajor, packFormatMinor);
+        writePackMeta(formats);
         writeLanguage(translations);
 
         int blockModels = 0;
@@ -117,13 +123,23 @@ public final class XiePackEmitter {
             }
         }
 
-        LOGGER.info("Emitted pack to {}: {} block models, {} item models, {} textures",
-            outputRoot, blockModels, itemModels, textures);
+        XieDataEmitter.Counts data = dataEmitter.emit(packs, blockMaxAges);
+
+        LOGGER.info("Emitted pack to {}: {} block models, {} item models, {} textures, "
+                + "{} loot tables, {} recipes, {} alias tags",
+            outputRoot, blockModels, itemModels, textures,
+            data.lootTables(), data.recipes(), data.tags());
+
+        if (data.skippedDrops() > 0 || data.skippedRecipes() > 0 || data.culls() > 0) {
+            LOGGER.info("Not emitted: {} drops and {} recipes name content this build cannot "
+                    + "register yet, and {} cull recipes have no datapack equivalent",
+                data.skippedDrops(), data.skippedRecipes(), data.culls());
+        }
     }
 
     // ------------------------------------------------------------- pack meta
 
-    private void writePackMeta(int major, int minor) throws IOException {
+    private void writePackMeta(PackFormats formats) throws IOException {
         JsonObject pack = new JsonObject();
         pack.addProperty("description", "Xie's Mod generated content");
 
@@ -132,11 +148,15 @@ public final class XiePackEmitter {
         // so "min_format" and "max_format" become mandatory. Those two do take the
         // [major, minor] list form.
         //
-        // The range declared is 84.0 up to whatever the running game is, which is
-        // honest: the pack was generated against this exact version.
-        pack.addProperty("pack_format", major);
-        pack.add("min_format", packFormat(major, 0));
-        pack.add("max_format", packFormat(major, minor));
+        // The same file is read once as a resource pack and once as a datapack, and
+        // those are numbered independently — 84.0 against 101.1 in 26.1.2. Only the
+        // range has to contain the running game's format for the pack to count as
+        // compatible, and "pack_format" only has to fall inside the range, so
+        // spanning both satisfies both readers. The pack is regenerated on every
+        // launch, so the breadth of the range never gets a chance to mislead.
+        pack.addProperty("pack_format", formats.resourceMajor());
+        pack.add("min_format", packFormat(formats.resourceMajor(), 0));
+        pack.add("max_format", packFormat(formats.dataMajor(), formats.dataMinor()));
 
         JsonObject root = new JsonObject();
         root.add("pack", pack);
@@ -290,8 +310,7 @@ public final class XiePackEmitter {
     }
 
     private void write(Path file, JsonObject json) throws IOException {
-        Files.createDirectories(file.getParent());
-        Files.writeString(file, GSON.toJson(json) + System.lineSeparator(), StandardCharsets.UTF_8);
+        PackJson.write(file, json);
     }
 
     private static void deleteRecursively(Path root) throws IOException {
