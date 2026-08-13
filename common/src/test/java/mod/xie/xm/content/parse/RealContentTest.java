@@ -4,7 +4,9 @@ import mod.xie.xm.content.model.AliasDef;
 import mod.xie.xm.content.model.BlockDef;
 import mod.xie.xm.content.model.ContentPack;
 import mod.xie.xm.content.model.ItemDef;
+import mod.xie.xm.content.model.ItemRef;
 import mod.xie.xm.content.model.RecipeDef;
+import mod.xie.xm.content.model.SpawnDef;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -13,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -71,9 +74,61 @@ class RealContentTest {
         assertEquals("food", tomato.archetype());
         assertTrue(tomato.hunger().isPresent());
 
-        assertNotNull(pack.blocks().get("campfire"), "expected campfire from farming/misc");
-        assertNotNull(pack.blocks().get("ashpile"), "expected ashpile from farming/misc");
-        assertNotNull(pack.items().get("potash"), "expected potash from farming/misc");
+        assertNotNull(pack.blocks().get("saltDeposit"), "expected saltDeposit from farming/misc");
+        assertNotNull(pack.items().get("salt"), "expected salt from farming/misc");
+        assertNotNull(pack.items().get("sammich"), "expected sammich from farming/foods");
+    }
+
+    /**
+     * {@code sheds} is written exactly like {@code drops} and means something else,
+     * so it is parsed by the same code into a field of its own. Getting the two
+     * confused would make a fruit tree drop its whole harvest when you break a leaf.
+     */
+    @Test
+    void readsShedsSeparatelyFromDrops() {
+        BlockDef leaves = result.pack().blocks().get("fruitLeaves");
+        assertNotNull(leaves, "expected fruitLeaves from farming/trees/fruit.xie");
+        assertEquals("tree", leaves.archetype());
+
+        assertEquals(List.of("apple", "orange", "lemon", "avocado"),
+            leaves.sheds().drops().stream().map(drop -> drop.item().name()).toList());
+        assertEquals(List.of("apple", "orange", "lemon", "avocado"),
+            leaves.drops().drops().stream().map(drop -> drop.item().name()).toList());
+
+        // Metadata picks the subtype here rather than a growth stage, so each fruit
+        // belongs to exactly one of the four trees.
+        var orange = leaves.sheds().drops().get(1);
+        assertEquals(20, orange.chanceFor(1), "the orange tree sheds oranges");
+        assertEquals(0, orange.chanceFor(0), "the apple tree does not");
+        assertEquals(8, leaves.props().getInt("shedSaturation", 0));
+
+        BlockDef cocoa = result.pack().blocks().get("cocoaLeaves");
+        assertNotNull(cocoa, "expected cocoaLeaves from farming/trees/cocoatree.xie");
+        assertEquals(List.of("cocoaBeans"),
+            cocoa.sheds().drops().stream().map(drop -> drop.item().name()).toList());
+        assertTrue(result.pack().blocks().get("cocoaSapling").sheds().isEmpty(),
+            "a sapling sheds nothing");
+    }
+
+    /**
+     * The four fruit trees are named by alias, and each alias has to reach a
+     * different subtype. Written as {@code fruitLeaves:0} through {@code :3} they
+     * would all reach the first, because a two-part reference is a count and not a
+     * metadata value — which is what they said until this port, and why every one of
+     * the four spawn entries generated an apple tree in 2013.
+     */
+    @Test
+    void theTreeAliasesReachAllFourSubtypes() {
+        var expected = java.util.Map.of(
+            "appleTree", 0, "orangeTree", 1, "lemonTree", 2, "avocadoTree", 3);
+        expected.forEach((name, meta) -> {
+            AliasDef alias = result.pack().aliases().get(name);
+            assertNotNull(alias, "expected the " + name + " alias");
+            ItemRef target = alias.members().get(0);
+            assertEquals("fruitLeaves", target.name());
+            assertTrue(target.hasMeta(), name + " must name a subtype, not just a count");
+            assertEquals(meta, target.meta());
+        });
     }
 
     /**
@@ -99,6 +154,55 @@ class RealContentTest {
         });
     }
 
+    /**
+     * The two {@code spawns} sections are spelled differently — {@code wildshrubs.xie}
+     * and {@code fruit.xie} say {@code "spawn"} and {@code salt.xie} says
+     * {@code "spawns"} — and one keys its entries by alias while the other names the
+     * block in a property. Both spellings and both forms have to reach the emitter.
+     */
+    @Test
+    void readsBothSpellingsOfTheSpawnSection() {
+        List<SpawnDef> spawns = result.pack().spawns();
+        assertEquals(10, spawns.size(), "expected every spawn entry in the content repo");
+
+        SpawnDef named = byName(spawns, "seasalt");
+        assertEquals("saltDeposit", named.target().name(),
+            "a \"spawns\" entry names its block in a property");
+        assertTrue(named.clump());
+        assertEquals(16, named.clusterSize());
+        assertEquals(2, named.nearDistance());
+        assertEquals(List.of("8", "9"), named.spawnsNear().stream().map(ItemRef::name).toList(),
+            "spawnsNear is written as 1.6 numeric block ids");
+
+        SpawnDef byAlias = byName(spawns, "wildCorn");
+        assertEquals("wildCorn", byAlias.target().name(),
+            "a \"spawn\" entry keyed by alias takes its own key as the block");
+        assertEquals(22, byAlias.rarity());
+        assertEquals(5, byAlias.clusterSize());
+        assertTrue(byAlias.clump());
+
+        // Nothing declares one, so every entry generates in the surface pass.
+        assertTrue(spawns.stream().allMatch(spawn -> spawn.spawnType().equals("surface")));
+        assertTrue(spawns.stream().allMatch(SpawnDef::generates));
+    }
+
+    /**
+     * Defaults come from {@code Spawnable}'s field initialisers rather than from
+     * anything the format documents, and {@code wildTomato} declares neither.
+     */
+    @Test
+    void fallsBackToTheOriginalsDefaults() {
+        SpawnDef wildTomato = byName(result.pack().spawns(), "wildTomato");
+        assertEquals(1, wildTomato.clusterSize(), "one block unless clusterSize says otherwise");
+        assertFalse(wildTomato.clump());
+        assertEquals(6, wildTomato.nearDistance(), "Spawnable.nearDistance starts at 6");
+    }
+
+    private static SpawnDef byName(List<SpawnDef> spawns, String name) {
+        return spawns.stream().filter(spawn -> spawn.name().equals(name)).findFirst()
+            .orElseThrow(() -> new AssertionError("no spawn entry named " + name));
+    }
+
     @Test
     void mergesAliasesAcrossFiles() {
         AliasDef salady = result.pack().aliases().get("salady");
@@ -114,11 +218,22 @@ class RealContentTest {
     }
 
     @Test
-    void readsRootLevelOverrideFile() {
-        BlockDef melon = result.pack().blocks().get("melon");
-        assertNotNull(melon, "expected the melon override from MelonOverride.xie");
-        assertTrue(melon.isOverride());
-        assertEquals("tile.melon", melon.override().orElseThrow().name());
+    void omitsContentVanillaHasSince() {
+        ContentPack pack = result.pack();
+        // Each of these was removed because Minecraft gained an equivalent after
+        // 1.6, and reintroducing one would mean shipping a worse duplicate of a
+        // vanilla feature. Campfire arrived in 1.14, the composter replaced the
+        // potash-and-fertiliser loop in the same release, and vanilla melon
+        // mechanics no longer need overriding.
+        for (String block : new String[] {"campfire", "ashpile", "melon"}) {
+            assertFalse(pack.blocks().containsKey(block),
+                block + " is superseded by vanilla and should not be declared");
+        }
+        for (String item : new String[] {"potash", "fertiliser", "foragingStick",
+                                          "pumpkinPiece", "pumpkinCooked", "melon"}) {
+            assertFalse(pack.items().containsKey(item),
+                item + " is superseded by vanilla and should not be declared");
+        }
     }
 
     @Test
@@ -127,6 +242,28 @@ class RealContentTest {
             .anyMatch(block -> block.origin().path().contains("_wip")
                 || block.origin().path().contains("_plox_update"));
         assertFalse(fromSkipped, "work-in-progress directories should not be loaded");
+    }
+
+    /**
+     * The two live {@code cull} entries, pinned because the shape of what they name
+     * is easy to misread. {@code redDye:2} is a two-part reference, which
+     * {@code Xie.parseItemStack} read as name and <em>count</em> — so it is two red
+     * dye, not dye subtype two, and the item is decided by the name alone. Anything
+     * that treated the second field as metadata would cull the wrong item entirely.
+     */
+    @Test
+    void parsesCullsAsAnOutputStackWithACount() {
+        List<RecipeDef> culls = result.pack().recipes().stream()
+            .filter(recipe -> recipe.kind() == RecipeDef.Kind.CULL)
+            .toList();
+        assertEquals(2, culls.size(), "flowerbushes.xie declares both live culls");
+
+        List<ItemRef> targets = culls.stream().flatMap(cull -> cull.culls().stream()).toList();
+        assertEquals(List.of("redDye", "yellowDye"), targets.stream().map(ItemRef::name).toList());
+        for (ItemRef target : targets) {
+            assertEquals(2, target.count(), () -> target + " names a stack of two");
+            assertFalse(target.hasMeta(), () -> target + " has no metadata value");
+        }
     }
 
     /**

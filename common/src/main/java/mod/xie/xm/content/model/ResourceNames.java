@@ -64,9 +64,31 @@ public final class ResourceNames {
      * Mojang has renamed since 1.6. This is a starting set, not the full table —
      * unmapped names fall through to {@link #toPath} unchanged.
      */
+    /**
+     * The sixteen damage values of 1.6's {@code dyePowder}, which was one item id
+     * with a subtype per colour. Every one is a separate item now, so the reference
+     * cannot be resolved from the name alone — {@code dyePowder:1:3} is cocoa beans
+     * and {@code dyePowder:1:15} is bone meal.
+     */
+    private static final String[] DYE_SUBTYPES = {
+        "ink_sac", "red_dye", "green_dye", "cocoa_beans",
+        "lapis_lazuli", "purple_dye", "cyan_dye", "light_gray_dye",
+        "gray_dye", "pink_dye", "lime_dye", "yellow_dye",
+        "light_blue_dye", "magenta_dye", "orange_dye", "bone_meal"
+    };
+
     public static String toVanillaPath(ItemRef ref) {
         String name = ref.isVanilla() ? ref.vanillaName() : ref.name();
         String lower = name.toLowerCase(Locale.ROOT);
+
+        if (lower.equals("dyepowder") || lower.equals("dye")) {
+            // Without a subtype there is nothing sensible to pick; ink sac was
+            // metadata 0 and is what a bare reference meant.
+            int meta = ref.hasMeta() ? ref.meta() : 0;
+            if (meta >= 0 && meta < DYE_SUBTYPES.length) {
+                return DYE_SUBTYPES[meta];
+            }
+        }
 
         // A block and an item could share a name in 1.6 and mean different things,
         // which is exactly what the tile./item. prefixes were for. Modern ids have
@@ -105,7 +127,108 @@ public final class ResourceNames {
             case "fishcooked" -> "cooked_cod";
             case "milkbucket" -> "milk_bucket";
             case "bonemeal" -> "bone_meal";
-            default -> toPath(name);
+
+            // Raw foods were "<thing>Raw"; the modern id is the bare noun.
+            case "beefraw" -> "beef";
+            case "porkchopraw" -> "porkchop";
+            case "chickenraw" -> "chicken";
+            case "fishraw" -> "cod";
+
+            // 1.6 had exactly two flowers, named for their colours. "rose" is the
+            // red one and "flower" the yellow one — the bare name meant yellow.
+            case "rose" -> "poppy";
+            case "flower", "yellowflower" -> "dandelion";
+
+            // Buckets were "bucket<Contents>"; the modern id reverses the order.
+            case "bucketwater" -> "water_bucket";
+            case "bucketlava" -> "lava_bucket";
+            case "bucketmilk", "milk" -> "milk_bucket";
+            case "bucketempty" -> "bucket";
+
+            case "cocoabeans" -> "cocoa_beans";
+            case "seeds_melon", "melonseeds" -> "melon_seeds";
+            case "seeds_pumpkin", "pumpkinseeds" -> "pumpkin_seeds";
+            case "sugarcane", "reed", "reeds" -> "sugar_cane";
+            case "slimeball" -> "slime_ball";
+            case "enderpearl" -> "ender_pearl";
+            case "blazerod" -> "blaze_rod";
+            case "blazepowder" -> "blaze_powder";
+            case "glassbottle" -> "glass_bottle";
+            // "netherStalk" was the crop block and "netherStalkSeeds" the item you
+            // plant; both are minecraft:nether_wart now, which is one block and one
+            // item sharing an id the way 1.6 could not.
+            case "netherstalkseeds", "netherwart", "netherstalk" -> "nether_wart";
+            case "goldnugget" -> "gold_nugget";
+            case "ingotiron" -> "iron_ingot";
+            case "ingotgold" -> "gold_ingot";
+
+            // Ores were named the 1.6 way round, the noun first. A tool's
+            // blocksEffective and canHarvest lists are written in these.
+            case "orecoal" -> "coal_ore";
+            case "oreiron" -> "iron_ore";
+            case "oregold" -> "gold_ore";
+            case "orediamond" -> "diamond_ore";
+            case "orelapis" -> "lapis_ore";
+            case "oreredstone", "oreredstoneglowing" -> "redstone_ore";
+            case "oreemerald" -> "emerald_ore";
+
+            // Names Mojang has simply changed since.
+            case "sandstone" -> "sandstone";
+            case "stonebrick" -> "stone_bricks";
+            case "stonemoss", "cobblestonemossy" -> "mossy_cobblestone";
+            case "hellrock" -> "netherrack";
+            case "web" -> "cobweb";
+            // "slowSand" is Block's own field name and "hellSand" its 1.6 texture
+            // name; the nether packs write it the way a player says it.
+            case "hellsand", "slowsand", "soulsand" -> "soul_sand";
+            case "goldenrail" -> "powered_rail";
+            // 1.6's stoneSlab was one block whose metadata picked the material; its
+            // subtype 0, the plain stone one, is smooth stone slab now.
+            case "stoneslab" -> "smooth_stone_slab";
+
+            default -> {
+                String tool = legacyToolPath(lower);
+                yield tool != null ? tool : toPath(name);
+            }
         };
+    }
+
+    /** The five tool kinds 1.6 had, longest first so {@code axe} cannot eat a pickaxe. */
+    private static final String[] TOOL_KINDS = {"pickaxe", "sword", "axe", "shovel", "hoe"};
+
+    /**
+     * A tool written the 1.6 way round, the noun first: {@code pickaxeWood} rather
+     * than {@code woodenPickaxe}.
+     *
+     * <p>The same convention as the ores above, and for the same reason — these are
+     * {@code Item}'s own field names, which is what a {@code .xie} file could name.
+     * {@code survivalpickaxe.xie} overrides two of them. The iron tier was spelt
+     * {@code Steel} in 1.6, so both spellings answer, on the same grounds
+     * {@link PotionNames} takes both spellings of an effect.
+     *
+     * <p>Note that the content is not consistent about this: {@code cullStoneTools.xie}
+     * writes {@code stonePickaxe}, tier first, which {@link #toPath} already turns into
+     * the modern id without help.
+     *
+     * @return the modern id path, or null when this is not a legacy tool name
+     */
+    private static String legacyToolPath(String lower) {
+        for (String kind : TOOL_KINDS) {
+            if (!lower.startsWith(kind)) {
+                continue;
+            }
+            String tier = switch (lower.substring(kind.length())) {
+                case "wood" -> "wooden";
+                case "stone" -> "stone";
+                case "iron", "steel" -> "iron";
+                case "gold" -> "golden";
+                case "diamond" -> "diamond";
+                default -> null;
+            };
+            if (tier != null) {
+                return tier + "_" + kind;
+            }
+        }
+        return null;
     }
 }

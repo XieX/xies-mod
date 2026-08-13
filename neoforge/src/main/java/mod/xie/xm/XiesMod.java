@@ -6,12 +6,14 @@ import mod.xie.xm.content.model.ContentPack;
 import mod.xie.xm.content.parse.Diagnostic;
 import mod.xie.xm.content.parse.XieParser;
 import mod.xie.xm.pack.XiePackProvider;
+import mod.xie.xm.recipe.XieRecipeCuller;
 import mod.xie.xm.reg.XieRegistrar;
 
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.common.NeoForge;
 
 import org.slf4j.Logger;
 
@@ -55,6 +57,11 @@ public class XiesMod {
         // Fires once for resources and once for data; the same generated directory
         // is registered as both a resource pack and a datapack.
         modEventBus.addListener(XiePackProvider::addPackFinders);
+
+        // "cull" is the one thing content asks for that no generated file can carry,
+        // so it is applied to the recipes as they load instead. On the game bus
+        // rather than the mod bus: it fires on every datapack load, not once.
+        NeoForge.EVENT_BUS.addListener(XieRecipeCuller::onModifyRecipeJsons);
     }
 
     public static XieRegistrar registrar() {
@@ -91,9 +98,12 @@ public class XiesMod {
             return;
         }
 
+        int rejected = 0;
+
         for (XieParser.ParseResult result : results) {
             ContentPack pack = result.pack();
             PACKS.add(pack);
+            rejected += result.rejected();
 
             LOGGER.info("Loaded content pack {}", pack);
 
@@ -114,5 +124,13 @@ public class XiesMod {
         int recipes = PACKS.stream().mapToInt(pack -> pack.recipes().size()).sum();
         LOGGER.info("Xie content: {} packs, {} blocks, {} items, {} recipes (nothing registered yet)",
             PACKS.size(), blocks, items, recipes);
+
+        // A declaration the reader refused is in none of those totals and in none the
+        // registrar or the emitters keep either, so it is the one way content can go
+        // missing from every count while still having been reported. Said here so the
+        // sums add up: the errors above name each one.
+        if (rejected > 0) {
+            LOGGER.info("Xie content: {} declarations rejected and not counted above", rejected);
+        }
     }
 }

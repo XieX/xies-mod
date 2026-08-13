@@ -1,6 +1,7 @@
 package mod.xie.xm.content.model;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * One entry from a {@code "spawns"} section — where a block generates in the world.
@@ -38,16 +39,57 @@ public record SpawnDef(
         biomes = List.copyOf(biomes);
     }
 
+    /** How many blocks one successful spawn places. {@code Spawnable.clusterSizeMax}. */
     public int clusterSize() {
-        return props.peek("clustersize").flatMap(PropertyMap::asInt).orElse(1);
+        return props.getInt("clustersize", 1);
     }
 
+    /**
+     * One in {@code rarity} chunks gets an attempt — {@code Spawnable.spawnFactor},
+     * rolled as {@code random.nextInt(spawnFactor) == 0}. Larger is rarer, and the
+     * default of 15 is the field's initialiser rather than anything the format says.
+     *
+     * <p>Zero or less never generates at all, which is how content switches an entry
+     * off without deleting it.
+     */
     public int rarity() {
-        return props.peek("rarity").flatMap(PropertyMap::asInt).orElse(1);
+        return props.getInt("rarity", 15);
     }
 
+    /** Whether {@link #rarity} allows this entry to generate at all. */
+    public boolean generates() {
+        return rarity() > 0;
+    }
+
+    /**
+     * How far {@link #spawnsNear} may look, in blocks. Six is
+     * {@code Spawnable.nearDistance}'s initialiser; the original ignored a declared
+     * value of zero or less rather than treating it as "must be at this very block".
+     */
     public int nearDistance() {
-        return props.peek("neardistance").flatMap(PropertyMap::asInt).orElse(0);
+        int declared = props.getInt("neardistance", 0);
+        return declared > 0 ? declared : 6;
+    }
+
+    /**
+     * Whether a cluster is one contiguous blob rather than a scatter.
+     * {@code Spawnable.attemptSpawn} builds a clump as square rings around a centre
+     * and a scatter as repeated random offsets from one point.
+     */
+    public boolean clump() {
+        return props.getBoolean("clump", false);
+    }
+
+    /**
+     * Which generation pass this belongs to: {@code surface}, {@code nether},
+     * {@code dungeon} or {@code ore}, defaulting to {@code surface} as
+     * {@code JobSpawn} did.
+     */
+    public String spawnType() {
+        return props.getString("type")
+            .map(text -> text.trim().toLowerCase(Locale.ROOT))
+            .filter(text -> !text.isEmpty())
+            .orElse("surface");
     }
 
     public boolean hasPlacementRules() {

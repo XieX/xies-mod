@@ -35,6 +35,13 @@ neoForge {
     runs {
         register("client") {
             client()
+            // Nothing random-ticks and no components can be inspected without a
+            // player, so verification drives a client into the dedicated server and
+            // asserts over rcon. -Pxie.join=<host> is how that client gets there;
+            // --args cannot supply it, because it replaces the launcher's own.
+            (findProperty("xie.join") as String?)?.let {
+                programArguments.addAll("--quickPlayMultiplayer", it)
+            }
         }
         register("server") {
             server()

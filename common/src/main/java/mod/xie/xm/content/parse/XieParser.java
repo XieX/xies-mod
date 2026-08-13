@@ -44,7 +44,13 @@ public final class XieParser {
     /** Directory under the game directory that user content packs live in. */
     public static final String CONTENT_DIR_NAME = "xiecontent";
 
-    public record ParseResult(ContentPack pack, Diagnostics diagnostics) { }
+    /**
+     * @param pack        everything the pack declared that the reader could use
+     * @param diagnostics every problem found while reading it
+     * @param rejected    how many declarations were reported and thrown away, and so
+     *                    appear in no other count. See {@link XieFileReader.Result}.
+     */
+    public record ParseResult(ContentPack pack, Diagnostics diagnostics, int rejected) { }
 
     private XieParser() { }
 
@@ -78,7 +84,7 @@ public final class XieParser {
 
         if (!Files.isDirectory(root)) {
             diagnostics.error(packName, "not a directory: " + root);
-            return new ParseResult(ContentPack.empty(packName), diagnostics);
+            return new ParseResult(ContentPack.empty(packName), diagnostics, 0);
         }
 
         Map<String, BlockDef> blocks = new LinkedHashMap<>();
@@ -89,6 +95,7 @@ public final class XieParser {
         Map<String, Integer> legacyIds = new LinkedHashMap<>();
         Map<String, String> displayNames = new LinkedHashMap<>();
         Map<String, String> texturePaths = new LinkedHashMap<>();
+        int rejected = 0;
 
         XieFileReader xieReader = new XieFileReader(diagnostics);
         XidReader xidReader = new XidReader(diagnostics);
@@ -102,6 +109,7 @@ public final class XieParser {
             if (lower.endsWith(XIE_EXTENSION)) {
                 String basename = stripExtension(file.getFileName().toString());
                 XieFileReader.Result result = xieReader.read(relative, basename, new StringReader(text));
+                rejected += result.rejected();
                 mergeFile(result, relative, diagnostics,
                     blocks, items, recipes, spawns, aliases, legacyIds, texturePaths);
             } else if (lower.endsWith(XID_EXTENSION)) {
@@ -113,7 +121,7 @@ public final class XieParser {
 
         ContentPack pack = new ContentPack(packName, blocks, items, recipes, spawns,
             aliases, legacyIds, displayNames, texturePaths);
-        return new ParseResult(pack, diagnostics);
+        return new ParseResult(pack, diagnostics, rejected);
     }
 
     private static void mergeFile(

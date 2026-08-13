@@ -119,25 +119,12 @@ public final class PropertyMap {
      * content only ever used JSON booleans here.
      */
     public boolean getBoolean(String key, boolean fallback) {
-        Optional<JsonElement> element = raw(key);
-        if (element.isEmpty() || !element.get().isJsonPrimitive()) {
-            return fallback;
-        }
-        JsonPrimitive primitive = element.get().getAsJsonPrimitive();
-        if (primitive.isBoolean()) {
-            return primitive.getAsBoolean();
-        }
-        if (primitive.isNumber()) {
-            return primitive.getAsDouble() != 0d;
-        }
-        String text = primitive.getAsString().trim().toLowerCase(Locale.ROOT);
-        if (text.equals("true") || text.equals("yes")) {
-            return true;
-        }
-        if (text.equals("false") || text.equals("no")) {
-            return false;
-        }
-        return fallback;
+        return raw(key).flatMap(PropertyMap::asBoolean).orElse(fallback);
+    }
+
+    /** {@link #getBoolean} without marking the key consumed. */
+    public boolean peekBoolean(String key, boolean fallback) {
+        return peek(key).flatMap(PropertyMap::asBoolean).orElse(fallback);
     }
 
     /**
@@ -170,6 +157,39 @@ public final class PropertyMap {
         if (!trimmed.isEmpty()) {
             out.add(trimmed);
         }
+    }
+
+    /**
+     * Reads a property written as an object of one name to another, in the order
+     * the author wrote them.
+     *
+     * <p>{@code transforms} is the only property that takes this shape: a map from
+     * the block a tool right-clicks to the block it becomes. Unlike
+     * {@link #getMetaMap} the keys are not metadata ranges but names, so they keep
+     * their case — {@code goldBlock} has to survive to be resolved as a block.
+     *
+     * <p>Declaration order is the whole of the reading order. {@code XieItemTool}
+     * held its transforms in a {@code HashMap} and returned the first key that
+     * matched, which means overlapping keys resolved in whatever order the hashes
+     * fell; nothing overlaps in the live content, so writing them down in the order
+     * they were declared is that behaviour made repeatable.
+     *
+     * @return the pairs declared, or empty when the property is absent or is not an
+     *         object — the caller decides whether that is worth reporting
+     */
+    public Map<String, String> getStringMap(String key) {
+        Optional<JsonElement> element = raw(key);
+        if (element.isEmpty() || !element.get().isJsonObject()) {
+            return Map.of();
+        }
+        Map<String, String> out = new LinkedHashMap<>();
+        for (Map.Entry<String, JsonElement> entry : element.get().getAsJsonObject().entrySet()) {
+            String from = entry.getKey().trim();
+            if (!from.isEmpty() && entry.getValue().isJsonPrimitive()) {
+                out.put(from, entry.getValue().getAsString().trim());
+            }
+        }
+        return Collections.unmodifiableMap(out);
     }
 
     /** {@link #getStringList} parsed as item references. */
@@ -227,6 +247,40 @@ public final class PropertyMap {
             }
         }
         return bad;
+    }
+
+    /**
+     * Coerces a JSON value to a boolean, or empty when it says neither. Accepts real
+     * JSON booleans, the strings "true"/"false" and any non-zero number.
+     *
+     * <p>Deviates from the original {@code Job.getBoolean}, which required a number
+     * strictly greater than 1 and so read {@code 1} as false. That was a bug; real
+     * content only ever used JSON booleans here.
+     */
+    public static Optional<Boolean> asBoolean(JsonElement element) {
+        if (!element.isJsonPrimitive()) {
+            return Optional.empty();
+        }
+        JsonPrimitive primitive = element.getAsJsonPrimitive();
+        if (primitive.isBoolean()) {
+            return Optional.of(primitive.getAsBoolean());
+        }
+        if (primitive.isNumber()) {
+            return Optional.of(primitive.getAsDouble() != 0d);
+        }
+        String text = primitive.getAsString().trim().toLowerCase(Locale.ROOT);
+        if (text.equals("true") || text.equals("yes")) {
+            return Optional.of(true);
+        }
+        if (text.equals("false") || text.equals("no")) {
+            return Optional.of(false);
+        }
+        return Optional.empty();
+    }
+
+    /** Reads a string property without marking the key consumed. */
+    public Optional<String> peekString(String key) {
+        return peek(key).filter(JsonElement::isJsonPrimitive).map(JsonElement::getAsString);
     }
 
     /** Coerces a JSON value to an int. Real content quotes numbers about half the time. */

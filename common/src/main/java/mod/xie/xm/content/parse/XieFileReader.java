@@ -53,11 +53,16 @@ public final class XieFileReader {
     private enum Section { BLOCK, ITEM, RECIPE, SPAWN, ALIAS }
 
     /** Keys the block parser consumes structurally rather than as plain properties. */
+    // "texfile", "icon" and "texturebase" are read by readTex, which builds a
+    // PropertyMap of its own over the same object when a definition declares them flat
+    // rather than nested in "tex" — so the definition's own map never sees the read.
     private static final String[] BLOCK_STRUCTURAL =
-        {"name", "type", "override", "overide", "drops", "tex", "blockbounds", "texfile", "icon"};
+        {"name", "type", "override", "overide", "drops", "sheds", "tex", "blockbounds",
+         "texfile", "icon", "texturebase"};
 
     private static final String[] ITEM_STRUCTURAL =
-        {"name", "type", "override", "overide", "texfile", "icon", "tex"};
+        {"name", "type", "override", "overide", "drops", "blocks", "texfile", "icon", "tex",
+         "texturebase"};
 
     private final Diagnostics diagnostics;
 
@@ -65,7 +70,18 @@ public final class XieFileReader {
         this.diagnostics = diagnostics;
     }
 
-    /** Everything one file contributed. */
+    /**
+     * Everything one file contributed.
+     *
+     * @param rejected how many declarations were thrown away, having been reported as
+     *                 an error. A declaration the reader refuses is in none of the
+     *                 lists above and in no count the registrar or the emitters keep,
+     *                 so without this it leaves the totals silently one short: three of
+     *                 {@code _wip/steel/steel.xie}'s six recipes write {@code contents}
+     *                 where the format wants {@code content} — as they did in 1.6,
+     *                 where {@code JobRecipe} failed the job outright — and the pack
+     *                 then reported one recipe not emitted rather than four missing.
+     */
     public record Result(
         Map<String, BlockDef> blocks,
         Map<String, ItemDef> items,
@@ -73,10 +89,12 @@ public final class XieFileReader {
         List<SpawnDef> spawns,
         List<AliasDef> aliases,
         Map<String, Integer> ids,
-        Map<String, String> texturePaths
+        Map<String, String> texturePaths,
+        int rejected
     ) {
         public static Result empty() {
-            return new Result(Map.of(), Map.of(), List.of(), List.of(), List.of(), Map.of(), Map.of());
+            return new Result(Map.of(), Map.of(), List.of(), List.of(), List.of(),
+                Map.of(), Map.of(), 0);
         }
     }
 
@@ -108,6 +126,7 @@ public final class XieFileReader {
         List<AliasDef> aliases = new ArrayList<>();
         Map<String, Integer> ids = new LinkedHashMap<>();
         Map<String, String> texturePaths = new LinkedHashMap<>();
+        int rejected = 0;
 
         for (Map.Entry<String, JsonElement> entry : root.getAsJsonObject().entrySet()) {
             String rawKey = entry.getKey();
@@ -137,6 +156,7 @@ public final class XieFileReader {
             }
             if (!value.isJsonObject()) {
                 diagnostics.error(path, "section \"" + rawKey + "\" must be an object");
+                rejected++;
                 continue;
             }
 
@@ -146,17 +166,31 @@ public final class XieFileReader {
                     continue;
                 }
                 Origin origin = new Origin(file, path, name);
-                switch (section) {
-                    case BLOCK -> readBlock(origin, def.getValue()).ifPresent(b -> put(blocks, b.name(), b, origin));
-                    case ITEM -> readItem(origin, def.getValue()).ifPresent(i -> put(items, i.name(), i, origin));
-                    case RECIPE -> readRecipe(origin, def.getValue()).ifPresent(recipes::add);
-                    case SPAWN -> readSpawn(origin, def.getValue()).ifPresent(spawns::add);
-                    case ALIAS -> readAlias(origin, def.getValue()).ifPresent(aliases::add);
+                // Every reader answers with an empty Optional for a declaration it has
+                // refused and reported, which is the one place a definition can go
+                // missing without anything downstream ever hearing of it.
+                boolean kept = switch (section) {
+                    case BLOCK -> read(readBlock(origin, def.getValue()),
+                        b -> put(blocks, b.name(), b, origin));
+                    case ITEM -> read(readItem(origin, def.getValue()),
+                        i -> put(items, i.name(), i, origin));
+                    case RECIPE -> read(readRecipe(origin, def.getValue()), recipes::add);
+                    case SPAWN -> read(readSpawn(origin, def.getValue()), spawns::add);
+                    case ALIAS -> read(readAlias(origin, def.getValue()), aliases::add);
+                };
+                if (!kept) {
+                    rejected++;
                 }
             }
         }
 
-        return new Result(blocks, items, recipes, spawns, aliases, ids, texturePaths);
+        return new Result(blocks, items, recipes, spawns, aliases, ids, texturePaths, rejected);
+    }
+
+    /** Keeps what a reader produced, answering whether there was anything to keep. */
+    private static <T> boolean read(Optional<T> parsed, java.util.function.Consumer<T> keep) {
+        parsed.ifPresent(keep);
+        return parsed.isPresent();
     }
 
     private <T> void put(Map<String, T> target, String name, T value, Origin origin) {
@@ -181,13 +215,17 @@ public final class XieFileReader {
         Optional<ItemRef> override = readOverride(props);
 
         DropTable drops = readDrops(origin, props.raw("drops").orElse(null));
+        // "sheds" is written exactly like "drops" — the original built both with
+        // expandDropsNode — but means something else: what a tree lets fall of its
+        // own accord rather than what breaking it yields.
+        DropTable sheds = readDrops(origin, props.raw("sheds").orElse(null));
         TexDef tex = readTex(origin, object, "block");
         Optional<MetaMap<Bounds>> bounds = readBounds(origin, props);
 
         props.markUsed(BLOCK_STRUCTURAL);
 
         BlockDef block = new BlockDef(origin, origin.name(), displayName, archetype,
-            override, drops, tex, bounds, props);
+            override, drops, sheds, tex, bounds, props);
 
         if (!block.hasKnownArchetype()) {
             diagnostics.warning(origin.toString(),
@@ -240,11 +278,17 @@ public final class XieFileReader {
         String archetype = props.getString("type", ItemDef.DEFAULT_ARCHETYPE)
             .trim().toLowerCase(Locale.ROOT);
         Optional<ItemRef> override = readOverride(props);
+        // Written exactly as a block's "drops", and meaning the same thing one step
+        // along: what you are left holding once the item has been used up. Only food
+        // ever declares it, and XieItemFood.onFoodEaten handed it to the player.
+        DropTable drops = readDrops(origin, props.raw("drops").orElse(null));
+        List<ItemDef.BlockDrops> blockDrops = readBlockDrops(origin, props.raw("blocks").orElse(null));
         TexDef tex = readTex(origin, object, "item");
 
         props.markUsed(ITEM_STRUCTURAL);
 
-        ItemDef item = new ItemDef(origin, origin.name(), displayName, archetype, override, tex, props);
+        ItemDef item = new ItemDef(origin, origin.name(), displayName, archetype, override,
+            drops, blockDrops, tex, props);
 
         if (!item.hasKnownArchetype()) {
             diagnostics.warning(origin.toString(),
@@ -263,6 +307,31 @@ public final class XieFileReader {
     }
 
     // ----------------------------------------------------------------- drops
+
+    /**
+     * The {@code blocks} map of a {@code stick}: block reference to the drop table
+     * that block yields when the stick is used on it.
+     *
+     * <p>Each value is written exactly as a block's own {@code drops}, and
+     * {@code JobItem.doStick} read it with the same {@code expandDropsNode} the block
+     * side uses — so it is the same parse here too. Declaration order is preserved
+     * because {@code XieItemStick} took the first entry that matched.
+     */
+    private List<ItemDef.BlockDrops> readBlockDrops(Origin origin, JsonElement element) {
+        if (element == null) {
+            return List.of();
+        }
+        if (!element.isJsonObject()) {
+            diagnostics.warning(origin.toString(), "blocks must be an object");
+            return List.of();
+        }
+        List<ItemDef.BlockDrops> entries = new ArrayList<>();
+        for (Map.Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
+            entries.add(new ItemDef.BlockDrops(ItemRef.parse(entry.getKey()),
+                readDrops(origin, entry.getValue())));
+        }
+        return entries;
+    }
 
     private DropTable readDrops(Origin origin, JsonElement element) {
         if (element == null) {

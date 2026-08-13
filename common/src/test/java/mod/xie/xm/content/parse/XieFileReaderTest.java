@@ -285,6 +285,74 @@ class XieFileReaderTest {
         assertFalse(result.blocks().get("b").hasKnownArchetype());
     }
 
+    /**
+     * {@code JobItem.doWork} dispatched {@code "seed"} and {@code "seeds"} to the
+     * same {@code doSeeds}, so a definition written in the singular is a seed and
+     * not an unknown archetype.
+     */
+    @Test
+    void acceptsBothSpellingsOfSeed() {
+        XieFileReader.Result result = read("""
+            {
+              "items": {
+                "one":  { "name": "One",  "type": "seed",  "growsInto": "aBush" },
+                "many": { "name": "Many", "type": "seeds", "growsInto": "aBush" }
+              }
+            }
+            """);
+        assertTrue(result.items().get("one").hasKnownArchetype());
+        assertTrue(result.items().get("many").hasKnownArchetype());
+        assertTrue(diagnostics.warnings().isEmpty(), diagnostics::toString);
+    }
+
+    /**
+     * A {@code stick}'s {@code blocks} map, which is a drop table per block written
+     * exactly as a block's own {@code drops} — and read in declaration order,
+     * because the first entry that matches is the one that fires.
+     */
+    @Test
+    void readsTheBlocksAStickWorksOn() {
+        XieFileReader.Result result = read("""
+            {
+              "items": {
+                "sickle": {
+                  "name": "Sickle", "type": "stick", "uses": 64, "destroyChance": 100,
+                  "blocks": {
+                    "netherStalk:3": {
+                      "etherWart":  { "chance": 2,  "amount": 1 },
+                      "netherWart": { "chance": 20, "amount": 6 }
+                    },
+                    "pumpkin": "pumpkinSeeds"
+                  }
+                }
+              }
+            }
+            """);
+        assertTrue(diagnostics.errors().isEmpty(), diagnostics::toString);
+
+        ItemDef sickle = result.items().get("sickle");
+        assertEquals(2, sickle.blockDrops().size());
+
+        ItemDef.BlockDrops wart = sickle.blockDrops().get(0);
+        assertEquals("netherStalk", wart.block().name());
+        // The suffix is a metadata value here — Xie.parseBlockAndMetadata read the
+        // key, not Xie.parseItemStack — but ItemRef has one grammar and reads a
+        // two-part reference as a count. The registrar drops the suffix either way,
+        // so what matters is only that something was written after the colon.
+        assertEquals(3, wart.block().count());
+        assertEquals(List.of("etherWart", "netherWart"),
+            wart.drops().drops().stream().map(d -> d.item().name()).toList());
+        assertEquals(6, wart.drops().drops().get(1).amount());
+        assertEquals(20, wart.drops().drops().get(1).chanceFor(0));
+
+        // The shorthand string form works here too, since it is the same parse.
+        assertEquals("pumpkin", sickle.blockDrops().get(1).block().name());
+        assertTrue(sickle.blockDrops().get(1).drops().drops().get(0).isUnconditional());
+
+        // "blocks" is structural, so it is not left over for the registrar to read.
+        assertFalse(sickle.props().untouchedKeys().contains("blocks"));
+    }
+
     @Test
     void tracksPropertiesNobodyRead() {
         XieFileReader.Result result = read("""
@@ -292,5 +360,53 @@ class XieFileReaderTest {
             """);
         // name/type are consumed structurally; hardness is left for the registrar.
         assertTrue(result.blocks().get("b").props().untouchedKeys().contains("hardness"));
+    }
+
+    /**
+     * {@code textureBase} is read by {@code readTex}, over a PropertyMap of its own
+     * when the declaration is flat rather than nested in {@code tex} — so the
+     * definition's map never sees the read and has to be told. Without that,
+     * {@code saltDeposit} is reported as declaring a property nobody looked at.
+     */
+    @Test
+    void countsAFlatTextureBaseAsRead() {
+        XieFileReader.Result result = read("""
+            { "blocks": { "saltDeposit": {
+                "name": "Salt Deposit", "material": "sand", "textureBase": "sand" } } }
+            """);
+        BlockDef salt = result.blocks().get("saltDeposit");
+        assertEquals("sand", salt.tex().base().orElseThrow());
+        assertFalse(salt.props().untouchedKeys().contains("texturebase"));
+    }
+
+    // -- _wip/steel/steel.xie -------------------------------------------------
+
+    /**
+     * A declaration the reader refuses is in none of the lists it returns, so it
+     * would otherwise be missing from every count the registrar and the emitters
+     * keep. {@code steel.xie} writes {@code contents} where {@code JobRecipe} read
+     * {@code content}, which failed the job outright in 1.6 and fails here — but it
+     * failed three of six recipes while the pack reported one recipe not emitted.
+     */
+    @Test
+    void countsRejectedDeclarations() {
+        XieFileReader.Result result = read("""
+            {
+              "recipes": {
+                "steelOre": { "pattern": " X ,XOX, X ", "contents": "coal,ironOre" },
+                "purpleSteelOre": "obsidian,ironOre"
+              }
+            }
+            """);
+        assertEquals(1, result.recipes().size());
+        assertEquals("purpleSteelOre", result.recipes().get(0).name());
+        assertEquals(1, result.rejected());
+        assertEquals(1, diagnostics.errors().size());
+    }
+
+    @Test
+    void countsNothingRejectedWhenEverythingParses() {
+        XieFileReader.Result result = read(TOMATO);
+        assertEquals(0, result.rejected());
     }
 }

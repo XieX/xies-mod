@@ -16,6 +16,7 @@ import java.util.Optional;
  * @param archetype   the {@code type} property; {@code basic} when unset
  * @param override    the vanilla object this replaces, from {@code override}
  * @param drops       what it yields when broken
+ * @param sheds       what it drops on the ground of its own accord; {@code tree} only
  * @param tex         spritesheet assignment
  * @param bounds      collision/selection box, possibly varying by metadata
  * @param props       every remaining property
@@ -27,6 +28,7 @@ public record BlockDef(
     String archetype,
     Optional<ItemRef> override,
     DropTable drops,
+    DropTable sheds,
     TexDef tex,
     Optional<MetaMap<Bounds>> bounds,
     PropertyMap props

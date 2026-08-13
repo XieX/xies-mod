@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 
 import mod.xie.xm.XiesMod;
 import mod.xie.xm.content.parse.XieParser;
+import mod.xie.xm.recipe.XieRecipeCuller;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -47,8 +48,12 @@ public final class XiePackProvider {
     /** Shown on the resource pack and datapack screens. */
     public static final String PACK_ID = XiesMod.MOD_ID + "_generated";
 
+    /** The override pack, which is a separate pack because it needs to outrank vanilla. */
+    public static final String OVERRIDE_PACK_ID = PACK_ID + "_overrides";
+
     /** The generated output, once written. Guarded by {@link #LOCK}. */
     private static Path generatedRoot;
+    private static Path overrideRoot;
     private static boolean generationFailed;
 
     private static final Object LOCK = new Object();
@@ -60,11 +65,35 @@ public final class XiePackProvider {
         if (root == null) {
             return;
         }
-
         PackType type = event.getPackType();
+
+        // Bottom position and always-active: the generated pack is a floor that a
+        // user pack can override, not something that overrides them. For the
+        // datapack side always-active also means required, which is what the blocks
+        // need — a registered block whose loot table is switched off drops nothing.
+        addPack(event, type, PACK_ID, "Xie's Mod content", root, Pack.Position.BOTTOM);
+
+        // The exact opposite, which is why it is a pack of its own. A definition that
+        // declares "override" writes a file at a vanilla id, and a pack below vanilla
+        // loses that argument every time — the generated table is read and then
+        // discarded, which looks precisely like the override not working. Only the
+        // files that replace something are up here; everything additive stays at the
+        // bottom where it cannot trample a user's pack.
+        //
+        // Registered even when it is empty, which is the usual case: a pack that
+        // appears and disappears with the content leaves "Missing data pack" behind in
+        // every world that once loaded it.
+        if (type == PackType.SERVER_DATA && overrideRoot != null) {
+            addPack(event, type, OVERRIDE_PACK_ID, "Xie's Mod vanilla overrides",
+                overrideRoot, Pack.Position.TOP);
+        }
+    }
+
+    private static void addPack(AddPackFindersEvent event, PackType type, String id,
+                                String title, Path root, Pack.Position position) {
         PackLocationInfo location = new PackLocationInfo(
-            PACK_ID,
-            Component.literal("Xie's Mod content"),
+            id,
+            Component.literal(title),
             PackSource.BUILT_IN,
             Optional.empty());
 
@@ -80,22 +109,15 @@ public final class XiePackProvider {
             }
         };
 
-        // Bottom position and always-active: the generated pack is a floor that a
-        // user pack can override, not something that overrides them. For the
-        // datapack side always-active also means required, which is what the blocks
-        // need — a registered block whose loot table is switched off drops nothing.
         Pack pack = Pack.readMetaAndCreate(
-            location,
-            resources,
-            type,
-            new PackSelectionConfig(true, Pack.Position.BOTTOM, false));
+            location, resources, type, new PackSelectionConfig(true, position, false));
 
         if (pack == null) {
             LOGGER.error("Generated pack at {} could not be read back as {}", root, type);
             return;
         }
         event.addRepositorySource(consumer -> consumer.accept(pack));
-        LOGGER.info("Registered generated {} pack from {}", type.getDirectory(), root);
+        LOGGER.info("Registered generated {} pack {} from {}", type.getDirectory(), id, root);
     }
 
     /** Writes the pack if it has not been written yet. Null when generation failed. */
@@ -106,7 +128,8 @@ public final class XiePackProvider {
             }
 
             Path contentDir = FMLPaths.GAMEDIR.get().resolve(XieParser.CONTENT_DIR_NAME);
-            XiePackEmitter emitter = new XiePackEmitter(contentDir, XiePackProvider::itemExists);
+            XiePackEmitter emitter = new XiePackEmitter(
+                contentDir, XiePackProvider::itemExists, XiePackProvider::blockExists);
 
             PackFormat resources = SharedConstants.getCurrentVersion().packVersion(PackType.CLIENT_RESOURCES);
             PackFormat data = SharedConstants.getCurrentVersion().packVersion(PackType.SERVER_DATA);
@@ -114,8 +137,7 @@ public final class XiePackProvider {
             try {
                 emitter.emit(
                     XiesMod.packs(),
-                    XiesMod.registrar().blockMaxAges(),
-                    XiesMod.registrar().translations(),
+                    XiesMod.registrar().registered(),
                     new XiePackEmitter.PackFormats(
                         resources.major(), resources.minor(), data.major(), data.minor()));
             } catch (IOException e) {
@@ -124,6 +146,13 @@ public final class XiePackProvider {
                 return null;
             }
 
+            // Nothing on disk carries a cull, so it is handed over directly. This
+            // runs before any datapack is read, on either side, which is what the
+            // culler needs — it acts on the recipes of the first load as well as of
+            // every later /reload.
+            XieRecipeCuller.targets(emitter.culledItems());
+
+            overrideRoot = emitter.overrideRoot();
             generatedRoot = emitter.outputRoot();
             return generatedRoot;
         }
@@ -140,5 +169,17 @@ public final class XiePackProvider {
     private static boolean itemExists(String id) {
         Identifier identifier = Identifier.tryParse(id);
         return identifier != null && BuiltInRegistries.ITEM.containsKey(identifier);
+    }
+
+    /**
+     * Whether a block id is actually registered.
+     *
+     * <p>Worldgen needs this rather than {@link #itemExists}: no Xie block registers
+     * a {@code BlockItem}, so the blocks worldgen exists to place are absent from the
+     * item registry entirely.
+     */
+    private static boolean blockExists(String id) {
+        Identifier identifier = Identifier.tryParse(id);
+        return identifier != null && BuiltInRegistries.BLOCK.containsKey(identifier);
     }
 }
