@@ -1,0 +1,24 @@
+{
+	"$schema": "../../_schema/xie-content.schema.json",
+	"items": {
+		"chocolatebar": {
+			"name": "Chocolate Bar",
+			"type": "food",
+			"hunger": 4,
+			"nourishment": 0.3,
+			"texFile": "xie_foods.png",
+			"icon": 69
+		}
+	},	
+	"recipes": {
+		"chocolatebar": {
+			"product": "chocolatebar:6",
+			"pattern": "XXX,YYY, Z ",
+			"content": "sugar,cocoabeans,milk"
+		}
+	}
+}
+	
+	
+
+    

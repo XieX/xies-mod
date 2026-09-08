@@ -1,0 +1,385 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://xie.mod/xie-content.schema.json",
+  "title": "Xie content file",
+  "description": "One definition file in a Xie content pack. Add \"$schema\": \"../xie-content.schema.json\" (or wherever this file lives relative to yours) at the top of a definition file to get completion and validation in an editor. Keys are matched case-insensitively by the engine; this schema lists the canonical spelling. Numbers may be written as JSON numbers or as quoted strings, and comma-separated lists may be written as one string or as a JSON array. Unknown properties are allowed everywhere, because archetypes can be added by other mods, but the engine reports every property no archetype consumed.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": {
+      "description": "Ignored. Older files carried a format version here.",
+      "type": ["string", "number"]
+    },
+    "blocks": { "$ref": "#/definitions/blockSection" },
+    "block": { "$ref": "#/definitions/blockSection" },
+    "items": { "$ref": "#/definitions/itemSection" },
+    "item": { "$ref": "#/definitions/itemSection" },
+    "recipes": { "$ref": "#/definitions/recipeSection" },
+    "recipe": { "$ref": "#/definitions/recipeSection" },
+    "spawns": { "$ref": "#/definitions/spawnSection" },
+    "spawn": { "$ref": "#/definitions/spawnSection" },
+    "aliases": { "$ref": "#/definitions/aliasSection" },
+    "alias": { "$ref": "#/definitions/aliasSection" },
+    "ids": {
+      "description": "Legacy numeric block and item ids. Parsed for the record and otherwise ignored; Minecraft dropped numeric ids in 1.7.",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/int" }
+    },
+    "texturePaths": {
+      "description": "Where a spritesheet named in a texFile lives, relative to the pack's textures/ directory.",
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  },
+  "patternProperties": {
+    "^_": {
+      "description": "Any key starting with an underscore is skipped. Use it to comment a file (\"_comment\"), disable a whole section (\"_blocks\"), or note what a file depends on (\"_requires\")."
+    }
+  },
+  "additionalProperties": false,
+
+  "definitions": {
+    "int": {
+      "description": "An integer, as a number or a quoted number.",
+      "oneOf": [
+        { "type": "integer" },
+        { "type": "string", "pattern": "^\\s*-?\\d+(\\.0+)?\\s*$" }
+      ]
+    },
+    "number": {
+      "description": "A number, as a number or a quoted number.",
+      "oneOf": [
+        { "type": "number" },
+        { "type": "string", "pattern": "^\\s*-?\\d*\\.?\\d+\\s*$" }
+      ]
+    },
+    "boolean": {
+      "description": "A boolean. true/false, \"true\"/\"false\", \"yes\"/\"no\", or a number where zero is false.",
+      "oneOf": [
+        { "type": "boolean" },
+        { "type": "number" },
+        { "type": "string", "enum": ["true", "false", "yes", "no", "TRUE", "FALSE", "True", "False"] }
+      ]
+    },
+    "itemRef": {
+      "description": "A reference to an item or block. \"tomato\" names a Xie item or block; \"farming@tomato\" qualifies it by the file it was declared in; \"tile.melon\" or \"item.melon\" is a vanilla block or item by its legacy unlocalised name; \":4\" appends a stack count and \":1:3\" a count and a metadata value; \"$name\" is an alias declared in an aliases section; \"#name\" is a built-in group the engine supplies.",
+      "type": "string",
+      "pattern": "^\\s*[$#]?\\s*[A-Za-z0-9_.@-]+(\\s*:\\s*-?\\d+){0,2}\\s*$"
+    },
+    "refList": {
+      "description": "Item references, comma-separated in one string or as an array. A bare number is a legacy numeric block id, e.g. 0 for air.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "integer" },
+        { "type": "array", "items": { "$ref": "#/definitions/itemRef" } }
+      ]
+    },
+    "intList": {
+      "description": "Integers, one per subtype: a single integer, a comma-separated string, or an array.",
+      "oneOf": [
+        { "type": "integer" },
+        { "type": "string", "pattern": "^\\s*\\d+(\\s*,\\s*\\d+)*\\s*$" },
+        { "type": "array", "items": { "type": "integer" } }
+      ]
+    },
+    "stringList": {
+      "description": "Names, comma-separated in one string or as an array.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" } }
+      ]
+    },
+    "metaRangePattern": {
+      "description": "A key naming which metadata (growth stage, damage value) an entry applies to: a single value \"3\", an inclusive range \"0-2\", or an open range \"6+\".",
+      "type": "string",
+      "pattern": "^\\s*\\d+\\s*(-\\s*\\d+\\s*|\\+\\s*)?$"
+    },
+    "metaInt": {
+      "description": "An integer that may vary by metadata: one value for every state, or an object keyed by metadata range.",
+      "oneOf": [
+        { "$ref": "#/definitions/int" },
+        {
+          "type": "object",
+          "propertyNames": { "$ref": "#/definitions/metaRangePattern" },
+          "additionalProperties": { "$ref": "#/definitions/int" }
+        }
+      ]
+    },
+    "bounds": {
+      "description": "A collision box as six numbers, \"minX,minY,minZ,maxX,maxY,maxZ\", in block units from 0 to 1.",
+      "type": "string",
+      "pattern": "^\\s*-?\\d*\\.?\\d+(\\s*,\\s*-?\\d*\\.?\\d+){5}\\s*$"
+    },
+    "metaBounds": {
+      "description": "A collision box, uniform or keyed by metadata range: {\"0-2\": \"0,0,0,1,0.1875,1\", \"6+\": \"0,0,0,1,1,1\"}.",
+      "oneOf": [
+        { "$ref": "#/definitions/bounds" },
+        {
+          "type": "object",
+          "propertyNames": { "$ref": "#/definitions/metaRangePattern" },
+          "additionalProperties": { "$ref": "#/definitions/bounds" }
+        }
+      ]
+    },
+    "drop": {
+      "description": "One entry of a drop table. A bare number is the amount; an object gives a percentage chance, optionally per metadata range, and an amount.",
+      "oneOf": [
+        { "$ref": "#/definitions/int" },
+        {
+          "type": "object",
+          "properties": {
+            "chance": {
+              "description": "Percent chance to drop, 0 to 100, uniform or keyed by metadata range (for a crop, its growth stage).",
+              "$ref": "#/definitions/metaInt"
+            },
+            "amount": {
+              "description": "How many. Default 1.",
+              "$ref": "#/definitions/int"
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "dropTable": {
+      "description": "What something yields. Either a comma-separated list of item references that always drop, or an object from item reference to chance and amount.",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "propertyNames": { "$ref": "#/definitions/itemRef" },
+          "additionalProperties": { "$ref": "#/definitions/drop" }
+        }
+      ]
+    },
+    "tex": {
+      "description": "Spritesheet indices per face. Face names: all, sides, ends, top, bottom, front, back, north, south, east, west, icon. Each is an index into texFile, uniform or keyed by metadata range.",
+      "type": "object",
+      "properties": {
+        "texFile": { "description": "Spritesheet file name under the pack's textures/ directory, e.g. \"xie_crops.png\".", "type": "string" },
+        "textureBase": { "description": "Reuse another block's textures instead of a spritesheet, e.g. \"crops\" for vanilla wheat.", "type": "string" },
+        "all": { "$ref": "#/definitions/metaInt" },
+        "sides": { "$ref": "#/definitions/metaInt" },
+        "side": { "$ref": "#/definitions/metaInt" },
+        "ends": { "$ref": "#/definitions/metaInt" },
+        "top": { "$ref": "#/definitions/metaInt" },
+        "bottom": { "$ref": "#/definitions/metaInt" },
+        "front": { "$ref": "#/definitions/metaInt" },
+        "back": { "$ref": "#/definitions/metaInt" },
+        "north": { "$ref": "#/definitions/metaInt" },
+        "south": { "$ref": "#/definitions/metaInt" },
+        "east": { "$ref": "#/definitions/metaInt" },
+        "west": { "$ref": "#/definitions/metaInt" },
+        "icon": { "$ref": "#/definitions/metaInt" }
+      },
+      "additionalProperties": { "$ref": "#/definitions/metaInt" }
+    },
+
+    "blockSection": {
+      "description": "Blocks, keyed by the name other definitions refer to them by.",
+      "type": "object",
+      "patternProperties": { "^_": {} },
+      "additionalProperties": { "$ref": "#/definitions/block" }
+    },
+    "blockType": {
+      "description": "The archetype that decides how the block behaves. Anything not listed needs another mod to register it.",
+      "anyOf": [
+        {
+          "enum": ["basic", "plant", "crop", "stem", "grass", "chest", "bush", "tree", "log",
+                   "sapling", "furnace", "mounted", "facing", "pane", "fence", "glass", "stove"]
+        },
+        { "type": "string" }
+      ]
+    },
+    "block": {
+      "type": "object",
+      "properties": {
+        "name": { "description": "Display name. Defaults to the key.", "type": "string" },
+        "type": { "$ref": "#/definitions/blockType" },
+        "override": { "description": "Replace an existing block, named by reference, with this definition.", "$ref": "#/definitions/itemRef" },
+        "overide": { "description": "Accepted misspelling of override.", "$ref": "#/definitions/itemRef" },
+        "drops": { "description": "What breaking the block yields.", "$ref": "#/definitions/dropTable" },
+        "sheds": { "description": "tree: what falls from the leaves of its own accord, written like drops.", "$ref": "#/definitions/dropTable" },
+        "shedSaturation": { "description": "tree: how many shed items may lie under one tree before it stops shedding.", "$ref": "#/definitions/int" },
+        "tex": { "$ref": "#/definitions/tex" },
+        "texFile": { "description": "Spritesheet file name, when the texture is given flat rather than in tex.", "type": "string" },
+        "icon": { "description": "Spritesheet index, when the texture is given flat rather than in tex.", "$ref": "#/definitions/metaInt" },
+        "textureBase": { "description": "Reuse another block's textures, e.g. \"crops\".", "type": "string" },
+        "blockBounds": { "$ref": "#/definitions/metaBounds" },
+        "material": {
+          "description": "Legacy 1.6 material, which sets default hardness, sound and map colour.",
+          "anyOf": [
+            { "enum": ["rock", "wood", "sand", "ground", "grass", "leaves", "plants", "vine", "glass", "iron", "cloth", "ice", "snow", "cactus", "clay", "sponge", "web", "air"] },
+            { "type": "string" }
+          ]
+        },
+        "hardness": { "description": "Time to break. Zero breaks instantly.", "$ref": "#/definitions/number" },
+        "resistance": { "description": "Explosion resistance.", "$ref": "#/definitions/number" },
+        "stepSound": { "description": "Sound group: stone, wood, gravel, grass, metal, glass, cloth, sand, snow, ladder, anvil.", "type": "string" },
+        "stepsound": { "description": "Same as stepSound.", "type": "string" },
+        "walkthroughable": { "description": "No collision box.", "$ref": "#/definitions/boolean" },
+        "renderType": { "description": "How to draw it: cross (like grass), crop, or a block model name.", "type": "string" },
+        "lightValue": { "description": "Emitted light, 0 to 15.", "$ref": "#/definitions/int" },
+        "lightLevel": { "description": "Same as lightValue.", "$ref": "#/definitions/int" },
+        "becomesWhenDestroyed": { "description": "Block left in place after this one is broken.", "$ref": "#/definitions/itemRef" },
+        "growsOn": { "description": "Blocks this may be planted on, e.g. \"farmland,dirt,grass\".", "$ref": "#/definitions/refList" },
+        "growthRate": { "description": "Chance, in one part per N random ticks, of advancing a stage.", "$ref": "#/definitions/int" },
+        "growthHeight": { "description": "crop: how many blocks tall it grows.", "$ref": "#/definitions/int" },
+        "maxGrowth": { "description": "Highest growth stage.", "$ref": "#/definitions/int" },
+        "growsInto": { "description": "sapling: the tree it becomes.", "$ref": "#/definitions/itemRef" },
+        "fertilisable": { "description": "Whether bone meal works on it.", "$ref": "#/definitions/boolean" },
+        "fertilizable": { "description": "Same as fertilisable.", "$ref": "#/definitions/boolean" },
+        "grows": { "description": "stem: the fruit block it grows beside.", "$ref": "#/definitions/itemRef" },
+        "plantType": { "description": "stem: crop, plains, desert, beach, cave, water, nether.", "type": "string" },
+        "trunk": { "description": "tree: the log block.", "$ref": "#/definitions/itemRef" },
+        "trunkMeta": { "description": "tree: metadata of the log block, one per subtype when the tree declares names.", "$ref": "#/definitions/intList" },
+        "spikey": { "description": "tree: hurts to touch.", "$ref": "#/definitions/boolean" },
+        "inheritMeta": { "$ref": "#/definitions/boolean" },
+        "fuel": { "description": "Burn time in ticks when used as furnace fuel.", "$ref": "#/definitions/metaInt" },
+        "cookTime": { "description": "furnace, stove: ticks per operation.", "$ref": "#/definitions/int" },
+        "fuelCapacity": { "description": "stove: ticks of fuel it holds.", "$ref": "#/definitions/int" },
+        "foodCapacity": { "description": "stove: ingredient slots.", "$ref": "#/definitions/int" },
+        "flavourCapacity": { "description": "stove: flavouring slots.", "$ref": "#/definitions/int" },
+        "waterBase": { "description": "stove: what fills the pot, e.g. \"bucketWater\".", "$ref": "#/definitions/itemRef" },
+        "ingredients": { "description": "stove: what may go in the pot, usually an alias.", "$ref": "#/definitions/refList" },
+        "flavourings": { "description": "stove: what may season the pot, usually an alias.", "$ref": "#/definitions/refList" },
+        "id": { "description": "Legacy numeric id. Ignored.", "$ref": "#/definitions/int" },
+        "names": { "description": "Legacy per-metadata display names. Ignored.", "type": "string" }
+      },
+      "additionalProperties": true
+    },
+
+    "itemSection": {
+      "description": "Items, keyed by the name other definitions refer to them by.",
+      "type": "object",
+      "patternProperties": { "^_": {} },
+      "additionalProperties": { "$ref": "#/definitions/item" }
+    },
+    "itemType": {
+      "description": "The archetype that decides how the item behaves. Anything not listed needs another mod to register it.",
+      "anyOf": [
+        {
+          "enum": ["basic", "food", "seeds", "seed", "tool", "sword", "bow", "armor", "armour",
+                   "bucket", "potion", "block", "stick", "set", "fertiliser", "interface"]
+        },
+        { "type": "string" }
+      ]
+    },
+    "item": {
+      "type": "object",
+      "properties": {
+        "name": { "description": "Display name. Defaults to the key.", "type": "string" },
+        "type": { "$ref": "#/definitions/itemType" },
+        "override": { "description": "Replace an existing item, named by reference, with this definition.", "$ref": "#/definitions/itemRef" },
+        "overide": { "description": "Accepted misspelling of override.", "$ref": "#/definitions/itemRef" },
+        "texFile": { "description": "Spritesheet file name under the pack's textures/ directory.", "type": "string" },
+        "icon": { "description": "Index into texFile.", "$ref": "#/definitions/metaInt" },
+        "tex": { "$ref": "#/definitions/tex" },
+        "textureBase": { "type": "string" },
+        "stacksize": { "description": "Maximum stack size.", "$ref": "#/definitions/int" },
+        "fuel": { "description": "Burn time in ticks when used as furnace fuel.", "$ref": "#/definitions/metaInt" },
+        "container": { "description": "food: the item left behind after eating, e.g. \"bowl\".", "$ref": "#/definitions/itemRef" },
+        "drops": { "description": "food: what you are left holding after eating, written like a block's drops.", "$ref": "#/definitions/dropTable" },
+        "hunger": { "description": "food: hunger points restored.", "$ref": "#/definitions/int" },
+        "nourishment": { "description": "food: saturation modifier, usually 0 to 1.", "$ref": "#/definitions/number" },
+        "cooked": { "description": "food: the item this smelts into.", "$ref": "#/definitions/itemRef" },
+        "action": { "description": "food: use animation, eat or drink.", "type": "string" },
+        "potionEffect": { "description": "food: effect applied on eating.", "type": "string" },
+        "growsInto": { "description": "seeds: the block planted.", "$ref": "#/definitions/itemRef" },
+        "inheritMeta": { "$ref": "#/definitions/boolean" },
+        "uses": { "description": "Durability.", "$ref": "#/definitions/int" },
+        "damage": { "description": "sword, tool: attack damage.", "$ref": "#/definitions/number" },
+        "enchantability": { "$ref": "#/definitions/int" },
+        "canBlock": { "description": "sword: can be used to block.", "$ref": "#/definitions/boolean" },
+        "flame": { "description": "sword, bow: seconds of fire set on hit.", "$ref": "#/definitions/int" },
+        "efficiency": { "description": "tool: mining speed.", "$ref": "#/definitions/number" },
+        "material": { "description": "tool: wood, stone, iron, gold, diamond.", "type": "string" },
+        "blocksEffective": { "description": "tool: blocks it mines quickly.", "$ref": "#/definitions/refList" },
+        "canHarvest": { "description": "tool: blocks that drop only when broken with it.", "$ref": "#/definitions/refList" },
+        "transforms": {
+          "description": "tool: block it right-clicks to the block that becomes.",
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/itemRef" }
+        },
+        "ammo": { "description": "bow: the item fired.", "$ref": "#/definitions/itemRef" },
+        "ammoConsumed": { "description": "bow: whether firing uses up the ammo.", "$ref": "#/definitions/boolean" },
+        "ammoless": { "description": "bow: fires with no ammo at all.", "$ref": "#/definitions/boolean" },
+        "semiautomatic": { "description": "bow: fires on click rather than on release.", "$ref": "#/definitions/boolean" },
+        "power": { "description": "bow: projectile speed multiplier.", "$ref": "#/definitions/number" },
+        "destroyChance": { "description": "stick: percent chance of breaking on use.", "$ref": "#/definitions/int" },
+        "blocks": {
+          "description": "stick: block it is used on, to what that block then yields. First matching entry wins.",
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/dropTable" }
+        },
+        "smeltsInto": { "description": "Legacy; use a smelt recipe instead.", "$ref": "#/definitions/itemRef" },
+        "toolMaterial": { "description": "set: a tool material definition.", "type": "object" },
+        "armorMaterial": { "description": "set: an armour material definition.", "type": "object" },
+        "id": { "description": "Legacy numeric id. Ignored.", "$ref": "#/definitions/int" },
+        "names": { "description": "Legacy per-metadata display names. Ignored.", "type": "string" }
+      },
+      "additionalProperties": true
+    },
+
+    "recipeSection": {
+      "description": "Recipes, keyed by product unless the recipe names one. A key of \"cull\" removes recipes instead.",
+      "type": "object",
+      "patternProperties": { "^_": {} },
+      "additionalProperties": { "$ref": "#/definitions/recipe" }
+    },
+    "recipe": {
+      "oneOf": [
+        {
+          "description": "Shapeless. The key is the product, optionally with a count (\"cornKernels:2\"), and the value is the ingredient list.",
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "product": { "description": "What is made. Defaults to the key.", "$ref": "#/definitions/itemRef" },
+            "content": { "description": "Ingredients, comma-separated. With a pattern, one per letter in order of first appearance.", "$ref": "#/definitions/refList" },
+            "pattern": { "description": "Shaped: rows separated by commas, one letter per ingredient and a space for empty, e.g. \"X X, X , F \".", "type": "string" },
+            "smelt": { "description": "Smelting: the input item.", "$ref": "#/definitions/refList" },
+            "cull": { "description": "Remove every recipe producing these items.", "$ref": "#/definitions/refList" }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+
+    "spawnSection": {
+      "description": "World generation rules, keyed by the block placed unless the rule names one.",
+      "type": "object",
+      "patternProperties": { "^_": {} },
+      "additionalProperties": { "$ref": "#/definitions/spawn" }
+    },
+    "spawn": {
+      "type": "object",
+      "properties": {
+        "block": { "description": "Block to place. Defaults to the key.", "$ref": "#/definitions/itemRef" },
+        "spawnsIn": { "description": "Blocks it replaces, e.g. \"stone\".", "$ref": "#/definitions/refList" },
+        "spawnsOn": { "description": "Blocks it may stand on, e.g. \"grass,dirt\".", "$ref": "#/definitions/refList" },
+        "spawnsUnder": { "description": "Blocks it hangs beneath.", "$ref": "#/definitions/refList" },
+        "spawnsNear": { "description": "Blocks that must be within nearDistance.", "$ref": "#/definitions/refList" },
+        "nearDistance": { "$ref": "#/definitions/int" },
+        "rarity": { "description": "Attempts per chunk.", "$ref": "#/definitions/int" },
+        "clusterSize": { "description": "Blocks per attempt.", "$ref": "#/definitions/int" },
+        "clump": { "description": "Place the cluster together rather than scattered.", "$ref": "#/definitions/boolean" },
+        "biomes": { "description": "Biome names, comma-separated. Empty means everywhere.", "$ref": "#/definitions/stringList" }
+      },
+      "additionalProperties": true
+    },
+
+    "aliasSection": {
+      "description": "Named groups of items, referred to elsewhere as \"$name\". Aliases with the same name across files merge.",
+      "type": "object",
+      "patternProperties": { "^_": {} },
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "array", "items": { "$ref": "#/definitions/itemRef" } }
+        ]
+      }
+    }
+  }
+}
