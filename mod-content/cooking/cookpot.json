@@ -1,0 +1,49 @@
+{
+  "$schema": "../_schema/xie-content.schema.json",
+  "_requires": "salt.json",
+  "aliases": {
+    "soupable": "carrot,potato,mushroom,redmushroom,tomato,lettuce,onion,soyBeans,cornCob,tofu,avocado,cheeseSlice",
+    "flavouring": "salt,dandelionSeeds"
+  },
+  "blocks": {
+    "cookpot": {
+      "name": "Cookpot",
+      "type": "stove",
+      "material": "rock",
+      "drops": "cookpot",
+      "cookTime": 200,
+      "fuelCapacity": 6000,
+      "foodCapacity": 8,
+      "flavourCapacity": 4,
+      "waterBase": "bucketWater",
+      "ingredients": "$soupable",
+      "flavourings": "$flavouring"
+    }
+  },
+  "items": {
+    "weakSoup": {
+      "name": "Weak Soup",
+      "type": "food",
+      "hunger": 4,
+      "nourishment": 0.6,
+      "container": "bowl"
+    },
+    "soup": {
+      "name": "Soup",
+      "type": "food",
+      "hunger": 6,
+      "nourishment": 0.6,
+      "container": "bowl"
+    },
+    "stew": {
+      "name": "Stew",
+      "type": "food",
+      "hunger": 8,
+      "nourishment": 0.6,
+      "container": "bowl"
+    }
+  },
+  "recipes": {
+    "cookpot": "campfire,cauldron"
+  }
+}
