@@ -14,7 +14,7 @@ import java.nio.file.Path;
  *
  * <p>Pretty-printed rather than compact because the whole point of writing the
  * pack to disk is that a content author can open it and read what their
- * {@code .xie} file produced.
+ * definition file produced.
  */
 final class PackJson {
 

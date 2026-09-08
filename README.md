@@ -14,6 +14,7 @@ Layout
 | `common/`  | The content model and parser. No Minecraft dependency at all, so it compiles and tests in seconds. |
 | `neoforge/`| The mod itself: entry point, registration, pack emission. Compiles `common/`'s sources into the jar. |
 | `mod/`     | The original 1.6.2 source tree, kept for reference. Not part of the build. |
+| `acceptance/` | The acceptance run: one command that starts a server, joins a client and asserts the behaviours a datapack cannot show. |
 
 Content lives in a separate repository so that packs can be written without using
 any of this one's content. The parser expects it beside this checkout at
@@ -45,14 +46,52 @@ Target platform versions live in `gradle.properties`. NeoForge for Minecraft 26.
 is still beta, so the build targets the current stable 26.1.2 line; bump
 `minecraft_version`, `minecraft_version_range` and `neo_version` together.
 
+Verifying
+---------
+
+Two commands, and between them they cover both halves of what this mod does.
+
+```bash
+./gradlew :common:test
+```
+
+The parser and the content model, in seconds, with no Minecraft anywhere near it.
+
+```bash
+python acceptance/run.py
+```
+
+The **acceptance run**: it starts the dedicated server, joins a real client to it,
+and asserts the behaviours only a running game can show — a stem fruiting, a tree
+shedding, a sapling growing, a canopy that stays up on a trunk this mod invented,
+bone meal being refused, the sickle, the Ultimate Fist, the bows, a craft remainder,
+a block that comes away with its soil, and the culled recipes. It prints pass or fail per assertion and exits non-zero on any
+failure, so it can be left alone. Add `--list` to see the checks, `--only <name>`
+to run one, `--no-client` for the subset rcon alone can answer.
+
+It needs Python 3 and a Windows desktop whose foreground it can take, because a
+`useOn` is a real right-click at a real window and there is no command for it. It
+arranges what it needs — the five deferred packs, its own flat world, and
+`pauseOnLostFocus` — and puts all of it back afterwards. See
+[TESTING.md](TESTING.md) for what each check is measuring, why it is measured that
+way, and what driving Minecraft from a script turns out to cost.
+
 Format
 ------
 
-A content pack is a directory of `.xie` files (JSON), plus optional `.loc` display
+A content pack is a directory of `.json` definition files, plus optional `.loc` display
 names and a `textures/` tree. Files and directories starting with `_` are skipped.
+The `.xie` extension the format wore for its first decade is the same JSON under
+another name, and still loads; there is no reason to rename a working pack.
+
+Every launch writes `xie-content.schema.json` into `<gamedir>/xiecontent/`, beside
+the packs. Point a definition file at it and any editor that understands JSON
+Schema will complete property names, describe them on hover and flag a typo before
+the game does:
 
 ```json
 {
+  "$schema": "../xie-content.schema.json",
   "blocks": {
     "tomatoBush": {
       "name": "Tomato Bush",
@@ -105,9 +144,14 @@ Port status
 - [x] `spikey` and `fertilisable` — a block that hurts what stands in it, and a plant
       that refuses bone meal
 - [x] Every property the content declares and nothing reads, counted and named in the log
+- [x] An acceptance run — one command that drives a real client into the dedicated
+      server and asserts the behaviours only a running game can show
+- [x] `stove` — the cookpot, a cauldron over a campfire that turns water, any of a
+      dozen ingredients and a seasoning into soup or stew, fed by right-click. The
+      port's first block entity, rebuilt from the mod posting rather than from a file
 
-Sixteen distinct archetypes appear across the content repo, deferred packs included,
-and fifteen of them register. The one that does not is `furnace`, which is content
+Seventeen distinct archetypes appear across the content repo, deferred packs included,
+and sixteen of them register. The one that does not is `furnace`, which is content
 this port dropped rather than an archetype it cannot build — see the table below. See
 [PORTING.md](PORTING.md) for the full breakdown and the version-specific gotchas
 worth not rediscovering.
@@ -133,8 +177,8 @@ in vanilla, and hunger has been a core mechanic since Beta 1.8.
 Vanilla has still never added fruit trees, salt, tofu, or sandwiches.
 
 The generated pack is written to `<gamedir>/xiecontent/_generated/` on every launch
-rather than served from memory, so you can open it and see exactly what a `.xie`
-file produced. One directory is registered twice, as a resource pack and as a
+rather than served from memory, so you can open it and see exactly what a
+definition file produced. One directory is registered twice, as a resource pack and as a
 datapack, so `assets/` and `data/` sit side by side in it.
 
 The three growing archetypes share one class, as they did in 2013. `plant` is both
@@ -269,9 +313,27 @@ written, so the parts of the content whose archetypes are not ported yet are lef
 out rather than emitted as JSON that fails to load. The counts in the log say how
 much that is.
 
+Those counts are checked every time the server starts, which left an odd gap: every
+number was verified constantly and every *behaviour* exactly once, by hand, and then
+never again. A datapack can be validated by loading it; a stem fruiting, a tree
+dropping its fruit, bone meal being refused and a sickle spending durability cannot.
+So `acceptance/run.py` starts the server, joins a real client to it, and asserts them
+— sixty-nine assertions in under three minutes, pass or fail per assertion, non-zero
+exit on failure. It exists because there is no other way to ask: no command right-clicks a
+block, so a `useOn` needs synthetic input at a focused game window, and nothing
+random-ticks or scheduled-ticks at all unless a player is standing there, forceloading
+or no forceloading.
+
+It earned itself on the first day, on a tree that was supposed to stop shedding once
+eight of its apples were lying under it and turned out to shed a ninth about two times
+in five. That is the kind of failure verifying a behaviour once cannot find: watching
+a tree shed proves that it sheds, and watching it stop proves nothing until you have
+watched it fail to stop. [TESTING.md](TESTING.md) has the twelve checks, what each one
+is really measuring, and the rules they are written to.
+
 Every archetype the content uses is now ported, which changes what is left to find:
 not a missing kind of block, but a *property* the engine reads nothing from. Those had
-been turning up one at a time, by reading a `.xie` file next to the registrar and
+been turning up one at a time, by reading a definition file next to the registrar and
 noticing. They are counted now — the parser has always tracked which properties
 anybody read, and at the end of pack emission the ones nobody did are listed with the
 definitions that declared them. Running it for the first time found three consumers
@@ -282,6 +344,19 @@ had never been run before, turned out to declare custom tool and armour material
 the 2013 engine parsed into a method whose body is `// TODO FTFESAD` — so the numbers
 were never used by anything, and there is nothing to port but the intention.
 
+That report had a blind spot of its own, and it has been closed. A property the parser
+turns into a structure of its own — what a block drops, what a tree sheds, the blocks a
+sickle reaps, a collision box, a texture assignment — was marked read the moment the
+parser read it, which said nothing about whether any archetype then wanted the value.
+That is how a fruit tree's collision box went missing in silence for as long as it did:
+it parsed perfectly and nothing asked for it. The mark moves to the point of use now, so
+the question is whether a registrar or an emitter consulted the definition, and the log
+distinguishes a property nothing reads from one that parses and is then consulted by
+nobody — different gaps, in different files. Auditing every archetype against the 2013
+source for each of those structures first, then wiring it up, found four places where
+the port consults less than 1.6 did and no content in the repo that reaches any of them.
+The mechanism was proved against a throwaway pack written to trip each one.
+
 The same pass closed the one gap where content could go missing from every count at
 once. A declaration the reader refuses is in none of the lists it returns, so it is in
 none of the totals the registrar and the emitters report either; three of the steel
@@ -289,13 +364,21 @@ pack's six recipes misspell `content` as `contents`, which failed the job outrig
 1.6 as well, and the pack reported one recipe not emitted while four were gone. The
 reader counts what it rejects now and the load summary says so.
 
-Textures need no migration: the `.xie` files still address spritesheet indices, but
+Textures need no migration: the definition files still address spritesheet indices, but
 `textures/` is already one PNG per sprite named `<definition>[_<meta>].png`. A pack
 that never migrated falls back to the indices, and the emitter cuts the sprite out
 of the sheet — sixteen across, tile size from the width, which is what an `Icon`
 index meant. Blocks fall back the same way as items, so a pack that names one sheet
 and a `sides` and an `ends` per block gets its faces cut out of it. A file always
 wins, so a pack shipping both is unaffected.
+
+An index with no sheet named at all is not a broken declaration either. 1.6 answered a
+definition that named no `texFile` with `/terrain.png`, so the number addresses
+vanilla's own sheet: `LegacyTerrain` translates it into a modern texture id and the
+model points straight at Minecraft's sprite rather than a copy of it. That is how
+`blazeTree` gets leaves of fire — index 31 was `Block.fire` — and keeps them animated.
+The table holds what the content addresses, and an index it has no answer for is named
+in the log rather than guessed at.
 
 A block that has an item form has no item sprite to draw, and vanilla answers that two
 ways: a sapling in an inventory slot is its block texture on a flat model, and a melon

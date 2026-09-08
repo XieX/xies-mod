@@ -326,7 +326,7 @@ public final class XieToolProperties {
      *
      * <p><strong>Every set is a replacement, and that is the point.</strong> A
      * vanilla pickaxe already carries a {@code minecraft:tool} built from its
-     * {@code ToolMaterial}, and {@code survivalpickaxe.xie} exists to make a wooden
+     * {@code ToolMaterial}, and {@code survivalpickaxe.json} exists to make a wooden
      * pickaxe mine <em>less</em> than vanilla's — so the existing rules have to go
      * rather than be added to. {@code DataComponentMap.Builder.set} overwrites, which
      * is exactly that.

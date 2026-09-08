@@ -1,9 +1,14 @@
 package mod.xie.xm.content.parse;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.Strictness;
+import com.google.gson.internal.LazilyParsedNumber;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 
 import mod.xie.xm.content.model.AliasDef;
 import mod.xie.xm.content.model.BlockDef;
@@ -18,6 +23,7 @@ import mod.xie.xm.content.model.RecipeDef;
 import mod.xie.xm.content.model.SpawnDef;
 import mod.xie.xm.content.model.TexDef;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -27,7 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Reads one {@code .xie} file into definitions.
+ * Reads one definition file into definitions.
  *
  * <p>Unlike the original {@code Work.findWork} plus {@code Job.doWork} pair, this
  * resolves nothing. References stay as {@link ItemRef}s, so there is no job queue,
@@ -49,6 +55,9 @@ public final class XieFileReader {
         "aliases", Section.ALIAS,
         "alias", Section.ALIAS
     );
+
+    /** Every spelling of a section key the reader accepts. */
+    public static final java.util.Set<String> SECTION_NAMES = SECTIONS.keySet();
 
     private enum Section { BLOCK, ITEM, RECIPE, SPAWN, ALIAS }
 
@@ -77,7 +86,7 @@ public final class XieFileReader {
      *                 an error. A declaration the reader refuses is in none of the
      *                 lists above and in no count the registrar or the emitters keep,
      *                 so without this it leaves the totals silently one short: three of
-     *                 {@code _wip/steel/steel.xie}'s six recipes write {@code contents}
+     *                 {@code _wip/steel/steel.json}'s six recipes write {@code contents}
      *                 where the format wants {@code content} — as they did in 1.6,
      *                 where {@code JobRecipe} failed the job outright — and the pack
      *                 then reported one recipe not emitted rather than four missing.
@@ -98,18 +107,82 @@ public final class XieFileReader {
         }
     }
 
+    /** Thrown by {@link #readTree} when an object repeats a key. */
+    private static final class DuplicateKeyException extends RuntimeException {
+        final String key;
+        final String where;
+
+        DuplicateKeyException(String key, String where) {
+            super("duplicate key \"" + key + "\" at " + where);
+            this.key = key;
+            this.where = where;
+        }
+    }
+
+    /**
+     * Builds a {@link JsonElement} tree the way {@code JsonParser.parseReader} does,
+     * except that a key repeated within one object is an error rather than a silent
+     * last-one-wins. Gson's own tree builder keeps the last value, which hides typos
+     * like two {@code "4"} entries in a {@code blockBounds} table.
+     */
+    private static JsonElement readTree(JsonReader in) throws IOException {
+        JsonToken token = in.peek();
+        switch (token) {
+            case BEGIN_OBJECT: {
+                JsonObject object = new JsonObject();
+                in.beginObject();
+                while (in.hasNext()) {
+                    String name = in.nextName();
+                    if (object.has(name)) {
+                        throw new DuplicateKeyException(name, in.getPath());
+                    }
+                    object.add(name, readTree(in));
+                }
+                in.endObject();
+                return object;
+            }
+            case BEGIN_ARRAY: {
+                JsonArray array = new JsonArray();
+                in.beginArray();
+                while (in.hasNext()) {
+                    array.add(readTree(in));
+                }
+                in.endArray();
+                return array;
+            }
+            case STRING:
+                return new JsonPrimitive(in.nextString());
+            case NUMBER:
+                return new JsonPrimitive(new LazilyParsedNumber(in.nextString()));
+            case BOOLEAN:
+                return new JsonPrimitive(in.nextBoolean());
+            case NULL:
+                in.nextNull();
+                return JsonNull.INSTANCE;
+            case END_DOCUMENT:
+                return JsonNull.INSTANCE;
+            default:
+                throw new IllegalStateException("unexpected " + token + " at " + in.getPath());
+        }
+    }
+
     /**
      * Parses one file.
      *
-     * @param path relative path used in diagnostics, e.g. {@code farming/crops/tomato.xie}
+     * @param path relative path used in diagnostics, e.g. {@code farming/crops/tomato.json}
      * @param file the basename without extension; becomes the {@code parent} in
      *             {@code parent@name} references
      */
     public Result read(String path, String file, Reader source) {
         JsonElement root;
         try {
-            root = JsonParser.parseReader(source);
-        } catch (JsonSyntaxException | com.google.gson.JsonIOException e) {
+            JsonReader reader = new JsonReader(source);
+            reader.setStrictness(Strictness.LENIENT);
+            root = readTree(reader);
+        } catch (DuplicateKeyException e) {
+            diagnostics.error(path, "duplicate key \"" + e.key + "\" at " + e.where);
+            return Result.empty();
+        } catch (IOException | IllegalStateException | NumberFormatException e) {
             diagnostics.error(path, "not valid JSON: " + e.getMessage());
             return Result.empty();
         }
@@ -135,6 +208,11 @@ public final class XieFileReader {
 
             // Authors disable a section by prefixing it with an underscore.
             if (rawKey.startsWith("_")) {
+                continue;
+            }
+            // "$schema" points an editor at xie-content.schema.json; it says nothing
+            // about the content. Any "$" key is the editor's business, not ours.
+            if (rawKey.startsWith("$")) {
                 continue;
             }
             if (key.equals("version")) {
@@ -199,6 +277,26 @@ public final class XieFileReader {
         }
     }
 
+    /**
+     * Hands a structural key back to the unread-property report, for whoever consumes
+     * what it parsed into.
+     *
+     * <p>Reading a key here proves the parser understood it and nothing more. Half of
+     * {@link #BLOCK_STRUCTURAL} produces a value that some archetypes want and others
+     * never ask for — {@code sheds} is a {@code tree}'s alone, and a {@code stem} takes
+     * neither a {@code blockBounds} nor a sprite — so marking them consumed at parse
+     * time hid exactly the gap {@code blazeTree}'s {@code blockBounds} was: parsed,
+     * correct, and asked for by nobody. See {@link PropertyMap#markStructural}.
+     *
+     * @param parsed whether the key produced anything. A key that produced nothing has
+     *               nothing to consume, and has already been reported if it was wrong
+     */
+    private static void deferred(PropertyMap props, boolean parsed, String... keys) {
+        if (parsed) {
+            props.markStructural(keys);
+        }
+    }
+
     // ---------------------------------------------------------------- blocks
 
     private Optional<BlockDef> readBlock(Origin origin, JsonElement element) {
@@ -223,6 +321,11 @@ public final class XieFileReader {
         Optional<MetaMap<Bounds>> bounds = readBounds(origin, props);
 
         props.markUsed(BLOCK_STRUCTURAL);
+        deferred(props, !drops.isEmpty(), "drops");
+        deferred(props, !sheds.isEmpty(), "sheds");
+        deferred(props, bounds.isPresent(), "blockBounds");
+        deferred(props, tex.hasSprites(), "tex", "texFile", "icon");
+        deferred(props, tex.base().isPresent(), "textureBase");
 
         BlockDef block = new BlockDef(origin, origin.name(), displayName, archetype,
             override, drops, sheds, tex, bounds, props);
@@ -286,6 +389,13 @@ public final class XieFileReader {
         TexDef tex = readTex(origin, object, "item");
 
         props.markUsed(ITEM_STRUCTURAL);
+        deferred(props, !drops.isEmpty(), "drops");
+        deferred(props, !blockDrops.isEmpty(), "blocks");
+        deferred(props, tex.hasSprites(), "tex", "texFile", "icon");
+        // No item ever consumes a textureBase, and none ever did: setTextureBase is on
+        // IXieBlock and JobItem has no branch for the key. Deferred all the same, so
+        // that the report says which of the two it is.
+        deferred(props, tex.base().isPresent(), "textureBase");
 
         ItemDef item = new ItemDef(origin, origin.name(), displayName, archetype, override,
             drops, blockDrops, tex, props);

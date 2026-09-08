@@ -65,7 +65,7 @@ class RealContentTest {
         assertFalse(pack.isEmpty(), "parsed nothing at all");
 
         BlockDef bush = pack.blocks().get("tomatoBush");
-        assertNotNull(bush, "expected tomatoBush from farming/crops/tomato.xie");
+        assertNotNull(bush, "expected tomatoBush from farming/crops/tomato.json");
         assertEquals("bush", bush.archetype());
         assertFalse(bush.drops().isEmpty(), "tomatoBush should drop something");
 
@@ -87,7 +87,7 @@ class RealContentTest {
     @Test
     void readsShedsSeparatelyFromDrops() {
         BlockDef leaves = result.pack().blocks().get("fruitLeaves");
-        assertNotNull(leaves, "expected fruitLeaves from farming/trees/fruit.xie");
+        assertNotNull(leaves, "expected fruitLeaves from farming/trees/fruit.json");
         assertEquals("tree", leaves.archetype());
 
         assertEquals(List.of("apple", "orange", "lemon", "avocado"),
@@ -103,7 +103,7 @@ class RealContentTest {
         assertEquals(8, leaves.props().getInt("shedSaturation", 0));
 
         BlockDef cocoa = result.pack().blocks().get("cocoaLeaves");
-        assertNotNull(cocoa, "expected cocoaLeaves from farming/trees/cocoatree.xie");
+        assertNotNull(cocoa, "expected cocoaLeaves from farming/trees/cocoatree.json");
         assertEquals(List.of("cocoaBeans"),
             cocoa.sheds().drops().stream().map(drop -> drop.item().name()).toList());
         assertTrue(result.pack().blocks().get("cocoaSapling").sheds().isEmpty(),
@@ -155,8 +155,8 @@ class RealContentTest {
     }
 
     /**
-     * The two {@code spawns} sections are spelled differently — {@code wildshrubs.xie}
-     * and {@code fruit.xie} say {@code "spawn"} and {@code salt.xie} says
+     * The two {@code spawns} sections are spelled differently — {@code wildshrubs.json}
+     * and {@code fruit.json} say {@code "spawn"} and {@code salt.json} says
      * {@code "spawns"} — and one keys its entries by alias while the other names the
      * block in a property. Both spellings and both forms have to reach the emitter.
      */
@@ -256,7 +256,7 @@ class RealContentTest {
         List<RecipeDef> culls = result.pack().recipes().stream()
             .filter(recipe -> recipe.kind() == RecipeDef.Kind.CULL)
             .toList();
-        assertEquals(2, culls.size(), "flowerbushes.xie declares both live culls");
+        assertEquals(2, culls.size(), "flowerbushes.json declares both live culls");
 
         List<ItemRef> targets = culls.stream().flatMap(cull -> cull.culls().stream()).toList();
         assertEquals(List.of("redDye", "yellowDye"), targets.stream().map(ItemRef::name).toList());
@@ -285,7 +285,7 @@ class RealContentTest {
     }
 
     /**
-     * The {@code .xie} files still address textures as spritesheet indices, but the
+     * The definition files still address textures as spritesheet indices, but the
      * texture tree is already one PNG per sprite, named after the definition with an
      * optional {@code _<meta>} suffix. If that convention covers everything, the
      * sheet indices are dead metadata and no slicer is needed for the port.

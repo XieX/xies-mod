@@ -90,7 +90,7 @@ public final class XieDataEmitter {
     /** Vanilla's crafting grid; anything larger was rejected in 2013 too. */
     private static final int MAX_GRID = RecipeDef.MAX_GRID;
 
-    /** Furnace defaults, since {@code .xie} smelting declares neither. */
+    /** Furnace defaults, since a {@code cooked} declaration names neither. */
     private static final int SMELT_TIME = 200;
     private static final float SMELT_EXPERIENCE = 0.1f;
 
@@ -111,6 +111,9 @@ public final class XieDataEmitter {
 
     /** Where NeoForge reads burn times from; the namespace is the data map's, not ours. */
     private static final String FUEL_DATA_MAP = "data/neoforge/data_maps/item/furnace_fuels.json";
+
+    /** The one archetype whose {@code blocks} map anything reads. See {@link #checkStickDrops}. */
+    private static final String STICK = "stick";
 
     /**
      * What one call to {@link #emit} produced.
@@ -165,7 +168,7 @@ public final class XieDataEmitter {
      * <p>An alias is a set, and as a recipe ingredient it becomes a tag — but a
      * <em>block</em> reference cannot be a set, so {@code Xie.parseBlock} took the
      * first member and so does this. It is how a {@code spawns} entry keyed by an
-     * alias finds its block at all: {@code fruit.xie} declares no spawn entry named
+     * alias finds its block at all: {@code fruit.json} declares no spawn entry named
      * {@code fruitLeaves}, only four named for the trees, and the alias is the whole
      * of the link between them.
      */
@@ -181,7 +184,7 @@ public final class XieDataEmitter {
      * is the emitter's whole output for it, handed to {@link mod.xie.xm.recipe.XieRecipeCuller}
      * to apply when the recipes are actually loaded. Resolving it here is what keeps
      * {@code redDye} and {@code stoneSword} meaning the same thing they mean anywhere
-     * else in a {@code .xie} file.
+     * else in a definition file.
      */
     private final Set<String> culledItems = new LinkedHashSet<>();
 
@@ -503,9 +506,18 @@ public final class XieDataEmitter {
      * {@code crimsonSickle} asks for {@code nethwerwart}, and nether wart is spelt with
      * the letters the other way round.
      *
+     * <p>Asked of a {@code stick} and nothing else, which is where {@code JobItem} read
+     * the {@code blocks} key — {@code doStick} and nowhere else. Checking every item
+     * would have counted the drops of a {@code blocks} map no archetype consumes, and
+     * would have marked the key read on a definition that is quietly losing it; the
+     * unread-property report says so instead.
+     *
      * @return how many drops named something unresolvable
      */
     private int checkStickDrops(ItemDef def) {
+        if (!def.archetype().equals(STICK)) {
+            return 0;
+        }
         int skipped = 0;
         for (ItemDef.BlockDrops harvest : def.blockDrops()) {
             if (anyBlock(harvest.block()).isEmpty()) {
@@ -767,7 +779,7 @@ public final class XieDataEmitter {
      * therefore does something worse than nothing: it culls the rose bush and leaves
      * the poppy recipe the content was written to remove. The count described the
      * recipe of the day rather than selecting among several, which is plain in
-     * {@code cullStoneTools.xie} where all five culls give no count at all, so what
+     * {@code cullStoneTools.json} where all five culls give no count at all, so what
      * carries over is the rule without it — every recipe producing this item.
      *
      * @return whether anything resolved; false means the cull has nothing to act on
@@ -987,7 +999,7 @@ public final class XieDataEmitter {
     /**
      * Every registered id belonging to a definition declared {@code type: food}.
      *
-     * <p>Only this mod's, because that is all a {@code .xie} definition can say it
+     * <p>Only this mod's, because that is all a content definition can say it
      * about. A {@code cooked} naming a vanilla item gets the furnace recipe and
      * nothing else, which is the conservative half of the guess.
      */

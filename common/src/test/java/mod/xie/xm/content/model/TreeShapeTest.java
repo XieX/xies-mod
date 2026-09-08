@@ -17,7 +17,7 @@ class TreeShapeTest {
         if (shape != null) {
             json.addProperty("shape", shape);
         }
-        return new BlockDef(new Origin("test", "test.xie", "leaves"), "leaves", "Leaves", "tree",
+        return new BlockDef(new Origin("test", "test.json", "leaves"), "leaves", "Leaves", "tree",
             Optional.empty(), new DropTable(List.of()), DropTable.EMPTY, TexDef.EMPTY,
             Optional.empty(), PropertyMap.of(json));
     }

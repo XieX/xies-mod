@@ -12,40 +12,44 @@ The whole pipeline runs end to end. Content parses during mod construction, bloc
 and items register before the registries freeze, and a resource pack and datapack
 are generated to `<gamedir>/xiecontent/_generated/` on every launch.
 
-Sixteen distinct `type` values appear across every `.xie` file in the content repo,
-deferred packs included. **Fifteen of them register.** The one that does not is
-`furnace`, in `SurvivalTweaks/_campfire.xie`, and it is content this port dropped
+Seventeen distinct `type` values appear across every definition file in the content repo,
+deferred packs included. **Sixteen of them register.** The one that does not is
+`furnace`, in `SurvivalTweaks/_campfire.json`, and it is content this port dropped
 rather than an archetype it cannot build — vanilla gained a campfire in 1.14. See
-the table at the end of the README.
+the table at the end of the README. The seventeenth is `stove`, the one archetype
+with no 2013 file behind it: the cookpot in `cooking/cookpot.json` was rebuilt from
+the mod posting, and is described under [The cookpot](#the-cookpot).
 
 That is worth stating that way round, because "every archetype the content uses" was
 true of the *live* content long before it was true of all of it, and the two are easy
 to confuse. Two more distinctions are worth keeping straight:
 
 - **A supported archetype is not the same as wanted content.** `foragingStick` is a
-  `stick`, which now registers, but it lives in `farming/misc/_foragingrod.xie` and
+  `stick`, which now registers, but it lives in `farming/misc/_foragingrod.json` and
   the leading underscore means it is never read at all. It stays dropped.
 - **Half the 2013 archetypes are not in this repo to port.** `chest`, `grass`,
   `mounted`, `facing`, `pane`, `fence` and `glass` are archetypes `JobBlock`
   dispatched on that nothing here declares. The Cooking Mod content that would need
-  most of them is in a pack this repo does not contain, which is the last section of
-  this file.
+  most of them did not survive; its stove is the one piece rebuilt from the mod
+  posting rather than ported from a file, and the rest stays dropped — see the last
+  section of this file.
 - **Every archetype ported is not every property carried.** With all sixteen accounted
   for, what is left to find in unfamiliar content is per-*property* rather than
   per-archetype: a declaration the port reads nothing from, or reads and then never
-  uses. Those had been found by hand until now, one `.xie` file at a time; they are
-  counted in the log as of this session. See [Properties nobody
-  reads](#properties-nobody-reads).
+  uses. Those had been found by hand until now, one definition file at a time; both kinds
+  are counted in the log as of this session, and the log says which kind each one is.
+  See [Properties nobody reads](#properties-nobody-reads) and [Structures that parse and
+  go nowhere](#structures-that-parse-and-go-nowhere).
 
-From the 16 blocks and 50 items in the live content repo:
+From the 17 blocks and 53 items in the live content repo:
 
 | | registered | notes |
 |---|---|---|
-| blocks | 16 of 16 definitions, 24 objects | `fruitLeaves` alone splits into four |
-| items | 64 of 50 definitions | multi-variant `names` split into one item each, plus five sapling block items |
-| recipes | 110 | 98 of the 100 in `recipes` sections, plus 12 from `cooked`; the other 2 are `cull` and remove rather than add |
-| loot tables | 24 | per-age drop chances as `block_state_property` pools |
-| alias tags | 13 | `$protein` became `#xiesmod:protein`, so one recipe replaces hundreds |
+| blocks | 17 of 17 definitions, 25 objects | `fruitLeaves` alone splits into four |
+| items | 68 of 53 definitions | multi-variant `names` split into one item each, plus five sapling block items and the cookpot's |
+| recipes | 111 | 99 of the 101 in `recipes` sections, plus 12 from `cooked`; the other 2 are `cull` and remove rather than add |
+| loot tables | 25 | per-age drop chances as `block_state_property` pools |
+| alias tags | 15 | `$protein` became `#xiesmod:protein`, so one recipe replaces hundreds |
 | worldgen | 9 of 10 `spawns` | the 1 left is the dropped melon |
 | tree features | 5 | a `minecraft:tree` configured feature per `tree` block |
 | burn times | 8 | `fuel`, as one entry each in NeoForge's furnace-fuel data map |
@@ -115,7 +119,10 @@ log already is, and three of the four arrive together:
   the thing that keeps a flame tree standing, because `XieTreeBlock` *is* a
   `LeavesBlock` and a canopy on an untagged trunk decays the moment it is placed. The
   tag is additive rather than an override, so it goes in the content pack and being
-  below vanilla costs it nothing.
+  below vanilla costs it nothing. That is asserted rather than reasoned now: the
+  `decay` check in [the acceptance run](TESTING.md#the-acceptance-run) stands the same
+  canopy on a `blazeLog`, on a vanilla log and on a block in no tag at all, and watches
+  which of the three loses it.
 - **Flammability is the one that does not.** `FireBlock.bootStrap` names each log
   block outright instead of reading the tag, so 5/5 goes on the block through
   NeoForge, exactly as `XieTreeBlock` puts its leaves' 30/60.
@@ -168,7 +175,12 @@ definition can vary. Four decisions the translation needed:
   be: `Cave` asked whether the block below had a solid top face and `Beach` asked for
   water within one block, and a block tag cannot ask a question. Nothing declares
   either.
-- **The fruit stands on the same ground the stem does.** Vanilla keeps two tags here —
+- **The fruit stands on the same ground the stem does**, and this is the one decision
+  in the archetype that nothing but a running game could confirm — it was reasoned out
+  of `StemBlock` and verified only by the datapack loading. It is asserted now, both
+  ways round: [the acceptance run](TESTING.md#the-acceptance-run) watches a ripe stem
+  fruit onto soul sand and bend towards it, and watches an otherwise identical stem
+  whose neighbours have stone under them ripen forever. Vanilla keeps two tags here —
   a melon stem grows on farmland and its melon lands on dirt — but 1.6 hardcoded the
   fruit's soil to tilled earth, dirt and grass, which is the untilled form of the very
   ground the stem was standing on. They were one list written twice. A definition
@@ -235,7 +247,24 @@ That leaves `XieTreeBlock` holding only what vanilla has no equivalent for:
   blocks, and fifty leaves each rolling for fruit is fifty times the fruit.
 - **`shedSaturation`** — stop once eight of the fruit are already lying nearby. It is
   what keeps an orchard from burying itself, and it is why shedding does not need
-  rate-limiting on top.
+  rate-limiting on top. **The count is taken where the fruit is about to be put**, as
+  1.6 took it, which makes it worth exactly as much as that position is right — see
+  below.
+- **Where the fruit lands had to be read rather than copied, twice.** The original
+  walks the neighbouring column down while it is *solid* and stops at the first air,
+  which is the opposite of finding the ground; that much was corrected when the
+  archetype was written. What was left is subtler and only a running game could show
+  it. The keystone sits inside the canopy, so a neighbouring column is air above
+  *leaves* about as often as it is air above the ground, and a descent that stops at
+  the first surface leaves the fruit on the canopy's own shoulder. As a landing spot
+  that is harmless, since the item falls out of the leaves anyway — but the
+  saturation count is taken there, so a tree aiming at its own foliage counts the
+  fruit lying under it as lying nowhere near, and sheds past the eight that were
+  meant to stop it. `groundBeside` skips leaves and logs now. It was found by
+  [the acceptance run](TESTING.md#the-acceptance-run) on its first day: the tree with
+  nine cocoa beans under it shed a tenth in two runs out of five, depending on the
+  trunk's height and which of the eight directions came up — which is exactly the kind of thing a
+  human verifying a behaviour once would have watched work and never seen fail.
 - Leaf decay is `LeavesBlock`'s. The forty lines of flood fill in
   `XieBlockLeaves.updateTick` were 1.6's `BlockLeaves` verbatim; the modern one keeps
   a `distance` property instead and reaches the same answer without the array.
@@ -292,7 +321,7 @@ adding vanilla features back into biomes under this mod's name is not the same t
 the content asked for. Those are counted and named, like recipes.
 
 An entry keyed by an *alias* resolves through it, which is what `Xie.parseBlock` did
-before anything else. `fruit.xie` declares no spawn entry named `fruitLeaves`, only
+before anything else. `fruit.json` declares no spawn entry named `fruitLeaves`, only
 four named for the trees, and the alias is the whole of the link between them.
 
 Eating, cooking and burning
@@ -334,6 +363,50 @@ implement it — and the exception is `cooked`, which was a recipe all along.
 `shape` is read by `TreeShape` but nothing in the live content declares one, so every
 fruit tree is an oak. `colorize` is read by nothing and nothing declares it either;
 the original defaulted leaf colourisation off, which is what an untinted model does.
+
+The cookpot
+-----------
+
+The one archetype in the port with no 2013 file behind it. The Cooking Mod pack that
+held the original stove did not survive, so `cooking/cookpot.json` is rebuilt from
+the mod posting rather than ported: a pot you feed by hand, which the posting
+describes as "wait until the pot changes colour". `StovePot` in `common/` is the
+rules and the reasoning, testable without Minecraft; `XieStoveBlock` and its block
+entity are the interaction. The archetype keeps the 2013 name, `stove`, because that
+is what the posting called it; the block is the cookpot because that is what it is.
+
+- **It is a cauldron with a fire under it, and the recipe says so.** Campfire plus
+  cauldron, shapeless. The 2013 stove was a furnace with an iron top because the
+  cauldron did not exist yet, and the old iron-and-furnace recipe went with it.
+  Every model is vanilla's own cauldron with the `content` sprite swapped — water,
+  then mud for stew — so the block needs no art at all, and the three meals are the
+  only sprites the pack ships for it.
+- **Everything goes in by hand, with no menu.** Water on an empty pot starts it;
+  anything in the `ingredients` alias is a food and anything in `flavourings` is a
+  seasoning; an empty bowl ladles out the best meal the pot can afford once it has
+  cooked; any furnace fuel stokes it. The 2013 stove had a menu, and dropping it for
+  right-click costs nothing that existed, since the pot was always the whole of it.
+- **Water, food, bowl is a Weak Soup; a second food or a flavouring makes it Soup;
+  both make Stew.** The tier is food plus flavouring, capped at two and one per meal,
+  and the pot always ladles the highest tier it can afford. Hunger 4, 6 and 8, all
+  on a bowl, so the cookpot is a way of turning any of a dozen cheap ingredients
+  into a few medium-value meals. Where it departs from the posting is capacity: the
+  original cooked one meal at a time, and this one accumulates and serves repeatedly.
+- **The fried half is deliberately not ported.** The posting listed the same meals
+  again with oil in place of water — Fried Mess, Fried Meal, Stirfry — sharing the
+  ingredient list, the flavouring list and the food values, so it was six items doing
+  the work of three. `StovePot.Base` keeps room for a second base; it should only
+  come back if it comes back different.
+- **How it is verified.** `StoveContentTest` holds the content file and the state
+  machine to the same meal names and the agreed food values, and `StovePotTest`
+  covers the rules without a world. The interaction is the `cookpot` acceptance
+  check (`acceptance/checks/cookpot.py`, see TESTING.md): real right-clicks in
+  survival put water, coal, foods, salt and a bowl into three pots and read the
+  meal back out of the player's inventory, with a null beside each positive — a
+  second bucket refused, an unfuelled pot still raw after `cookTime`, a bowl kept
+  on an empty and on an unfinished pot, and an apple moving nothing. Its first run
+  found that a bowl on a pot with nothing to serve was being burnt as furnace
+  fuel, which vanilla lists a bowl as; a bowl is now never fuel.
 
 Tools and swords
 ----------------
@@ -394,7 +467,7 @@ block sets and never a list of ids, so each `blocksEffective`, `canHarvest`,
 `data/xiesmod/tags/block/tool/<item>/`, and the rule points at it exactly as
 vanilla's pickaxe points at `#minecraft:mineable/pickaxe`. Mapping onto those vanilla
 tags instead was the alternative, and it destroys the only thing these lists are for:
-`survivalpickaxe.xie` exists to make a wooden pickaxe mine *less* than vanilla's, and
+`survivalpickaxe.json` exists to make a wooden pickaxe mine *less* than vanilla's, and
 its eleven named blocks are a hand-picked subset of `mineable/pickaxe` rather than
 the whole of it. A name nothing answers to is left out and said so in the log, because
 a tag entry naming a missing block is a load error and an optional one is
@@ -713,7 +786,7 @@ every other mod, datapack and future version.
 on the server once every pack's recipe JSON has been read and before any of it is
 deserialised, and hands over the whole map to modify in place — the same walk, over
 everything, on the first load and on every `/reload`. That is `XieRecipeCuller`.
-What it costs is that a `.xie` file's effect can no longer be read off disk in full:
+What it costs is that a definition file's effect can no longer be read off disk in full:
 this one property is a runtime hook, and the generated pack does not show it. It
 also reads `result.id` out of raw JSON rather than from a deserialised recipe, which
 is safe because every recipe type writes its result as an `ItemStack` and that codec
@@ -729,21 +802,21 @@ Two decisions the translation needed:
   recipes, one of which — the rose bush, a two-block flower — yields exactly two. A
   faithful count match culls the rose bush and leaves the poppy recipe the content
   was written to remove. The count described the recipe of the day rather than
-  selecting among several, which is plain in `cullStoneTools.xie` where all five
+  selecting among several, which is plain in `cullStoneTools.json` where all five
   culls give no count at all. So what carries over is the rule without it: every
   recipe producing this item. Red dye from beetroot goes with the flowers, which is
   the rule applied to content 1.6 did not have rather than a special case.
 - **This mod's own recipes are spared.** The content that culls a thing is
-  invariably the content that replaces it — `flowerbushes.xie` culls red dye and
-  then declares red dye from rose seeds, and `cullStoneTools.xie` culls every stone
-  tool so `flintTools.xie` can craft them from flint. In 2013 load order did this: a
+  invariably the content that replaces it — `flowerbushes.json` culls red dye and
+  then declares red dye from rose seeds, and `cullStoneTools.json` culls every stone
+  tool so `flintTools.json` can craft them from flint. In 2013 load order did this: a
   cull job ran against the list as it stood and the pack's own recipes were added by
   later jobs. Sparing the `xiesmod` namespace preserves it without depending on
   which file was read first.
 
 The result in the live content is that a poppy in a crafting grid now yields rose
 seeds rather than red dye, and red dye comes from the seeds — which is exactly the
-chain `flowerbushes.xie` describes, and was not reachable before because vanilla
+chain `flowerbushes.json` describes, and was not reachable before because vanilla
 supplied the shortcut.
 
 Vanilla overrides
@@ -781,7 +854,7 @@ would, and both live uses need less than one:
   already writes, and NeoForge's `ModifyDefaultComponentsEvent` patches a registered
   item's defaults in place. Each component is *set* rather than added to, and that is
   the point: a vanilla pickaxe already carries a `minecraft:tool` built from its
-  `ToolMaterial`, and `survivalpickaxe.xie` exists to make a wooden pickaxe mine
+  `ToolMaterial`, and `survivalpickaxe.json` exists to make a wooden pickaxe mine
   *less* than vanilla's, so its eleven-block list has to displace
   `#minecraft:mineable/pickaxe` rather than join it. The generated tags are named
   after the item being overridden — `tags/block/tool/wooden_pickaxe/effective` — so
@@ -830,7 +903,7 @@ it turns out not to be a loss at all:
   without one, so it is not evidence of a rename request. Vanilla wheat keeps its own
   name.
 - `blockBounds` is the one genuine loss, and it is cosmetic. It is the same 16-stage
-  ladder `corn.xie`, `soy.xie` and `hybridwheat.xie` carry, truncated at seven: ages 0
+  ladder `corn.json`, `soy.json` and `hybridwheat.json` carry, truncated at seven: ages 0
   to 7 come out 3, 6, 6, 8, 8, 11, 11 and 13 sixteenths tall where vanilla's are 2, 4,
   6, 8, 10, 12, 14 and 16, so a ripe plant would stop short of filling its block. A
   crop has no collision, so this is the selection outline and nothing else — and
@@ -848,7 +921,7 @@ needs to know nothing about any archetype. `PropertyMap` has tracked reads since
 written and its own javadoc says `untouchedKeys()` "is how typos surface without the
 parser needing an allowlist" — but **nothing outside the tests ever called it**, so
 nothing surfaced. `spikey` and `fertilisable` were both found by a human reading a
-`.xie` file beside the registrar, which does not scale and did not have to happen.
+definition file beside the registrar, which does not scale and did not have to happen.
 `XieUnreadProperties` runs it at the end of pack emission, by which point every
 consumer has had its turn: the registrar reads a definition to build a block or an
 item, and the emitters read it again to draw and describe it.
@@ -865,7 +938,7 @@ A key nobody read is one of three things, and all three earn a line:
 
 Two kinds of key are exempt, because reporting them would bury the rest: `id`, whose
 absence from the port is the whole design rather than a gap in it, and anything
-beginning with an underscore, which is the format's comment convention — `steel.xie`
+beginning with an underscore, which is the format's comment convention — `steel.json`
 annotates each ingot with `"_comment": "10% improvement over iron"`. An overriding
 definition is skipped whole, because `XieOverrides` applies its properties from
 `ModifyDefaultComponentsEvent`, which waits for the datapack and so runs later than
@@ -884,12 +957,6 @@ accusing the port of dropping things it does not drop:
   the same JSON object when a definition declares its texture flat rather than nested
   in `tex`, so the definition's own map never sees the read. It is in the structural key
   list now, beside `texFile` and `icon`.
-
-**What it cannot see is a structure that parsed and then went unconsumed.** `drops`,
-`sheds`, `tex` and `blockBounds` are marked at parse time because the reader really
-does read them, and nothing tracks whether the *parsed value* was then used by anybody.
-That is how `blazeTree`'s `blockBounds` was going missing in silence — see below — and
-the next gap of that shape will need finding the way this one was.
 
 The four that remain are all real, and none of them is a loss this port introduced:
 
@@ -937,11 +1004,112 @@ The four that remain are all real, and none of them is a loss this port introduc
   word for it is an enchantment, and an enchantment brings a glint, a tooltip line and
   anvil transferability that the property did not.
 
+Structures that parse and go nowhere
+------------------------------------
+
+The blind spot the report above had, and the harder half of the same question.
+`untouchedKeys()` works for a scalar because the only thing that ever reads one is a
+consumer. It said nothing about `drops`, `sheds`, `blocks`, `blockBounds` and the
+texture keys, because `XieFileReader` reads *those* for every definition it
+understands — into `BlockDef.bounds()`, `.drops()`, `.sheds()`, `.tex()` and
+`ItemDef.blockDrops()` — and marked them consumed on the spot. Which was true, and
+proved only that the parser understood them.
+
+**`blazeTree`'s `blockBounds` is what that costs.** It parsed perfectly, and
+`XieBlockProperties.forTree` never called `fillsItsCube`, `XieRegistrar.treeConfig`
+never called `boundsFor`, and `XiePackEmitter.partialCube` is only asked about
+cube-styled blocks — so a cross-rendered `tree` dropped its box entirely and the report
+had nothing to say. It was found by a human reading the registrar, which is exactly
+what this report exists to stop being necessary.
+
+**The marking moves to the accessor.** `PropertyMap.markStructural` hands a key back to
+the report after the reader has parsed it, and the definition's own accessor is what
+marks it consumed — so the question the report asks is no longer "did anything read this
+key" but "did any archetype ask the definition for the value". Three things fall out of
+it:
+
+- **A key that parsed into nothing is settled by the reader**, which has already
+  reported whatever was wrong with it. `zombiePigmelonStem` writes
+  `"tex": "#melonstem"`, a string where the format wants an object, and that is one
+  diagnostic rather than a diagnostic and a report line as well.
+- **The report says which of the two kinds a key is**, because they want looking at in
+  different places: "which nothing reads" is a property the port does not carry or a
+  spelling it never knew, and the parser is where to look; "which the parser reads and
+  no archetype then consults" is a hole in a registrar or an emitter path.
+- **Reading a component field inside the record does not count.**
+  `BlockDef.impliedMaxMeta` sizes a blockstate from the bounds and the texture faces,
+  and that is not anybody's *use* of either. Nor is `ContentPack.referencedSheets`,
+  which answers a question about the content rather than using it — `peekTex` is there
+  for the same reason `PropertyMap.peek` is.
+
+**Two consumers were reading further than anything used, and both had to be narrowed
+before the mechanism told the truth:**
+
+- **The texture copy asked `def.tex()` only in the spritesheet fallback.** Live content
+  ships one PNG per sprite and a file always wins, so the declaration was never
+  consulted for any of it — and every migrated definition in the content would have been
+  reported. It asks once at the top of `copyBlockTextures` and `copyItemTexture` now,
+  which is the honest reading: the texture path consulted the assignment, and whether it
+  needed the indices depends on which files the pack shipped.
+- **`XieDataEmitter.checkStickDrops` validated the `blocks` map of every item**, not
+  just a `stick`'s. That both counted skipped drops nothing consumes and marked the key
+  read on a definition quietly losing it. It asks a `stick`, which is where
+  `JobItem.doStick` read the key and the only place anything reads it here.
+
+**The audit, which is the point of the exercise** — knowing what the answer should be
+before the code says it. Left column is where `JobBlock` and `JobItem` read the key in
+2013; right is what consults the parsed value here:
+
+| structure | 1.6 read it for | the port consumes it for |
+|---|---|---|
+| block `drops` | every archetype, in `expandCommonBlockParameters` | every registered block: the loot tables, and the item-form test |
+| `sheds` | `tree` alone, in `doTree` | `tree` alone, in `treeConfig` |
+| `blockBounds` | every archetype | `basic`, `log`, `tree` and the four growing ones — **not `stem`** |
+| block `tex`, `texFile`, `icon` | every archetype | every registered block **but `stem`** |
+| `textureBase` | every archetype, in `doTextureBase` | **cube-styled blocks only**, in a model's face entries |
+| item `drops` | set on every archetype; read by `food`, `basic` and `seeds` | **`food` alone**, as the use remainder |
+| `blocks` | `stick` alone, in `doStick` | `stick` alone |
+| item `texFile`, `icon` | every archetype | every registered item |
+| item `textureBase` | nothing: `setTextureBase` is on `IXieBlock` | nothing |
+
+Four rows disagree, and each is a real gap that no content in this repo reaches:
+
+- **`blockBounds` on a `stem`** — there is no class to hand a shape to, `StemBlock`
+  being vanilla's, which is the same limit that stops a stem being `spikey`. Reported
+  rather than half-applied, like `transforms` on an override.
+- **`tex` on a `stem`** — it draws with vanilla's nine melon-stem models and never
+  reaches the texture copy. `zombiePigmelonStem`'s is the refused declaration above, so
+  it costs nothing.
+- **`textureBase` on a cross or a crop** — 1.6's was a fallback for any sprite lookup
+  that came up empty; here it reaches the face entries of a cube model and nothing else.
+  `saltDeposit` is the only content that declares one and it is a cube.
+- **An item's `drops` on `basic` or `seeds`** — `XieItem.onItemRightClick` turned a
+  plain item into its drops and `XieItemSeeds.onItemUse` handed them over for planting,
+  and only `food` carries them here, as the use remainder. Every `drops` on an item in
+  every pack in this repo is on a food.
+
+**Nothing in the content trips any of it**, which is the answer the audit predicted and
+the run confirmed: the five packs report the same 20 properties across the same 15
+definitions as before. The mechanism was therefore verified against a throwaway `probe`
+pack in `xiecontent/` declaring one of each — a `sheds` on a `basic`, a `blockBounds` on
+a `stem`, a `blocks` on a `food`, and a `textureBase` and a `drops` on a plain item —
+which produced four lines and not one false positive from the real packs. Building a
+pack to fire a report is the cheapest way to tell "this cannot happen" from "this does
+not work", and it is worth doing again the next time a report goes quiet.
+
+One hole of the same family is left, and named here so it is not rediscovered: **the
+`PropertyMap` inside a drop entry is reported by nothing.** `"drops": {"tomato":
+{"chance": 20, "amuont": 2}}` loses the amount in silence, because the report walks a
+definition's own properties and not those of the structures hanging off it. Reaching
+them means a non-consuming route to a `DropTable` from outside the model package, which
+is a wider change than this one; nothing in the content declares anything but `chance`
+and `amount` there today.
+
 `spikey` and `fertilisable`
 ---------------------------
 
 The two properties that report was going to catch anyway, both declared by
-`_plox_update/nether_crops/flame_tree.xie` and both now carried. Neither is a class
+`_plox_update/nether_crops/flame_tree.json` and both now carried. Neither is a class
 that turned out to be vanilla's — they are the opposite case, two of the smallest real
 implementations in the 2013 tree.
 
@@ -980,7 +1148,8 @@ before calling `fertilize`, so refusing in `isValidBonemealTarget` is where it b
 **`blazeTree`'s `blockBounds` was going missing as well**, and it is what makes `spikey`
 reachable at all. `expandCommonBlockParameters` read `blockBounds` for every archetype,
 leaves included; the port read it for `basic`, `log` and the growing blocks and not for
-`tree`. It is the one property the unread report cannot see, being structural. The
+`tree`. It was the one property the unread report could not see, being structural, and
+it is what the section above was built out of. The
 canopy is a cross (`renderType: "flower"`) and a cross's model carries no box, so this
 is purely the collision shape and the selection outline — the same split vanilla wheat
 has. Inset to 0.1–0.9 it is also the difference between a spikey canopy that can hurt
@@ -989,6 +1158,40 @@ against the block's edge and a hair outside its cell, and `Entity.checkInsideBlo
 deflates by 1e-5 before testing, so flush is outside. The measured stop positions say
 it plainly — 109.8 against the inset canopy, and 117.7 and 125.7 against full-cube
 leaves eight blocks further along, which is `wall + 0.1 - 0.3` against `wall - 0.3`.
+
+A sprite index with no sheet is vanilla's own
+--------------------------------------------
+
+`blazeTree` declares `"tex": {"all": {"0": 31}}` and no `texFile`, and its canopy
+rendered untextured because the slicer had no sheet to cut sprite 31 out of. Read as a
+gap in the *content* — a `texFile` somebody forgot in 2013 — that is unfixable from
+here, since the content repo would have to be edited to close it. It is not one.
+`SpritesheetManager.getTextureFilepath` answered a definition that named no sheet with
+`getDefaultTextureFile()`, which returns `/terrain.png`, so a bare index addresses
+**vanilla's** sheet and always did.
+
+Index 31 is where `Block.fire` drew from — `new BlockFire(51, 31)` — which is exactly
+what the block is for. Three things say so at once, which is what makes this a reading
+rather than a guess: the [2013 announcement][nethercrops] says a blaze tree's trunks
+"are made from blaze rods, and their leaves from flame", the definition's
+`"lightValue": 1.0` is fire's own light value, and cell 31 of the pack's own
+`nether_crops.png` is empty — the index was never for that sheet.
+
+`LegacyTerrain` is the translation from a sprite index to a modern texture id and
+`XiePackEmitter.borrowedSprite` is where a face consults it. Nothing is copied into the
+pack for one of these: the model points straight at `minecraft:block/fire_0`, which
+keeps the flames animated and lets a resource pack redraw the canopy by redrawing
+vanilla's fire — both of which a copy taken at emit time would lose. The pack summary
+counts the models that borrow one, because a block drawn with somebody else's sprite is
+worth saying out loud.
+
+The table holds the one index the content addresses. `terrain.png` was retired in 1.5
+and its layout is not derivable from anything modern, so an entry nothing addresses is
+a claim about a picture no test can check; an index the table cannot answer for is
+named in the log, with the definition that wants it, rather than guessed at. Filling it
+out is the work of whoever brings in the pack that needs the next one.
+
+[nethercrops]: https://github.com/XieX/xiecraft/blob/master/_posts/2013-02-25-nether-crops.md
 
 A block item is drawn the way vanilla draws one
 -----------------------------------------------
@@ -1012,7 +1215,7 @@ said so: `Missing textures in model xiesmod:item/zombie_pigmelon`. So the split 
 Recipes that never reach the emitter
 ------------------------------------
 
-`steel.xie` writes `"contents"` where the format wants `"content"` in three of its six
+`steel.json` writes `"contents"` where the format wants `"content"` in three of its six
 recipes, and **1.6 lost the same three**: `JobRecipe.doWork` looks for `content`,
 nothing else, and answers a missing one with `logFailure("Failed to find ingredients
 for this recipe. Job undoable.")` and no recipe. So the three are reported and dropped,
@@ -1036,7 +1239,7 @@ Other systems
   its four declared biomes. `BiomeNames` is where a mapping would go.
 - **`seed` is `seeds`, and always was.** `JobItem.doWork` dispatched
   `subtype.equals("seeds") || subtype.equals("seed")` to one `doSeeds`. Only
-  `cheese.xie` and `zombie_pigmelon.xie` write the singular, both in deferred packs,
+  `cheese.json` and `zombie_pigmelon.json` write the singular, both in deferred packs,
   which is why a fully ported archetype was skipping definitions with "archetype not
   ported yet" over a spelling. Nothing else in the parser or the emitters keys off the
   literal string — `ItemDef.KNOWN_ARCHETYPES` and `SUPPORTED_ITEMS` were the two
@@ -1054,17 +1257,17 @@ Other systems
   skipped drops, 0 recipes not emitted, 1 worldgen entry not emitted and 0 skipped
   culls:
   - `weapons/` and `ultimatefist/` add 7 items and 7 recipes and skip nothing.
-  - `SurvivalTweaks/` and `_wheatOverride.xie` add the two pickaxe overrides, the
+  - `SurvivalTweaks/` and `_wheatOverride.json` add the two pickaxe overrides, the
     wheat loot table, 10 recipes and the five stone-tool culls, and skip one more
     recipe — `tweaks@furnace`, whose `clayBlock` is a 1.6 name the rename table does
     not answer for.
   - `nether_crops/` adds 6 blocks from 5 definitions, 5 items from 3, 3 loot tables,
     5 recipes, 2 block tags and a tree, and skips exactly one thing: the `nethwerwart`
-    typo in the sticks section above. One content gap it reports rather than hides:
-    `blazeTree` gives texture indices and no `texFile`, so the flame tree's canopy has
-    no drawing to cut out and renders untextured. Its `spikey` and its
-    `fertilisable: false` were the two properties nothing read, and both are carried
-    now — see the two sections on them above.
+    typo in the sticks section above. Its `spikey` and its `fertilisable: false` were
+    the two properties nothing read, and `blazeTree`'s texture indices with no
+    `texFile` looked like a third gap in the content until they turned out to name
+    vanilla's own sheet. All three are carried now — see the three sections on them
+    above.
   - `cheese/` adds 1 block from 1 definition, 3 items from 2 — the third is
     `cheeseBlock`'s item form, since it drops itself — 1 block model, 3 item models,
     3 textures, 1 loot table and 5 recipes, and **skips nothing at all**. It is the
@@ -1087,15 +1290,31 @@ Other systems
     `Droppables` dropped nothing in 1.6 too, `XieBlock.drops` being initialised to one
     rather than left null. It is a work in progress in the most literal sense, and the
     port's job with it was to say so in the log rather than to finish it.
-- **Cooking Mod content** — stoves and stews live in a different content pack that
-  is not in this repo. That needs a block entity, a menu and a custom recipe type,
-  none of which a datapack can supply, and is the strongest remaining argument for
-  the engine existing at all.
+- **Cooking Mod content** — the pack that held the 2013 stove and its stews is not
+  in this repo and did not survive. The stove is back as the cookpot, rebuilt from
+  the mod posting with a block entity and no menu — see [The cookpot](#the-cookpot)
+  — and it is still the one thing here a datapack could not have supplied, which is
+  the strongest remaining argument for the engine existing at all. Whatever else the
+  Cooking Mod declared (the `chest`, `mounted`, `facing`, `pane`, `fence` and
+  `glass` archetypes above are the likely candidates) stays dropped, because there
+  is no file to port it from.
+
+The acceptance run
+------------------
+
+Moved to [TESTING.md](TESTING.md), which is where it belongs: this file is temporary
+and the run is not. What each of the twelve checks measures, the three rules they
+follow, what the run arranges and puts back, what it found on its first day and where
+it does not reach are all there, along with the working notes below that were about
+driving the game rather than about the port.
 
 Working notes
 -------------
 
-Things that cost time once and should not cost it twice.
+Things that cost time once and should not cost it twice. What used to be in this
+section was largely how to drive the game by hand; the acceptance run does that now,
+and the notes that belong to the rig went to [TESTING.md](TESTING.md) with it. What is
+left here is what the port itself cost time on, with the file that encodes each one.
 
 - **Read the decompiled sources before writing API calls.** Extract from
   `neoforge/build/moddev/artifacts/minecraft-patched-26.1.2.94-sources.jar` and the
@@ -1148,13 +1367,13 @@ Things that cost time once and should not cost it twice.
   divides instead, which is what vanilla and `XieBlockPlant.updateTick` both meant.
   When a 2013 formula looks wrong, check it against `mod/` twice before reproducing it.
 - **Numeric block ids still appear in content.** `Xie.parseBlock` accepted a bare
-  number and indexed `Block.blocksList` with it, so `salt.xie` says
+  number and indexed `Block.blocksList` with it, so `salt.json` says
   `"spawnsNear": "8,9"` — flowing and still water — and `"spawnsUnder": 0` for air.
   `LegacyBlockIds` is that table, kept apart from the name table in `ResourceNames`
   because an id is unambiguously a block where a name is not, and because 1.6 spent
   two ids on what is now one block with a blockstate.
 - **`material` names in the content are not the ones the engine parsed.**
-  `wildshrubs.xie` says `"material": "plant"`, but `Xie.parseMaterial` only knew
+  `wildshrubs.json` says `"material": "plant"`, but `Xie.parseMaterial` only knew
   `plants`, and its fallback for an unknown name was reflection on `Material` and
   then `Material.ground`. So the shrubs were ground-material blocks in 2013, by
   accident. Infer plant-ness from `walkthroughable`, which the original really did
@@ -1167,7 +1386,9 @@ Things that cost time once and should not cost it twice.
   closed range in the content and is otherwise indistinguishable.
 - **Verify on the dedicated server.** `gradlew :neoforge:runServer` parses and
   validates every loot table, recipe and worldgen file at startup with no GUI. The
-  client only registers the datapack when a world loads.
+  client only registers the datapack when a world loads. That covers everything a
+  file can be wrong about and nothing a block can be wrong about, which is what
+  [the acceptance run](TESTING.md#the-acceptance-run) is for.
 - **Half the effect names in the content never worked.** `Xie.parsePotionID` built
   `"potion." + word` and compared it against every `Potion.getName()`, so the word had
   to be Mojang's own field name — `moveSpeed`, `digSpeed`, `confusion` — and
@@ -1187,27 +1408,6 @@ Things that cost time once and should not cost it twice.
 - **A smoker halves the burn time it is given**, so a fuel declared as 100 shows
   `lit_total_time: 50` there and 100 in a furnace. That is
   `AbstractFurnaceBlockEntity`, not a lost value.
-- **`--quickPlayMultiplayer` cannot be passed with `--args`**, which replaces the dev
-  launcher's whole argument list, main class included. `runClient` takes
-  `-Pxie.join=<host>` instead; see `neoforge/build.gradle.kts`.
-- **Data components can be asserted from rcon** without anyone eating anything:
-  `/execute if items entity <player> container.* <item>[<component>=<value>]` compares
-  against the stack's *effective* components, defaults included, where `/data get`
-  only ever shows the patch. `[!<component>]` tests absence, which is the presence
-  test spelt backwards. Calibrate the literal against a plain vanilla-shaped item
-  first — matching one is proof the syntax is right, and a failed match otherwise
-  looks the same as a missing component.
-- **`[!minecraft:enchantments]` is never true**, because every item carries an empty
-  `minecraft:enchantments` by default — a plain vanilla bow fails the test exactly as
-  a Xie one does, which is the calibration step above earning its keep again. The
-  test for "carries no enchantment" is `[minecraft:enchantments={}]`, the empty
-  value rather than the absent component.
-- **A float component value cannot be matched with the obvious literal.** An item
-  predicate compares the decoded component for equality, and an attack speed built
-  from a `float` widens to a `double` that is not the one an SNBT `-2.4d` parses to:
-  vanilla's own iron sword only matches `-2.4000000953674316d`. It fails silently
-  and looks exactly like a missing modifier, which is why the calibration step
-  matters — the same literal against a vanilla item fails first and says so.
 - **A generated pack below vanilla cannot override vanilla.** `/datapack list enabled`
   reports load order and the *last* pack wins, and a `Pack.Position.BOTTOM` pack sits
   under `[vanilla (built-in)]`. A file written at a vanilla id from down there is read
@@ -1238,115 +1438,12 @@ Things that cost time once and should not cost it twice.
   with `#minecraft:mineable/pickaxe`. `GameData` unfreezes everything, fires every
   registration event, and freezes again, so this holds for any registry earlier in
   the order than the one being filled.
-- **A crafter verifies a craft remainder**, which no predicate can see. Fill its slots
-  with `/item replace block`, pulse it with a redstone block, and the remainder is
-  left among what it ejects.
-- **Nothing random-ticks without a player**, and nothing scheduled-ticks either.
-  Forceloading a few hundred chunks brings them to `full` and runs their features,
-  but no crop, sapling or leaf block ever advances in them, whatever
-  `random_tick_speed` says — and a dispenser or a crafter sitting on a redstone block
-  takes `triggered=1` and then never fires, which looks like the thing under test
-  being broken rather than the rig. Vanilla wheat, a vanilla oak sapling and a
-  vanilla dispenser all behave identically, so this is the environment and not the
-  mod. Anything that ticks has to be verified with a client connected. The quickest
-  way is `--quickPlayMultiplayer 127.0.0.1` on the client run and rcon on the server:
-  the player makes the chunks tick and rcon does the building and the asserting.
-- **`entityInside` needs the entity to have moved.** `Entity.move` records a
-  `Movement` for the tick only inside `if (movementLength > 1.0E-7 || ...)`, and
-  `checkInsideBlocks` walks that list — so a player teleported into a block and left
-  standing there never triggers it, whatever the block is. Testing a spikey block by
-  `/tp`ing onto it gives a null result, and so does the same test against a **cactus**,
-  which is how the rig announced itself rather than the mod. The player has to walk:
-  hold `W` through the same synthetic-input path as a click, into a two-block-high wall
-  of the block under test. Two further traps in choosing a control for it:
-  - **A cactus cannot be a wall.** `CactusBlock.canSurvive` refuses any solid
-    horizontal neighbour, so a `fill`ed wall of it breaks on placement and the player
-    strolls through the gap — which reads exactly like a block that does not hurt.
-    `minecraft:sweet_berry_bush` is no better on stone: it needs `#minecraft:dirt`
-    below. The control that actually earns its place is the mod's own case succeeding
-    in the same run as the nulls.
-  - **Leaves placed by `fill` decay.** `persistent` defaults to false, so a wall of
-    `minecraft:oak_leaves` is gone by the time the player reaches it.
-    `[persistent=true]` is the fix, and Xie leaves need nothing because
-    `XieTreeBlock`'s decay is measured from `#minecraft:logs`.
-- **The block id is the definition key, not the display name.** `blazeTree` is
-  `xiesmod:blaze_tree` even though its `name` is "Blaze Leaves" — the display name only
-  reaches the lang file, and `names` subtypes are the one exception. A wrong guess is
-  worse than a typo in a command: `fill ... xiesmod:blaze_leaves` answers "Unknown
-  block type" once, in a reply that scrolls past, and then every measurement afterwards
-  is taken against a wall that was never built. `ls _generated/assets/xiesmod/blockstates/`
-  is the list.
-- **A dispenser applies bone meal, and needs no aim at all.** The behaviour registered
-  for `Items.BONE_MEAL` calls `BoneMealItem.growCrop` on the block in front, which goes
-  straight to `applyBonemeal` and the same `isValidBonemealTarget` the hand path asks —
-  so a `fertilisable` test is rcon-only: dispenser one above the plant with
-  `[facing=down]`, `/item replace block` the bone meal in, pulse a redstone block, read
-  the age back. It also self-reports: the stack is only consumed when the bone meal
-  took, so "spent 0" and "spent 1" tell a refusal from a hit without looking at the
-  plant. Two ways to get nothing — off-by-one on `facing=down` (a dispenser two above
-  fires at the air between), and building it where no player is standing, since nothing
-  ticks there.
-- **No command right-clicks a block**, so a `useOn` cannot be driven from rcon at all
-  — rcon can only build the situation and read the result. What closes the gap is
-  that aim is a property of the player and not of the mouse: `/tp <player> <x> <y>
-  <z> <yaw> <pitch>` fixes exactly which block and which face the crosshair is on
-  (`pitch 90` is the block you stand on, `-90` the one overhead, `pitch 0` a side
-  face), and the click itself is synthetic input to the focused game window. **Test
-  the null cases against a positive control taken the same way**: a click on the
-  underside that changes nothing looks identical to a click that never reached the
-  game, and the only thing that tells them apart is the same synthetic click doing
-  something a moment earlier. Three things have to be right or the click vanishes
-  without a word, and each one costs an hour to find:
-  - **`PostMessage` is not enough.** The game reads the mouse through GLFW, which
-    takes raw input on Windows, so it has to be `SendInput` — and the window has to
-    genuinely hold focus, which a background process only gets by attaching its input
-    queue to the foreground thread first (`AttachThreadInput`). `SetForegroundWindow`
-    alone is refused and returns as though it worked.
-  - **`SendInput` checks `cbSize` against the real `sizeof(INPUT)`,** which is the
-    size of its *largest* union member. A struct declared with only `KEYBDINPUT` in
-    the union is 32 bytes where 40 is required: `SendInput` returns 0 and sets
-    `ERROR_INVALID_PARAMETER`, and the symptom is indistinguishable from the game
-    ignoring you. Check the return value.
-  - **`pauseOnLostFocus` is on by default,** so the moment the driving process hands
-    the window back, the game menu opens — and a click sent while it is closing is
-    swallowed, which made the whole rig about one run in three. Turning it off in
-    `neoforge/run/options.txt` takes it to four in four. The client rewrites
-    `options.txt` on a clean exit, so change it while the client is *not* running.
-- **A screenshot of the game is the game's own.** `PrintWindow` on an OpenGL window
-  returns a stale frame, and the client rect is not the render size. `F2` through the
-  same synthetic-input path writes a real PNG to `neoforge/run/screenshots/` and logs
-  the filename, which doubles as the cheapest proof that input is landing at all —
-  and `F1` first hides the HUD and the rcon chat spam.
-- **Creative mode does not wear tools.** `ItemStack.hurtAndBreak` returns immediately
-  for a player with infinite materials, so a durability assertion in creative fails
-  against an item that is working perfectly. Switch to survival for that one check.
-- **`/setblock` with the block already there is a no-op**, and says "Could not set
-  the block" in the middle of a long rcon script where it scrolls past. Pulsing a
-  crafter by re-placing it therefore leaves the old `triggered` state and the pulse
-  does nothing; clear the position to air first.
-- **A crafter with no matching recipe ejects an ingredient**, so "the crafter emitted
-  an item" does not mean it crafted. Read the item entity, don't count it.
-- **`/recipe give <player> <id>` is a recipe-registry probe.** The argument resolves
-  against the recipes that actually loaded, so a culled or absent one answers
-  "Unknown recipe" while a live one answers "Unlocked 1 recipe(s)" — no crafting, no
-  inventory, no ambiguity. It needs a real player: with `@a` and nobody online the
-  target check fails first and both cases answer "No player was found", which reads
-  like a result and is not one.
 - **The disabling condition is `neoforge:never`,** not `false`, under the key
   `neoforge:conditions` — `ConditionalOps.DEFAULT_CONDITIONS_KEY` and the id
   `NeoForgeMod.NEVER_CONDITION` registers. `SimpleJsonResourceReloadListener.scanDirectory`
   wraps every codec in `createConditionalCodec`, so a file whose conditions fail is
   skipped with a debug line rather than erroring, for recipes and everything else
   loaded that way.
-- **Gamerules are snake_case as of 26.1** — `random_tick_speed`, `advance_time`. The
-  old camelCase names fail with a bare "Incorrect argument for command".
-- **A sapling will not grow into a neighbour's canopy**, so a test orchard planted
-  three blocks apart looks like a bug in the growth code. `TreeFeature` checks a
-  column one wider than the trunk for the whole height, and leaves are not
-  `REPLACEABLE_BY_TREES`. Eight blocks apart is clear.
-- **`/fill` caps at 32768 blocks** and says so, which is easy to miss when the reply
-  scrolls past — a test area that was never actually cleared then blocks everything
-  planted in it.
 - **A block model needs no `render_type`.** As of 26.1 the chunk layer comes from the
   *sprite*: `BakedQuad.MaterialInfo.of` asks `ChunkSectionLayer.byTransparency` about
   the stitched texture's alpha. Nothing in the NeoForge sources reads a `render_type`
@@ -1357,7 +1454,7 @@ Things that cost time once and should not cost it twice.
   emitted as a plain cube and there is nothing to register.
 - **References are `name:count:meta`, except where they are not.** `Xie.parseItemStack`
   reads a two-part reference as name *and count*, but `JobSpawn.initSpawn` splits its
-  own key as name and *meta*. That inconsistency is why `fruit.xie` had
+  own key as name and *meta*. That inconsistency is why `fruit.json` had
   `"appleTree": "fruitLeaves:0"` through `"fruitLeaves:3"` — four aliases that all
   resolved to subtype 0, so in 2013 every one of the four fruit-tree spawn entries
   generated an apple tree. They are `fruitLeaves:1:0` through `1:3` in the content
@@ -1386,7 +1483,7 @@ Things that cost time once and should not cost it twice.
   `is_plains`, `is_swamp` or `is_desert` tag at all.
 - **There is no "within n blocks" block predicate.** `spawnsNear` has to be written
   out as one offset test per position, which is `(2n+1)³` of them — 125 at the
-  distance `salt.xie` asks for and 2197 at `Spawnable`'s default of 6. The emitter
+  distance `salt.json` asks for and 2197 at `Spawnable`'s default of 6. The emitter
   caps the radius, which only ever makes the test stricter.
 - **The run directory holds a copy of the content**, at
   `neoforge/run/xiecontent/mod-content`. It does not track edits to `../mod-content`
@@ -1403,12 +1500,3 @@ Things that cost time once and should not cost it twice.
   in the content pack joins vanilla's rather than replacing it, and being at the bottom
   of the pack order costs it nothing. That is the opposite of a loot table at a vanilla
   id, which is why only those go to `_overrides/`.
-- **`/execute if block` is the state probe; `/say` is not.** A `run say` fires into
-  chat, which the rcon reply never carries, so a test written that way answers with an
-  empty body whichever way it went. Bare `execute if block <pos> <block>` answers
-  "Test passed" or "Test failed" in the reply itself.
-- **`setblock` does not ask `canSurvive`.** Placing a plant on ground it could never
-  stand on succeeds and stays there until something updates the neighbourhood, so
-  "the block is still there" proves nothing about its support rule. Change the block
-  *below* it and read the result — that is the update, and it tests both directions in
-  two commands.

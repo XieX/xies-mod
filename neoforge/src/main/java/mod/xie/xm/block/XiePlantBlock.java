@@ -69,7 +69,7 @@ public class XiePlantBlock extends VegetationBlock implements BonemealableBlock 
     public static final int MIN_GROWTH_LIGHT = 9;
 
     /**
-     * Configuration parsed from a {@code .xie} block definition.
+     * Configuration parsed from a block definition.
      *
      * @param maxAge       highest growth stage, clamped to 1..15
      * @param growthRate   percentage; 100 is the default speed, higher is faster

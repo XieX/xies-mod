@@ -304,12 +304,36 @@ public class XieTreeBlock extends LeavesBlock {
         BlockPos.MutableBlockPos at = pos.offset(direction[0], 0, direction[1]).mutable();
 
         for (int fallen = 0; fallen < MAX_FALL; fallen++) {
-            if (level.isEmptyBlock(at) && !level.isEmptyBlock(at.below())) {
+            if (level.isEmptyBlock(at) && isGround(level.getBlockState(at.below()))) {
                 return at.immutable();
             }
             at.move(0, -1, 0);
         }
         return pos;
+    }
+
+    /**
+     * Whether fruit can lie on this, which is anything except the tree it fell out
+     * of.
+     *
+     * <p>The keystone sits <em>inside</em> the canopy, so a neighbouring column is
+     * air above leaves about as often as it is air above the ground, and stopping at
+     * the first surface leaves the fruit on the canopy's own shoulder. That reads as
+     * harmless — an item spawned in the leaves falls out of them — but it is not,
+     * because {@link #isSaturated} is measured where the fruit was <em>put</em>: a
+     * tree that keeps aiming at its own leaves counts the fruit lying under it as
+     * lying nowhere near, and goes on shedding after the eight that were supposed to
+     * stop it.
+     *
+     * <p>Found by the acceptance run, which is the whole argument for it existing:
+     * the tree with nine cocoa beans under it shed a tenth in two runs out of five,
+     * and the answer depended on the trunk's height and which of the eight
+     * directions came up. See PORTING.md.
+     */
+    private static boolean isGround(BlockState below) {
+        return !below.isAir()
+            && !(below.getBlock() instanceof LeavesBlock)
+            && !below.is(BlockTags.LOGS);
     }
 
     /** One roll of the shed table, as {@code Droppables.getDropsForMetaAndMultiplier}. */

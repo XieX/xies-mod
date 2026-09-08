@@ -45,9 +45,9 @@ import java.util.TreeSet;
  * <h2>What is spared</h2>
  *
  * <p>Recipes in this mod's own namespace, always. The content that culls a thing is
- * invariably the content that replaces it: {@code flowerbushes.xie} culls red dye
- * and then declares red dye from rose seeds, and {@code cullStoneTools.xie} culls
- * every stone tool so that {@code flintTools.xie} can craft them from flint instead.
+ * invariably the content that replaces it: {@code flowerbushes.json} culls red dye
+ * and then declares red dye from rose seeds, and {@code cullStoneTools.json} culls
+ * every stone tool so that {@code flintTools.json} can craft them from flint instead.
  * The 2013 engine got this from load order — a cull job ran against the recipe list
  * as it stood, and the pack's own recipes were added by later jobs — and the
  * namespace is what preserves it without depending on which file was read first.

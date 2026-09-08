@@ -18,7 +18,7 @@ import java.util.function.Function;
 /**
  * The scalar properties of a definition, keyed case-insensitively.
  *
- * <p>The {@code .xie} format spreads roughly eighty properties across sixteen block
+ * <p>The content format spreads roughly eighty properties across sixteen block
  * and item archetypes, and third-party packs are free to use any of them. Rather
  * than a typed field per property — which would make the parser the bottleneck
  * every time an archetype gains an option — the parser normalises the
@@ -27,11 +27,20 @@ import java.util.function.Function;
  *
  * <p>Reads are tracked, so {@link #untouchedKeys()} reports properties nobody
  * consumed. That is how typos surface without the parser needing an allowlist.
+ *
+ * <p>A key the parser reads into a structure of its own — {@code drops},
+ * {@code blockBounds} and the rest — is a second case, because the parser's own read
+ * proves nothing about whether anybody used what it produced. Those are declared with
+ * {@link #markStructural}, which hands the key back to the report until a consumer
+ * asks the definition for the value. See {@link #unconsumedStructures()}.
  */
 public final class PropertyMap {
 
     private final Map<String, JsonElement> values = new LinkedHashMap<>();
     private final Set<String> touched = new LinkedHashSet<>();
+
+    /** Keys parsed into a structure, whose consumer is somewhere downstream. */
+    private final Set<String> structural = new LinkedHashSet<>();
 
     public static PropertyMap empty() {
         return new PropertyMap();
@@ -69,6 +78,43 @@ public final class PropertyMap {
             touched.add(normalise(key));
         }
         return this;
+    }
+
+    /**
+     * Records a key the parser has read into a structure of its own, and marks it
+     * unread again so that the report waits for whoever uses that structure.
+     *
+     * <p>The distinction the rest of this class cannot draw. {@code drops},
+     * {@code sheds}, {@code blockBounds}, {@code blocks} and the texture keys are all
+     * read by {@code XieFileReader} the moment a definition is parsed, so marking them
+     * consumed there says only that the parser understood them — which was true of
+     * {@code blazeTree}'s {@code blockBounds} for as long as it was going missing.
+     * Reopening them puts the question where it belongs: did any archetype ask the
+     * definition for the value?
+     *
+     * <p>Only call this for a key that parsed into something. A key that produced
+     * nothing has nothing to consume, and the parser has already reported whatever was
+     * wrong with it.
+     */
+    public PropertyMap markStructural(String... keys) {
+        for (String key : keys) {
+            String normalised = normalise(key);
+            if (values.containsKey(normalised)) {
+                touched.remove(normalised);
+                structural.add(normalised);
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Of {@link #untouchedKeys()}, the ones that parsed into a structure nobody then
+     * consulted — a gap in a consumer rather than a property the port never knew.
+     */
+    public Set<String> unconsumedStructures() {
+        Set<String> remaining = new LinkedHashSet<>(structural);
+        remaining.removeAll(touched);
+        return remaining;
     }
 
     public boolean has(String key) {

@@ -8,7 +8,7 @@ import java.util.Map;
 
 /**
  * Reads a {@code .loc} file: display names, kept separate from definitions so a
- * pack can be translated without touching its {@code .xie} files.
+ * pack can be translated without touching its definition files.
  *
  * <pre>
  *   greySteelOre="Grey Steel Ore"

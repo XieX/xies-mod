@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PotionEffectDefTest {
 
-    /** {@code tea.xie} in full: Speed I for twenty seconds, one drink in five. */
+    /** {@code tea.json} in full: Speed I for twenty seconds, one drink in five. */
     @Test
     void readsTheFullForm() {
         PotionEffectDef effect = PotionEffectDef.parse("speed:20:1@20").orElseThrow();

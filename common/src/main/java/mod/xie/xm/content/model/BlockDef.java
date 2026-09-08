@@ -10,6 +10,12 @@ import java.util.Optional;
  * Everything else stays in {@link #props()} for the archetype to interpret, so
  * adding a property to an archetype does not mean touching the parser.
  *
+ * <p>Each of those has an accessor that marks the key it came from consumed, which is
+ * what lets the unread-property report see a structure that parsed and then went
+ * nowhere. Reading a component field directly inside this class deliberately does not
+ * count — {@link #impliedMaxMeta()} sizes a blockstate from the bounds and the faces
+ * without that being anybody's use of either.
+ *
  * @param origin      where it was declared
  * @param name        the declaration key, e.g. {@code tomatoBush}
  * @param displayName the {@code name} property, or the key if absent
@@ -44,8 +50,90 @@ public record BlockDef(
      */
     public static final java.util.Set<String> KNOWN_ARCHETYPES = java.util.Set.of(
         "basic", "plant", "crop", "stem", "grass", "chest", "bush", "tree", "log",
-        "sapling", "furnace", "mounted", "facing", "pane", "fence", "glass"
+        "sapling", "furnace", "mounted", "facing", "pane", "fence", "glass",
+        // Not one of JobBlock's sixteen. The 2013 stove was lost with the Cooking
+        // Mod pack, so this archetype is rebuilt from the mod posting rather than
+        // ported: see XieStoveBlockEntity for the recipe table it describes.
+        "stove"
     );
+
+    /**
+     * What breaking this block yields.
+     *
+     * <p>A consuming read, and so are the four below it. The parser fills these in
+     * for every definition it understands, which is why marking them at parse time
+     * said nothing useful: {@code blazeTree} declared a {@code blockBounds} that
+     * parsed perfectly and that no archetype ever asked for, and the report could not
+     * see it because the reader's own read had already marked the key. Asking through
+     * the accessor moves the question to the only place that can answer it — whether a
+     * registrar or an emitter path actually wanted the value.
+     *
+     * <p>{@code expandCommonBlockParameters} read {@code drops} for every block
+     * archetype and so does this: every registered block is asked whether it drops
+     * itself, and every one with drops gets a loot table.
+     */
+    public DropTable drops() {
+        props.markUsed("drops");
+        return drops;
+    }
+
+    /**
+     * What this drops of its own accord. Only {@code tree} consults it, which is what
+     * {@code JobBlock} did too — {@code sheds} is read in {@code doTree} and nowhere
+     * else — so a definition declaring it on anything else is reported.
+     */
+    public DropTable sheds() {
+        props.markUsed("sheds");
+        return sheds;
+    }
+
+    /**
+     * The collision and selection box.
+     *
+     * <p>1.6 read this for every archetype, leaves included. Here {@code basic},
+     * {@code log}, {@code tree} and the four growing archetypes consult it; a
+     * {@code stem} does not, because it is vanilla's {@code StemBlock} and has no
+     * class of its own to hand a shape to — the same limit that stops one being
+     * {@code spikey}.
+     */
+    public Optional<MetaMap<Bounds>> bounds() {
+        props.markUsed("blockBounds");
+        return bounds;
+    }
+
+    /**
+     * The sprites this block draws itself with.
+     *
+     * <p>Consumed by the texture copy, which runs for every registered block except a
+     * {@code stem} — a stem borrows vanilla's nine melon-stem models and has no sprite
+     * of its own to place. Whether the indices are actually needed depends on the
+     * pack: content that migrated to one PNG per sprite ships the files and the
+     * declaration is only the fallback, which is still the texture path having
+     * consulted it.
+     */
+    public TexDef tex() {
+        props.markUsed("tex", "texFile", "icon");
+        return tex;
+    }
+
+    /**
+     * The block whose texture fills in every face this one does not draw.
+     *
+     * <p>Apart from {@link #tex()} because its consumer is narrower: 1.6's
+     * {@code XieTex.setTextureBase} was a fallback for any sprite lookup that came up
+     * empty, and here it reaches the face entries of a cube model and nothing else. A
+     * cross or a crop has one texture key pointing at its own sprite, so a
+     * {@code textureBase} on one of those is dropped — and now says so.
+     */
+    public Optional<String> textureBase() {
+        props.markUsed("textureBase");
+        return tex.base();
+    }
+
+    /** {@link #tex()} without marking it consumed, for diagnostics. */
+    TexDef peekTex() {
+        return tex;
+    }
 
     public boolean isOverride() {
         return override.isPresent();

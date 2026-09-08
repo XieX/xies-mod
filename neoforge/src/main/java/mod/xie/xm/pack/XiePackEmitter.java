@@ -10,6 +10,7 @@ import mod.xie.xm.content.model.Bounds;
 import mod.xie.xm.content.model.ContentPack;
 import mod.xie.xm.content.model.ItemDef;
 import mod.xie.xm.content.model.ItemRef;
+import mod.xie.xm.content.model.LegacyTerrain;
 import mod.xie.xm.content.model.MetaMap;
 import mod.xie.xm.content.model.RenderStyle;
 import mod.xie.xm.content.model.ResourceNames;
@@ -46,7 +47,7 @@ import java.util.stream.Stream;
  * vanilla's own systems already consume, and hands it over as a pack.
  *
  * <p>Output goes to disk rather than being served from memory on purpose. A
- * content author who writes a {@code .xie} file and gets a purple-and-black block
+ * content author who writes a definition file and gets a purple-and-black block
  * needs to see what was generated for it, and the underscore prefix keeps the
  * parser from trying to load the output back in as a content pack.
  *
@@ -72,7 +73,7 @@ public final class XiePackEmitter {
      * registered at the bottom, below vanilla, so that a user pack can override it;
      * an override has to sit at the top or it cannot do the one thing it is for.
      * Keeping them apart is also the readable arrangement — everything in here is,
-     * by construction, something a {@code .xie} file took away from vanilla.
+     * by construction, something a definition file took away from vanilla.
      *
      * <p>{@code PathPackResources} reads only {@code assets/}, {@code data/} and
      * {@code pack.mcmeta}, so this directory is invisible to the pack that contains
@@ -183,6 +184,7 @@ public final class XiePackEmitter {
         int blockModels = 0;
         int itemModels = 0;
         int textures = 0;
+        int borrowed = 0;
 
         for (ContentPack pack : packs) {
             Path packRoot = contentRoot.resolve(pack.name());
@@ -208,11 +210,12 @@ public final class XiePackEmitter {
 
                     Sprites sprites = copyBlockTextures(packRoot, def, names, meta, stages);
                     textures += sprites.copied();
+                    borrowed += sprites.borrowed().size();
                     writeBlockState(stages, def);
                     blockModels += writeBlockModels(pack, def, stages, sprites);
 
                     if (registered.blockItems().contains(path)) {
-                        writeBlockItemModel(path, def, stages);
+                        writeBlockItemModel(path, def, stages, sprites);
                         itemModels++;
                     }
                 }
@@ -243,6 +246,13 @@ public final class XiePackEmitter {
             data.lootTables(), data.recipes(), data.tags(), data.blockTags(), data.features(),
             data.trees(), data.fuels(), data.overrides());
 
+        if (borrowed > 0) {
+            // Not counted among the textures above, because no file was written: the
+            // model points at Minecraft's own sprite. See borrowedSprite.
+            LOGGER.info("Borrowed a vanilla texture for {} models, which is what a sprite "
+                + "index with no texFile asks for", borrowed);
+        }
+
         if (data.skippedDrops() > 0 || data.skippedRecipes() > 0
             || data.skippedSpawns() > 0 || data.skippedCulls() > 0) {
             LOGGER.info("Not emitted: {} drops, {} recipes, {} worldgen entries and {} culls name "
@@ -260,7 +270,7 @@ public final class XiePackEmitter {
     /**
      * The items the content's {@code cull} entries named, once {@link #emit} has run.
      *
-     * <p>The one thing a {@code .xie} file asks for that no generated file can carry:
+     * <p>The one thing a definition file asks for that no generated file can carry:
      * it removes recipes rather than adding any, so it leaves the pack by this route
      * instead. See {@link mod.xie.xm.recipe.XieRecipeCuller}.
      */
@@ -346,15 +356,28 @@ public final class XiePackEmitter {
     }
 
     /**
-     * The sprites copied for one block.
+     * The sprites drawn for one block: the files copied into the pack, and the vanilla
+     * textures borrowed instead of copied.
      *
-     * @param copied how many files were written, for the summary line
-     * @param faces  cube face name ({@code up}, {@code north}, …) to texture id, for
-     *               a block that ships face-specific sprites
+     * @param copied   how many files were written, for the summary line
+     * @param faces    cube face name ({@code up}, {@code north}, …) to texture id, for
+     *                 a block that ships face-specific sprites
+     * @param borrowed model name to vanilla texture id, for a block whose drawing is
+     *                 vanilla's own — see {@link LegacyTerrain}. Keyed by model rather
+     *                 than by block because a growing block has one per stage.
      */
-    private record Sprites(int copied, Map<String, String> faces) {
+    private record Sprites(int copied, Map<String, String> faces, Map<String, String> borrowed) {
 
-        static final Sprites NONE = new Sprites(0, Map.of());
+        static final Sprites NONE = new Sprites(0, Map.of(), Map.of());
+
+        /**
+         * The texture a model draws where no face-specific sprite says otherwise: the
+         * borrowed one if there is one, and otherwise the sprite written under the
+         * model's own name.
+         */
+        String drawing(String modelName) {
+            return borrowed.getOrDefault(modelName, XiesMod.MOD_ID + ":block/" + modelName);
+        }
     }
 
     /**
@@ -415,6 +438,10 @@ public final class XiePackEmitter {
                                    "z", new int[] {90, 0}));
 
     private void writeBlockState(Stages stages, BlockDef def) throws IOException {
+        if (def.archetype().equals(STOVE)) {
+            writeStoveBlockState(stages);
+            return;
+        }
         if (def.archetype().equals(LOG)) {
             JsonObject variants = new JsonObject();
             for (Map.Entry<String, int[]> axis : LOG_AXIS_ROTATIONS.entrySet()) {
@@ -458,6 +485,9 @@ public final class XiePackEmitter {
 
     private int writeBlockModels(ContentPack pack, BlockDef def,
                                  Stages stages, Sprites sprites) throws IOException {
+        if (def.archetype().equals(STOVE)) {
+            return writeStoveModels(stages);
+        }
         RenderStyle style = RenderStyle.forBlock(def);
         String parent = STYLE_PARENTS.get(style);
         Optional<Bounds> box = style.isCube() ? partialCube(def) : Optional.empty();
@@ -473,7 +503,7 @@ public final class XiePackEmitter {
             }
             model.add("textures", style.isCube()
                 ? cubeTextures(pack, def, name, sprites)
-                : single(STYLE_TEXTURE_KEYS.get(style), XiesMod.MOD_ID + ":block/" + name));
+                : single(STYLE_TEXTURE_KEYS.get(style), sprites.drawing(name)));
             write(assets().resolve("models").resolve("block").resolve(name + ".json"), model);
         }
         return stages.count();
@@ -561,8 +591,8 @@ public final class XiePackEmitter {
      * at emit time, into the face entries of a model.
      */
     private JsonObject cubeTextures(ContentPack pack, BlockDef def, String name, Sprites sprites) {
-        Optional<String> base = def.tex().base().map(baseName -> resolveTexture(pack, baseName));
-        String own = XiesMod.MOD_ID + ":block/" + name;
+        Optional<String> base = def.textureBase().map(baseName -> resolveTexture(pack, baseName));
+        String own = sprites.drawing(name);
 
         JsonObject textures = new JsonObject();
         for (String face : CUBE_FACES) {
@@ -621,12 +651,20 @@ public final class XiePackEmitter {
         Path target = assets().resolve("textures").resolve("block");
         boolean split = !names.isEmpty();
 
+        // Asked for here rather than down in the slicer, because this is the point at
+        // which the definition's texture assignment is consulted whether or not the
+        // indices turn out to be needed — a migrated pack ships the files and they are
+        // only the fallback. A block whose sprites are never copied at all is a stem,
+        // which draws with vanilla's models and never reaches this method.
+        TexDef tex = def.tex();
+
         if (stages.aged()) {
-            return copyStageTextures(packRoot, source, target, def, split, meta, stages);
+            return copyStageTextures(packRoot, source, target, def, tex, split, meta, stages);
         }
 
         int copied = 0;
         Map<String, String> faces = new LinkedHashMap<>();
+        Map<String, String> borrowed = new LinkedHashMap<>();
 
         Optional<Path> bare = split
             ? findSprite(source, def.name(), meta).or(() -> findTexture(source, def.name()))
@@ -636,10 +674,18 @@ public final class XiePackEmitter {
         // asks for exactly that name, and cubeTextures falls back to it.
         boolean drawn = bare.isPresent()
             ? copy(bare.get(), target, stages.path() + ".png")
-            : sliceSprite(packRoot, def, TexDef.FACE_ALL, split ? meta : 0, target, stages.path());
+            : sliceSprite(packRoot, def, tex, TexDef.FACE_ALL, split ? meta : 0, target,
+                stages.path());
         if (drawn) {
             copied++;
             CUBE_FACES.forEach(face -> faces.put(face, XiesMod.MOD_ID + ":block/" + stages.path()));
+        } else {
+            Optional<String> vanilla =
+                borrowedSprite(def, tex, TexDef.FACE_ALL, split ? meta : 0);
+            vanilla.ifPresent(texture -> {
+                borrowed.put(stages.path(), texture);
+                CUBE_FACES.forEach(face -> faces.put(face, texture));
+            });
         }
 
         for (Map.Entry<String, List<String>> alias : FACE_ALIASES.entrySet()) {
@@ -650,22 +696,32 @@ public final class XiePackEmitter {
             Optional<Path> found = findTexture(source, def.name() + "_" + alias.getKey());
             boolean written = found.isPresent()
                 ? copy(found.get(), target, spriteName + ".png")
-                : sliceSprite(packRoot, def, alias.getKey(), split ? meta : 0, target, spriteName);
+                : sliceSprite(packRoot, def, tex, alias.getKey(), split ? meta : 0, target,
+                    spriteName);
             if (!written) {
+                // A face can borrow on its own, and only that face's entries move: the
+                // block still draws its own sprite, or its textureBase, everywhere else.
+                Optional<String> vanilla =
+                    borrowedSprite(def, tex, alias.getKey(), split ? meta : 0);
+                vanilla.ifPresent(texture -> alias.getValue().forEach(face -> faces.put(face, texture)));
                 continue;
             }
             copied++;
             alias.getValue().forEach(face -> faces.put(face, XiesMod.MOD_ID + ":block/" + spriteName));
         }
 
-        return copied == 0 ? Sprites.NONE : new Sprites(copied, faces);
+        return copied == 0 && faces.isEmpty()
+            ? Sprites.NONE
+            : new Sprites(copied, faces, borrowed);
     }
 
     /** One sprite per growth stage, named {@code <path>_stage<n>.png}. */
     private Sprites copyStageTextures(Path packRoot, Path source, Path target, BlockDef def,
-                                      boolean split, int meta, Stages stages) throws IOException {
+                                      TexDef tex, boolean split, int meta, Stages stages)
+                                      throws IOException {
         int copied = 0;
         Path lastFound = null;
+        Map<String, String> borrowed = new LinkedHashMap<>();
         for (int age = 0; age <= stages.maxAge(); age++) {
             int sprite = split ? meta : age;
             Path candidate = findSprite(source, def.name(), sprite)
@@ -673,10 +729,16 @@ public final class XiePackEmitter {
                 .orElse(lastFound);
             if (candidate == null) {
                 // No file for this stage, and possibly none for any: a sheet index is
-                // the other way a growing block says what it looks like.
-                if (sliceSprite(packRoot, def, TexDef.FACE_ALL, sprite, target,
+                // the other way a growing block says what it looks like, and an index
+                // with no sheet is the third — vanilla's own drawing.
+                if (sliceSprite(packRoot, def, tex, TexDef.FACE_ALL, sprite, target,
                         stages.modelName(age))) {
                     copied++;
+                } else {
+                    Optional<String> vanilla = borrowedSprite(def, tex, TexDef.FACE_ALL, sprite);
+                    if (vanilla.isPresent()) {
+                        borrowed.put(stages.modelName(age), vanilla.get());
+                    }
                 }
                 continue;
             }
@@ -684,7 +746,7 @@ public final class XiePackEmitter {
             copy(candidate, target, stages.modelName(age) + ".png");
             copied++;
         }
-        return new Sprites(copied, Map.of());
+        return new Sprites(copied, Map.of(), borrowed);
     }
 
     /**
@@ -733,16 +795,18 @@ public final class XiePackEmitter {
      * named a sprite that was never written, and the client said so. Only
      * {@code cheeseBlock}, which declares one {@code all} face, happened to work.
      */
-    private void writeBlockItemModel(String path, BlockDef def, Stages stages) throws IOException {
-        String blockModel = XiesMod.MOD_ID + ":block/" + stages.modelName(0);
+    private void writeBlockItemModel(String path, BlockDef def, Stages stages, Sprites sprites)
+            throws IOException {
         if (RenderStyle.forBlock(def).isCube()) {
             JsonObject model = new JsonObject();
-            model.addProperty("parent", blockModel);
+            model.addProperty("parent", XiesMod.MOD_ID + ":block/" + stages.modelName(0));
             write(assets().resolve("models").resolve("item").resolve(path + ".json"), model);
             writeItemModelReference(path);
             return;
         }
-        writeItemModel(path, blockModel);
+        // The flat form draws the block's sprite rather than its model, so a block whose
+        // drawing is vanilla's hands the item that one and not a name nothing wrote.
+        writeItemModel(path, sprites.drawing(stages.modelName(0)));
     }
 
     private void writeItemModel(String path, String texture) throws IOException {
@@ -782,6 +846,10 @@ public final class XiePackEmitter {
         Path items = packRoot.resolve("textures").resolve("items");
         Path blocks = packRoot.resolve("textures").resolve("blocks");
 
+        // See copyBlockTextures: consulted here, needed only where the pack shipped no
+        // migrated file. Every registered item passes through this method.
+        TexDef tex = def.tex();
+
         Optional<Path> found = names.isEmpty()
             ? findTexture(items, def.name())
             : findTexture(items, def.name() + "_" + meta).or(() -> findTexture(items, def.name()));
@@ -790,7 +858,7 @@ public final class XiePackEmitter {
             found = findTexture(blocks, def.name());
         }
         if (found.isEmpty()) {
-            return sliceItemSprite(packRoot, def, meta, path);
+            return sliceItemSprite(packRoot, def, tex, meta, path);
         }
         Path target = assets().resolve("textures").resolve("item");
         Files.createDirectories(target);
@@ -830,10 +898,7 @@ public final class XiePackEmitter {
     private boolean sliceSprite(Path packRoot, String origin, TexDef tex, String face, int meta,
                                 Path target, String spriteName) throws IOException {
         Optional<String> sheetName = tex.sheet();
-        // Asked for exactly, not through spriteFor's all-then-icon fallback: a block
-        // declaring only "sides" must not have that sprite put on its ends as well.
-        Optional<Integer> index = tex.face(face).flatMap(map -> map.get(meta))
-            .or(() -> face.equals(TexDef.FACE_ALL) ? tex.face(TexDef.FACE_ICON).flatMap(map -> map.get(meta)) : Optional.empty());
+        Optional<Integer> index = spriteIndex(tex, face, meta);
         if (sheetName.isEmpty() || index.isEmpty()) {
             return false;
         }
@@ -874,15 +939,70 @@ public final class XiePackEmitter {
     }
 
     /** {@link #sliceSprite} for one face of a block. */
-    private boolean sliceSprite(Path packRoot, BlockDef def, String face, int meta,
+    private boolean sliceSprite(Path packRoot, BlockDef def, TexDef tex, String face, int meta,
                                 Path target, String spriteName) throws IOException {
-        return sliceSprite(packRoot, def.qualifiedName(), def.tex(), face, meta, target, spriteName);
+        return sliceSprite(packRoot, def.qualifiedName(), tex, face, meta, target, spriteName);
+    }
+
+    /**
+     * The index one face draws, asked for exactly rather than through
+     * {@link TexDef#spriteFor}'s all-then-icon fallback: a block declaring only
+     * {@code sides} must not have that sprite put on its ends as well. The one
+     * fallback kept is {@code icon} for {@code all}, since an item's single index and
+     * a block's whole-block one are the same declaration written two ways.
+     */
+    private static Optional<Integer> spriteIndex(TexDef tex, String face, int meta) {
+        return tex.face(face).flatMap(map -> map.get(meta))
+            .or(() -> face.equals(TexDef.FACE_ALL)
+                ? tex.face(TexDef.FACE_ICON).flatMap(map -> map.get(meta))
+                : Optional.empty());
+    }
+
+    /**
+     * The vanilla texture a face borrows, for an index that belongs to no sheet of the
+     * pack's own.
+     *
+     * <p>A definition that names no {@code texFile} is not one that forgot to. In 1.6
+     * {@code SpritesheetManager} answered a definition with no sheet with
+     * {@code /terrain.png}, so its indices address the game's own sheet and the sprite
+     * it wants is one Minecraft still ships — under a name now rather than a number.
+     * {@link LegacyTerrain} is that translation, and it is why {@code blazeTree} is a
+     * tree with leaves of fire rather than a tree with no leaves at all.
+     *
+     * <p>Nothing is written to the pack for one of these: the model points straight at
+     * {@code minecraft:block/…}, which keeps the sprite animated where vanilla animates
+     * it, and lets a resource pack redraw this mod's block by redrawing the vanilla
+     * texture it borrows — both of which a copy taken at emit time would lose.
+     *
+     * <p>Only a definition with no sheet at all reaches here. One that names a sheet
+     * the pack does not ship is reported by {@link #sliceSprite} instead: 1.6 fell back
+     * to {@code terrain.png} for that case too, but a warning naming the file somebody
+     * meant to ship is worth more than a drawing nobody chose.
+     */
+    private Optional<String> borrowedSprite(BlockDef def, TexDef tex, String face, int meta) {
+        if (tex.sheet().isPresent()) {
+            return Optional.empty();
+        }
+        Optional<Integer> index = spriteIndex(tex, face, meta);
+        if (index.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Optional<String> texture = LegacyTerrain.texture(index.get());
+        if (texture.isEmpty()) {
+            LOGGER.warn("{} draws sprite {} of vanilla's terrain.png, which LegacyTerrain "
+                    + "has no modern texture for",
+                def.qualifiedName(), index.get());
+            return Optional.empty();
+        }
+        return texture.map(path -> "minecraft:block/" + path);
     }
 
     /** {@link #sliceSprite} for an item, whose one sprite is its {@code icon}. */
-    private int sliceItemSprite(Path packRoot, ItemDef def, int meta, String path) throws IOException {
+    private int sliceItemSprite(Path packRoot, ItemDef def, TexDef tex, int meta, String path)
+            throws IOException {
         Path target = assets().resolve("textures").resolve("item");
-        return sliceSprite(packRoot, def.qualifiedName(), def.tex(), TexDef.FACE_ICON, meta,
+        return sliceSprite(packRoot, def.qualifiedName(), tex, TexDef.FACE_ICON, meta,
             target, path) ? 1 : 0;
     }
 
@@ -945,5 +1065,98 @@ public final class XiePackEmitter {
         for (Path entry : entries) {
             Files.deleteIfExists(entry);
         }
+    }
+
+    // -- stove ----------------------------------------------------------------
+
+    /** The archetype whose drawing is entirely vanilla's, borrowed rather than shipped. */
+    private static final String STOVE = "stove";
+
+    /**
+     * The {@code content} texture for each {@code pot} blockstate value.
+     *
+     * <p>This table <em>is</em> the mod posting's "wait until the pot changes
+     * colour". Vanilla's cauldron models take an arbitrary {@code content} sprite, so
+     * these give three distinguishable pot states without the pack shipping any art:
+     * water goes in clear and comes out as mud-thick stew.
+     *
+     * <p>Index is the {@code pot} value. Index 0 is empty and has no content layer at
+     * all, which is why it is null. Retexturing the pot later is a change to these
+     * strings and nothing else.
+     */
+    private static final String[] STOVE_CONTENTS = {
+        null,
+        "minecraft:block/water_still",
+        "minecraft:block/mud"
+    };
+
+    /**
+     * The stove's blockstate: every {@code pot} value against both {@code lit} values.
+     *
+     * <p>Six entries, because a missing variant is a hard load error rather than a
+     * fallback. {@code lit} does not change the model — a cauldron has no furnace
+     * front to light up, and the fire is particles from
+     * {@link mod.xie.xm.block.XieStoveBlock#animateTick} — but it has to be named
+     * here because the block carries it.
+     */
+    private void writeStoveBlockState(Stages stages) throws IOException {
+        JsonObject variants = new JsonObject();
+
+        for (int pot = 0; pot < STOVE_CONTENTS.length; pot++) {
+            for (boolean lit : new boolean[] {false, true}) {
+                JsonObject variant = new JsonObject();
+                variant.addProperty("model", XiesMod.MOD_ID + ":block/" + stoveModelName(stages, pot));
+                variants.add("lit=" + lit + ",pot=" + pot, variant);
+            }
+        }
+
+        JsonObject root = new JsonObject();
+        root.add("variants", variants);
+        write(assets().resolve("blockstates").resolve(stages.path() + ".json"), root);
+    }
+
+    /**
+     * One cauldron model per pot state.
+     *
+     * <p>Every texture is vanilla's, so the stove needs no art to render correctly.
+     * The empty state is vanilla's own {@code block/cauldron}; the four filled ones
+     * are {@code block/template_cauldron_full} with the content sprite swapped, which
+     * is exactly how vanilla builds its water, lava and powder snow cauldrons.
+     *
+     * <p>The stove was a furnace with an iron top in 2013 because the cauldron did
+     * not exist yet. It does now, and a pot you drop ingredients into should look
+     * like a pot.
+     */
+    private int writeStoveModels(Stages stages) throws IOException {
+        int written = 0;
+
+        for (int pot = 0; pot < STOVE_CONTENTS.length; pot++) {
+            JsonObject model = new JsonObject();
+            JsonObject textures = new JsonObject();
+
+            if (STOVE_CONTENTS[pot] == null) {
+                model.addProperty("parent", "minecraft:block/cauldron");
+            } else {
+                model.addProperty("parent", "minecraft:block/template_cauldron_full");
+                textures.addProperty("content", STOVE_CONTENTS[pot]);
+            }
+
+            textures.addProperty("particle", "minecraft:block/cauldron_side");
+            textures.addProperty("top", "minecraft:block/cauldron_top");
+            textures.addProperty("bottom", "minecraft:block/cauldron_bottom");
+            textures.addProperty("side", "minecraft:block/cauldron_side");
+            textures.addProperty("inside", "minecraft:block/cauldron_inner");
+            model.add("textures", textures);
+
+            write(assets().resolve("models").resolve("block")
+                .resolve(stoveModelName(stages, pot) + ".json"), model);
+            written++;
+        }
+        return written;
+    }
+
+    /** Empty keeps the block's own name so the block item has an obvious parent. */
+    private static String stoveModelName(Stages stages, int pot) {
+        return pot == 0 ? stages.modelName(0) : stages.modelName(0) + "_pot" + pot;
     }
 }

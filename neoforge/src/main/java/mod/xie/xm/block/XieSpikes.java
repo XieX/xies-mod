@@ -17,7 +17,7 @@ import net.minecraft.world.level.Level;
  * and a one-line override in each of the port's block classes, which is what
  * {@link XieBecomes} already does for the same reason.
  *
- * <p>Only {@code blazeTree} in {@code _plox_update/nether_crops/flame_tree.xie}
+ * <p>Only {@code blazeTree} in {@code _plox_update/nether_crops/flame_tree.json}
  * declares it: a canopy of burning leaves you cannot climb through for free. The
  * archetypes with no class of their own cannot carry it — {@code stem} is vanilla's
  * {@code StemBlock} — and a definition declaring it there is reported by

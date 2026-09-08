@@ -7,7 +7,7 @@ import java.util.Optional;
 /**
  * Everything one content pack declares, fully parsed and ready to register.
  *
- * <p>A pack is a directory (or zip) containing {@code .xie} definition files,
+ * <p>A pack is a directory (or zip) containing {@code .json} definition files,
  * optional {@code .xid} id assignments, optional {@code .loc} display names, and a
  * {@code textures/} tree. The engine ships one of these; users drop more into
  * {@code <gamedir>/xiecontent/}.
@@ -75,11 +75,19 @@ public record ContentPack(
         return item == null ? Optional.empty() : Optional.of(item.displayName());
     }
 
-    /** Every spritesheet filename referenced by any definition in this pack. */
+    /**
+     * Every spritesheet filename referenced by any definition in this pack.
+     *
+     * <p>Deliberately not a consuming read of the texture declarations. Answering
+     * "which sheets does this pack name" is a question about the content rather than a
+     * use of it, and marking every definition's {@code tex} consumed here would leave
+     * the unread-property report unable to see a texture assignment nothing draws.
+     * Same distinction as {@code PropertyMap.peek}.
+     */
     public java.util.SortedSet<String> referencedSheets() {
         java.util.SortedSet<String> sheets = new java.util.TreeSet<>();
-        blocks.values().forEach(block -> block.tex().sheet().ifPresent(sheets::add));
-        items.values().forEach(item -> item.tex().sheet().ifPresent(sheets::add));
+        blocks.values().forEach(block -> block.peekTex().sheet().ifPresent(sheets::add));
+        items.values().forEach(item -> item.peekTex().sheet().ifPresent(sheets::add));
         return sheets;
     }
 

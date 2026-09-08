@@ -56,6 +56,53 @@ public record ItemDef(
         blockDrops = java.util.List.copyOf(blockDrops);
     }
 
+    /**
+     * What using this item leaves behind.
+     *
+     * <p>A consuming read, like the two below it, and for the reason
+     * {@link BlockDef#drops()} gives: the parser fills it in for every definition, so
+     * only a consumer asking for it says anything about whether it survived.
+     *
+     * <p>Here that consumer is {@code food} alone, as the use remainder. 1.6 set the
+     * drops on every archetype and read them back in three: {@code XieItemFood} handed
+     * them over when you ate, {@code XieItem.onItemRightClick} turned a plain item
+     * into them, and {@code XieItemSeeds.onItemUse} gave them to you for planting.
+     * Only the first is carried, so a {@code drops} on a {@code basic} or a
+     * {@code seeds} item is reported rather than quietly lost.
+     */
+    public DropTable drops() {
+        props.markUsed("drops");
+        return drops;
+    }
+
+    /**
+     * The blocks this works on and what each yields. {@code stick} alone consults it,
+     * which is where {@code JobItem} read it too — {@code doStick} and nowhere else.
+     */
+    public java.util.List<BlockDrops> blockDrops() {
+        props.markUsed("blocks");
+        return blockDrops;
+    }
+
+    /**
+     * The sprite this item draws, consumed by the texture copy for every registered
+     * item.
+     *
+     * <p>There is no item counterpart of {@link BlockDef#textureBase()} because there
+     * was none in 2013 either: {@code setTextureBase} is on {@code IXieBlock} and
+     * {@code JobItem} has no branch for the key at all. An item declaring one is
+     * therefore reported, exactly as {@code smeltsInto} is.
+     */
+    public TexDef tex() {
+        props.markUsed("tex", "texFile", "icon");
+        return tex;
+    }
+
+    /** {@link #tex()} without marking it consumed, for diagnostics. */
+    TexDef peekTex() {
+        return tex;
+    }
+
     public boolean isOverride() {
         return override.isPresent();
     }

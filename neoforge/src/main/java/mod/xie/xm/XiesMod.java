@@ -85,6 +85,14 @@ public class XiesMod {
             return;
         }
 
+        try {
+            // Beside the packs, so "$schema": "../xie-content.schema.json" resolves
+            // from a file at a pack's root. Not fatal: the game loads without it.
+            XieParser.installSchema(contentDir);
+        } catch (IOException e) {
+            LOGGER.warn("Could not write {} into {}", XieParser.SCHEMA_FILE_NAME, contentDir, e);
+        }
+
         List<XieParser.ParseResult> results;
         try {
             results = XieParser.parseAll(contentDir);

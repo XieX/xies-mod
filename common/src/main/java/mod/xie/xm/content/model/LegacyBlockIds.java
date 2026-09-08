@@ -11,7 +11,7 @@ import java.util.Optional;
  * one, which covers almost everything content writes. Worldgen is the exception:
  * {@code Xie.parseBlock} accepted a bare number and indexed {@code Block.blocksList}
  * with it, so a {@code spawns} entry could — and in the live content does — name a
- * block by id. {@code salt.xie} says {@code "spawnsNear": "8,9"}, which is flowing
+ * block by id. {@code salt.json} says {@code "spawnsNear": "8,9"}, which is flowing
  * and still water rather than anything you could look up by name.
  *
  * <p>Numeric ids were removed in 1.7, so this is a frozen historical table rather

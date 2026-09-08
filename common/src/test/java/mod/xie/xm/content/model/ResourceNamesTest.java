@@ -104,7 +104,7 @@ class ResourceNamesTest {
 
     /**
      * A dye written by its own name needs no subtype table: {@code redDye} is already
-     * the modern id in camelCase. {@code flowerbushes.xie} writes its culls that way,
+     * the modern id in camelCase. {@code flowerbushes.json} writes its culls that way,
      * with a count rather than a metadata value — {@code redDye:2} is two red dye —
      * so the count must not be mistaken for a subtype and change which item is meant.
      */
@@ -126,7 +126,7 @@ class ResourceNamesTest {
 
     /**
      * The names a tool's {@code blocksEffective} and {@code canHarvest} lists are
-     * written in — {@code survivalpickaxe.xie} names eleven blocks and eight of them
+     * written in — {@code survivalpickaxe.json} names eleven blocks and eight of them
      * have been renamed since. The ore family is the one that has to be spelt out:
      * every one of them was the noun first in 1.6 and is the noun last now, so
      * {@code oreIron} otherwise resolves to a plausible-looking {@code ore_iron}
@@ -152,7 +152,7 @@ class ResourceNamesTest {
     }
 
     /**
-     * The names a vanilla override names. {@code survivalpickaxe.xie} overrides
+     * The names a vanilla override names. {@code survivalpickaxe.json} overrides
      * {@code pickaxeWood} and {@code pickaxeStone}, which are 1.6's own field names
      * and are the noun first, exactly as the ores are.
      */
@@ -172,7 +172,7 @@ class ResourceNamesTest {
     }
 
     /**
-     * The other way round, which needs no table at all: {@code cullStoneTools.xie}
+     * The other way round, which needs no table at all: {@code cullStoneTools.json}
      * writes the tier first and the plain camelCase split already lands on the
      * modern id.
      */

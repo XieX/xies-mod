@@ -22,6 +22,33 @@ public final class XieBlockProperties {
 
     private XieBlockProperties() { }
 
+    /**
+     * Properties for a {@code stove}: vanilla's furnace, which is what it is built from.
+     *
+     * <p>Hardness 3.5 and a pickaxe requirement are {@code Blocks.FURNACE}'s own, and
+     * the recipe puts a furnace in the middle of the stove, so inheriting them keeps
+     * the upgrade from being softer than the thing it upgrades.
+     *
+     * <p>The light comes from the {@code lit} blockstate rather than the definition,
+     * for the same reason a furnace's does: an unlit stove that glowed would be
+     * indistinguishable from a lit one in a dark kitchen.
+     *
+     * <p>{@code noOcclusion} because the stove is drawn as a cauldron and a cauldron
+     * is hollow. Without it the pot would be lit as though it were a solid cube and
+     * the inside would go black.
+     */
+    public static BlockBehaviour.Properties forStove(BlockDef def) {
+        BlockBehaviour.Properties properties = BlockBehaviour.Properties.of()
+            .mapColor(mapColorFor(def))
+            .sound(soundFor(def))
+            .requiresCorrectToolForDrops()
+            .noOcclusion()
+            .lightLevel(state -> state.getValue(
+                mod.xie.xm.block.XieStoveBlock.LIT) ? 13 : 0);
+
+        return common(def, properties, 3.5f);
+    }
+
     /** Properties for a plant-like block: no collision, ticks, breaks instantly-ish. */
     public static BlockBehaviour.Properties forPlant(BlockDef def) {
         BlockBehaviour.Properties properties = BlockBehaviour.Properties.of()

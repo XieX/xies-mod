@@ -9,6 +9,8 @@ import mod.xie.xm.block.XieCropBlock;
 import mod.xie.xm.block.XieLogBlock;
 import mod.xie.xm.block.XiePlantBlock;
 import mod.xie.xm.block.XieSaplingBlock;
+import mod.xie.xm.block.XieStoveBlock;
+import mod.xie.xm.block.XieStoveBlockEntity;
 import mod.xie.xm.block.XieTreeBlock;
 import mod.xie.xm.content.model.BlockDef;
 import mod.xie.xm.content.model.Bounds;
@@ -48,10 +50,12 @@ import net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect;
 import net.minecraft.world.level.block.AttachedStemBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.StemBlock;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.grower.TreeGrower;
 
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -67,6 +71,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * Turns parsed content into registry entries.
@@ -90,7 +95,10 @@ public final class XieRegistrar {
 
     /** Block archetypes this build can register. Grows as archetypes are ported. */
     private static final Set<String> SUPPORTED_BLOCKS =
-        Set.of("bush", "plant", "crop", "basic", "sapling", "tree", "log", "stem");
+        Set.of("bush", "plant", "crop", "basic", "sapling", "tree", "log", "stem", "stove");
+
+    /** The one archetype that is a block entity, and the first in the port to be one. */
+    private static final String STOVE = "stove";
 
     /** Of those, the ones that grow and so carry an {@code age} blockstate property. */
     private static final Set<String> GROWING_BLOCKS = Set.of("bush", "plant", "crop", "sapling");
@@ -111,8 +119,8 @@ public final class XieRegistrar {
      *
      * <p>{@code seed} and {@code seeds} are the same archetype and always were:
      * {@code JobItem.doWork} dispatched {@code subtype.equals("seeds") ||
-     * subtype.equals("seed")} to one {@code doSeeds}. Only {@code cheese.xie} and
-     * {@code zombie_pigmelon.xie} write the singular, which is why it went unnoticed.
+     * subtype.equals("seed")} to one {@code doSeeds}. Only {@code cheese.json} and
+     * {@code zombie_pigmelon.json} write the singular, which is why it went unnoticed.
      */
     private static final Set<String> SUPPORTED_ITEMS =
         Set.of("basic", "food", "seeds", "seed", "tool", "sword", "bow", "stick");
@@ -138,6 +146,17 @@ public final class XieRegistrar {
     private final DeferredRegister.Items items = DeferredRegister.createItems(XiesMod.MOD_ID);
     private final DeferredRegister<CreativeModeTab> tabs =
         DeferredRegister.create(Registries.CREATIVE_MODE_TAB, XiesMod.MOD_ID);
+    private final DeferredRegister<BlockEntityType<?>> blockEntities =
+        DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, XiesMod.MOD_ID);
+
+    /**
+     * Every registered stove, so one {@link BlockEntityType} can name them all.
+     *
+     * <p>A type has to know its valid blocks, and the blocks are queued one at a
+     * time as their definitions are read, so the type cannot be built until they are
+     * all in. It is registered at the end of {@link #register} instead.
+     */
+    private final List<DeferredBlock<Block>> stoveBlocks = new ArrayList<>();
 
     /** Id path to registered block, e.g. {@code tomato_bush} to the holder. */
     private final Map<String, DeferredBlock<Block>> registeredBlocks = new LinkedHashMap<>();
@@ -201,9 +220,12 @@ public final class XieRegistrar {
 
         registerCreativeTab();
 
+        registerStoveBlockEntity();
+
         blocks.register(modEventBus);
         items.register(modEventBus);
         tabs.register(modEventBus);
+        blockEntities.register(modEventBus);
         overrides.install(modEventBus);
 
         LOGGER.info("Xie registrar: queued {} blocks and {} items from {} block and {} item "
@@ -276,6 +298,14 @@ public final class XieRegistrar {
             // measure their distance from #minecraft:logs.
             blockTags.computeIfAbsent(LOGS_TAG, tag -> new ArrayList<>())
                 .add(XiesMod.MOD_ID + ":" + path);
+        } else if (def.archetype().equals(STOVE)) {
+            XieStoveBlock.Config config = stoveConfig(pack, def);
+            holder = blocks.registerBlock(
+                path,
+                properties -> new XieStoveBlock(properties, config),
+                properties -> XieBlockProperties.forStove(def)
+            );
+            stoveBlocks.add(holder);
         } else if (def.archetype().equals(STEM)) {
             holder = registerStem(pack, def, path);
             // A stem's ages are vanilla's 0-7, which is what 1.6's BlockStem had too.
@@ -1291,5 +1321,87 @@ public final class XieRegistrar {
     /** Id path to registered item. */
     public Map<String, DeferredItem<Item>> registeredItems() {
         return Map.copyOf(registeredItems);
+    }
+
+    // -- stove ----------------------------------------------------------------
+
+    /**
+     * Register the single {@link BlockEntityType} that serves every stove.
+     *
+     * <p>One type for all of them rather than one each: a type is a factory plus the
+     * set of blocks it may sit in, and every stove shares the factory. The set is
+     * only knowable once the blocks are queued, which is why this runs at the end of
+     * {@link #register} rather than beside the blocks themselves.
+     */
+    private void registerStoveBlockEntity() {
+        if (stoveBlocks.isEmpty()) {
+            LOGGER.debug("No stove declared in any pack; no block entity type registered");
+            return;
+        }
+
+        DeferredHolder<BlockEntityType<?>, BlockEntityType<XieStoveBlockEntity>> holder =
+            blockEntities.register(STOVE, () -> new BlockEntityType<>(
+                XieStoveBlockEntity::new,
+                stoveBlocks.stream().map(DeferredBlock::get).collect(Collectors.toSet())));
+
+        XieStoveBlockEntity.bindType(holder);
+        LOGGER.debug("Registered one stove block entity type over {} block(s)", stoveBlocks.size());
+    }
+
+    /**
+     * Read a stove's properties.
+     *
+     * <p>The defaults are the ones {@code cooking/cookpot.json} declares, so a pack that
+     * leaves them out still gets a working block rather than one that cooks instantly
+     * or holds nothing.
+     */
+    private XieStoveBlock.Config stoveConfig(ContentPack pack, BlockDef def) {
+        PropertyMap props = def.props();
+        return new XieStoveBlock.Config(
+            props.getInt("cookTime", 200),
+            props.getInt("fuelCapacity", 6000),
+            props.getInt("foodCapacity", 8),
+            props.getInt("flavourCapacity", 4),
+            itemTag(props.getString("ingredients")),
+            itemTag(props.getString("flavourings")),
+            baseIds(pack, props.getString("waterBase")));
+    }
+
+    /**
+     * An {@code $alias} reference as the item tag the data emitter writes for it.
+     *
+     * <p>Anything that is not an alias is ignored rather than treated as a single
+     * item: the ingredient list is meant to be open, and {@code writeAliasTags} is
+     * what makes it so — another pack contributing to {@code $soupable} widens what
+     * every stove accepts without touching this mod.
+     */
+    private static Optional<TagKey<Item>> itemTag(Optional<String> declared) {
+        return declared.map(ItemRef::parse)
+            .filter(ref -> ref.kind() == ItemRef.RefKind.ALIAS)
+            .map(ref -> TagKey.create(Registries.ITEM,
+                Identifier.fromNamespaceAndPath(XiesMod.MOD_ID, ResourceNames.toPath(ref.name()))));
+    }
+
+    /**
+     * Every id a base declaration names, a multi-variant item's subtypes included.
+     *
+     * <p>{@code oil} is one definition with two {@code names}, so it registers as two
+     * items; a stove that only accepted the first would refuse corn oil for no reason
+     * a player could see.
+     */
+    private Set<Identifier> baseIds(ContentPack pack, Optional<String> declared) {
+        if (declared.isEmpty()) {
+            return Set.of();
+        }
+        String name = declared.get();
+
+        ItemDef item = pack.items().get(name);
+        if (item != null) {
+            return Variants.pathsFor(name, Variants.namesIn(item.props())).stream()
+                .map(path -> Identifier.fromNamespaceAndPath(XiesMod.MOD_ID, path))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        }
+        return Set.of(Identifier.withDefaultNamespace(
+            ResourceNames.toVanillaPath(ItemRef.parse(name))));
     }
 }

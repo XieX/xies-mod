@@ -20,6 +20,10 @@ src/generated/
 .project
 bin/
 
+# Python, for the acceptance run
+__pycache__/
+*.pyc
+
 # OS
 Thumbs.db
 .DS_Store

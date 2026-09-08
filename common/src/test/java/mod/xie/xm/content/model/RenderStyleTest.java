@@ -16,7 +16,7 @@ class RenderStyleTest {
         if (renderType != null) {
             json.addProperty("renderType", renderType);
         }
-        return new BlockDef(new Origin("test", "test.xie", "b"), "b", "B", archetype,
+        return new BlockDef(new Origin("test", "test.json", "b"), "b", "B", archetype,
             Optional.empty(), new DropTable(List.of()), DropTable.EMPTY, TexDef.EMPTY,
             Optional.empty(), PropertyMap.of(json));
     }

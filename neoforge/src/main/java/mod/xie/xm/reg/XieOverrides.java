@@ -31,9 +31,9 @@ import java.util.List;
  *
  * <p>Numeric ids are gone, so there is no collision to escape and no faithful
  * translation. What carries over instead is the <em>name</em> the property holds,
- * because that was never the accident: {@code _wheatOverride.xie} declares
+ * because that was never the accident: {@code _wheatOverride.json} declares
  * {@code "override": "crops"} and goes on to describe a wheat crop, and
- * {@code survivalpickaxe.xie} declares {@code "overide": "pickaxeWood"} and goes on
+ * {@code survivalpickaxe.json} declares {@code "overide": "pickaxeWood"} and goes on
  * to describe a nerfed wooden pickaxe. The author picked those ids deliberately and
  * the content beside the property says what it is for. So an override is read here
  * as <em>this definition speaks for that vanilla object</em>, and its properties are
@@ -71,7 +71,7 @@ public final class XieOverrides {
      * @param def        the definition, for its properties and for the log
      * @param target     the item whose default components are patched
      * @param targetPath the item's id path, which is what its generated block tags
-     *                   are named after — so {@code survivalpickaxe.xie} writes
+     *                   are named after — so {@code survivalpickaxe.json} writes
      *                   {@code tags/block/tool/wooden_pickaxe/effective}
      */
     public record ItemOverride(ItemDef def, Item target, String targetPath) { }

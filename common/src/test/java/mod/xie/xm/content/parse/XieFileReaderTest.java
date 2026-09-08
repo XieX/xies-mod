@@ -29,10 +29,10 @@ class XieFileReaderTest {
 
     private XieFileReader.Result read(String json) {
         diagnostics = new Diagnostics();
-        return new XieFileReader(diagnostics).read("test.xie", "test", new StringReader(json));
+        return new XieFileReader(diagnostics).read("test.json", "test", new StringReader(json));
     }
 
-    // -- tomato.xie -----------------------------------------------------------
+    // -- tomato.json -----------------------------------------------------------
 
     private static final String TOMATO = """
         {
@@ -124,7 +124,7 @@ class XieFileReaderTest {
         assertTrue(recipe.problems().isEmpty());
     }
 
-    // -- campfire.xie ---------------------------------------------------------
+    // -- _campfire.json -------------------------------------------------------
 
     private static final String CAMPFIRE = """
         {
@@ -158,6 +158,30 @@ class XieFileReaderTest {
         assertEquals(16, campfire.tex().spriteFor(TexDef.FACE_ALL, 0).orElseThrow());
         assertEquals(20, campfire.tex().spriteFor(TexDef.FACE_ALL, 4).orElseThrow());
         assertEquals(java.util.Set.of(16, 20), campfire.tex().referencedSprites());
+    }
+
+    /**
+     * A texture declaration is indices and, separately, a sheet to read them from.
+     * {@code blazeTree} gives the first and not the second, which is not a broken
+     * declaration: 1.6's {@code SpritesheetManager} answered a definition that named
+     * no sheet with {@code /terrain.png}, so the indices address vanilla's own. The
+     * reader's job is to keep them apart and hand both on — see
+     * {@link mod.xie.xm.content.model.LegacyTerrain}, which is where 31 becomes fire.
+     */
+    @Test
+    void readsSpriteIndicesWithNoSheetToReadThemFrom() {
+        XieFileReader.Result result = read("""
+            { "blocks": { "blazeTree": {
+                "name": "Blaze Leaves", "type": "tree", "trunk": "blazeLog",
+                "renderType": "flower", "lightValue": 1.0,
+                "tex": { "all": { "0": 31 } } } } }
+            """);
+        assertTrue(diagnostics.errors().isEmpty(), diagnostics::toString);
+
+        BlockDef blazeTree = result.blocks().get("blazeTree");
+        assertTrue(blazeTree.tex().sheet().isEmpty());
+        assertTrue(blazeTree.tex().hasSprites());
+        assertEquals(31, blazeTree.tex().spriteFor(TexDef.FACE_ALL, 0).orElseThrow());
     }
 
     @Test
@@ -273,6 +297,44 @@ class XieFileReaderTest {
     }
 
     @Test
+    void reportsDuplicateKeysInsteadOfKeepingTheLastValue() {
+        XieFileReader.Result result = read("""
+            {
+              "blocks": {
+                "corn": {
+                  "name": "Corn", "type": "crop",
+                  "blockBounds": {
+                    "3": "0,0,0,1,0.4375,1",
+                    "4": "0,0,0,1,0.625,1",
+                    "4": "0,0,0,1,0.9375,1"
+                  }
+                }
+              }
+            }
+            """);
+        assertTrue(diagnostics.hasErrors());
+        assertEquals(0, result.blocks().size());
+        Diagnostic error = diagnostics.errors().get(0);
+        assertEquals("test.json", error.where());
+        assertTrue(error.message().contains("duplicate key \"4\""), error.message());
+        assertTrue(error.message().contains("blockBounds"), error.message());
+    }
+
+    @Test
+    void acceptsTheSameKeyInDifferentObjects() {
+        XieFileReader.Result result = read("""
+            {
+              "blocks": {
+                "a": { "name": "A", "type": "crop", "blockBounds": { "4": "0,0,0,1,1,1" } },
+                "b": { "name": "B", "type": "crop", "blockBounds": { "4": "0,0,0,1,1,1" } }
+              }
+            }
+            """);
+        assertFalse(diagnostics.hasErrors(), diagnostics.toString());
+        assertEquals(2, result.blocks().size());
+    }
+
+    @Test
     void warnsOnUnknownSectionAndUnknownArchetype() {
         XieFileReader.Result result = read("""
             {
@@ -365,26 +427,120 @@ class XieFileReaderTest {
     /**
      * {@code textureBase} is read by {@code readTex}, over a PropertyMap of its own
      * when the declaration is flat rather than nested in {@code tex} — so the
-     * definition's map never sees the read and has to be told. Without that,
-     * {@code saltDeposit} is reported as declaring a property nobody looked at.
+     * definition's map never sees the read, and the reader has to say what became of
+     * it. What it says now is "parsed, waiting for a consumer": the consumer is the
+     * cube-model writer, and it asks through {@link BlockDef#textureBase()}.
      */
     @Test
-    void countsAFlatTextureBaseAsRead() {
+    void countsAFlatTextureBaseAsAStructureAwaitingItsConsumer() {
         XieFileReader.Result result = read("""
             { "blocks": { "saltDeposit": {
                 "name": "Salt Deposit", "material": "sand", "textureBase": "sand" } } }
             """);
         BlockDef salt = result.blocks().get("saltDeposit");
-        assertEquals("sand", salt.tex().base().orElseThrow());
+        assertTrue(salt.props().unconsumedStructures().contains("texturebase"));
+        assertTrue(salt.props().untouchedKeys().contains("texturebase"));
+
+        assertEquals("sand", salt.textureBase().orElseThrow());
         assertFalse(salt.props().untouchedKeys().contains("texturebase"));
     }
 
-    // -- _wip/steel/steel.xie -------------------------------------------------
+    // -- structures that parse and are then consumed by nobody -----------------
+
+    /**
+     * The blind spot the report had until it was taught this: a structural key is read
+     * by {@code XieFileReader} for every definition, so marking it consumed there said
+     * only that the parser understood it. {@code blazeTree} declared a
+     * {@code blockBounds} that parsed perfectly and that no archetype asked for, and
+     * this is the shape of that.
+     */
+    @Test
+    void leavesAParsedStructureUnreadUntilSomethingConsultsIt() {
+        XieFileReader.Result result = read(TOMATO);
+        BlockDef bush = result.blocks().get("tomatoBush");
+
+        assertEquals(java.util.Set.of("drops", "blockbounds"), bush.props().unconsumedStructures());
+        assertTrue(bush.props().untouchedKeys().containsAll(List.of("drops", "blockbounds")));
+
+        bush.bounds();
+        assertEquals(java.util.Set.of("drops"), bush.props().unconsumedStructures());
+        bush.drops();
+        assertTrue(bush.props().unconsumedStructures().isEmpty());
+    }
+
+    /**
+     * {@code sheds} is a {@code tree}'s alone — {@code JobBlock} reads it in
+     * {@code doTree} and nowhere else — so a definition declaring it on anything else
+     * loses it, and the report is the only thing that will ever say so.
+     */
+    @Test
+    void reportsAShedsNoArchetypeWillRead() {
+        XieFileReader.Result result = read("""
+            { "blocks": { "b": { "name": "B", "type": "basic",
+                "sheds": { "apple": { "chance": 20 } } } } }
+            """);
+        BlockDef block = result.blocks().get("b");
+        assertEquals(java.util.Set.of("sheds"), block.props().unconsumedStructures());
+    }
+
+    /**
+     * A {@code blocks} map is a {@code stick}'s, exactly as it was in
+     * {@code JobItem.doStick}. On anything else the entries parse and are handed to
+     * nobody.
+     */
+    @Test
+    void reportsABlocksMapNoArchetypeWillRead() {
+        XieFileReader.Result result = read("""
+            { "items": { "i": { "name": "I", "type": "food",
+                "blocks": { "netherStalk": { "etherWart": { "chance": 2 } } } } } }
+            """);
+        ItemDef item = result.items().get("i");
+        assertEquals(java.util.Set.of("blocks"), item.props().unconsumedStructures());
+
+        assertEquals(1, item.blockDrops().size());
+        assertTrue(item.props().unconsumedStructures().isEmpty());
+    }
+
+    /**
+     * A key that parsed into nothing is settled by the reader, which has already
+     * reported whatever was wrong with it. {@code zombiePigmelonStem} writes
+     * {@code "tex": "#melonstem"} — a string where the format wants an object — and
+     * that is one diagnostic, not a diagnostic and a report line as well.
+     */
+    @Test
+    void doesNotDeferAStructureThatParsedIntoNothing() {
+        XieFileReader.Result result = read("""
+            { "blocks": { "zombiePigmelonStem": {
+                "name": "Zombie Pigmelon Stem", "type": "stem",
+                "grows": "zombiePigmelon", "tex": "#melonstem" } } }
+            """);
+        BlockDef stem = result.blocks().get("zombiePigmelonStem");
+        assertEquals(1, diagnostics.warnings().size());
+        assertTrue(stem.tex().isEmpty());
+        assertTrue(stem.props().unconsumedStructures().isEmpty());
+        assertFalse(stem.props().untouchedKeys().contains("tex"));
+    }
+
+    /**
+     * A definition's own texture keys are one structure however they are written:
+     * flat, as every item writes them, or nested in {@code tex}, as a block does.
+     */
+    @Test
+    void treatsFlatAndNestedTextureKeysAsOneStructure() {
+        XieFileReader.Result result = read(TOMATO);
+        ItemDef tomato = result.items().get("tomato");
+
+        assertEquals(java.util.Set.of("texfile", "icon"), tomato.props().unconsumedStructures());
+        tomato.tex();
+        assertTrue(tomato.props().unconsumedStructures().isEmpty());
+    }
+
+    // -- _wip/steel/steel.json -------------------------------------------------
 
     /**
      * A declaration the reader refuses is in none of the lists it returns, so it
      * would otherwise be missing from every count the registrar and the emitters
-     * keep. {@code steel.xie} writes {@code contents} where {@code JobRecipe} read
+     * keep. {@code steel.json} writes {@code contents} where {@code JobRecipe} read
      * {@code content}, which failed the job outright in 1.6 and fails here — but it
      * failed three of six recipes while the pack reported one recipe not emitted.
      */

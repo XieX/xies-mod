@@ -12,7 +12,7 @@ class LegacyBlockIdsTest {
 
     @Test
     void resolvesTheIdsSaltDeclares() {
-        // salt.xie says "spawnsNear": "8,9" and "spawnsUnder": 0, which is the whole
+        // salt.json says "spawnsNear": "8,9" and "spawnsUnder": 0, which is the whole
         // reason this table exists.
         assertEquals(Optional.of("water"), LegacyBlockIds.path("8"));
         assertEquals(Optional.of("water"), LegacyBlockIds.path("9"));

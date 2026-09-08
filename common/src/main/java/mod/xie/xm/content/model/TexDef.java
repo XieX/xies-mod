@@ -51,6 +51,18 @@ public record TexDef(Optional<String> sheet, Map<String, MetaMap<Integer>> faces
         return sheet.isEmpty() && faces.isEmpty() && base.isEmpty();
     }
 
+    /**
+     * Whether this says anything about a drawing of its own, as opposed to only
+     * naming a {@code textureBase} to borrow one from.
+     *
+     * <p>The two halves have different consumers — the sprites are copied or cut for
+     * every registered block and item, and the base is read by the cube models alone —
+     * so they are tracked apart. See {@link BlockDef#textureBase()}.
+     */
+    public boolean hasSprites() {
+        return sheet.isPresent() || !faces.isEmpty();
+    }
+
     public Optional<MetaMap<Integer>> face(String name) {
         return Optional.ofNullable(faces.get(name));
     }

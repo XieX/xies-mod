@@ -145,6 +145,12 @@ public final class ResourceNames {
             case "bucketmilk", "milk" -> "milk_bucket";
             case "bucketempty" -> "bucket";
 
+            // 1.6 had one "mushroom" (the brown one, block id 39) and a separate
+            // "redMushroom"; NameMapFile lists both spellings of each. Unmapped,
+            // "mushroom" resolved to an id nothing registers.
+            case "mushroom", "brownmushroom", "mushroombrown" -> "brown_mushroom";
+            case "redmushroom", "mushroomred" -> "red_mushroom";
+
             case "cocoabeans" -> "cocoa_beans";
             case "seeds_melon", "melonseeds" -> "melon_seeds";
             case "seeds_pumpkin", "pumpkinseeds" -> "pumpkin_seeds";
@@ -201,12 +207,12 @@ public final class ResourceNames {
      * than {@code woodenPickaxe}.
      *
      * <p>The same convention as the ores above, and for the same reason — these are
-     * {@code Item}'s own field names, which is what a {@code .xie} file could name.
-     * {@code survivalpickaxe.xie} overrides two of them. The iron tier was spelt
+     * {@code Item}'s own field names, which is what a definition file could name.
+     * {@code survivalpickaxe.json} overrides two of them. The iron tier was spelt
      * {@code Steel} in 1.6, so both spellings answer, on the same grounds
      * {@link PotionNames} takes both spellings of an effect.
      *
-     * <p>Note that the content is not consistent about this: {@code cullStoneTools.xie}
+     * <p>Note that the content is not consistent about this: {@code cullStoneTools.json}
      * writes {@code stonePickaxe}, tier first, which {@link #toPath} already turns into
      * the modern id without help.
      *

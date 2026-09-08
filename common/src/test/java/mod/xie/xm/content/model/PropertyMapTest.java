@@ -17,7 +17,7 @@ class PropertyMapTest {
         return PropertyMap.of(new Gson().fromJson(json, JsonObject.class));
     }
 
-    /** {@code ultimatefist.xie}, which is the one declaration of the property. */
+    /** {@code ultimatefist.json}, which is the one declaration of the property. */
     private static final String ULTIMATE_FIST = """
         { "transforms": { "stone": "goldBlock", "dirt": "air" } }
         """;

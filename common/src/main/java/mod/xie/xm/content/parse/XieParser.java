@@ -8,6 +8,7 @@ import mod.xie.xm.content.model.RecipeDef;
 import mod.xie.xm.content.model.SpawnDef;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -15,6 +16,7 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -26,23 +28,33 @@ import java.util.stream.Stream;
 /**
  * Loads a content pack directory into a {@link ContentPack}.
  *
- * <p>A pack root contains {@code .xie} definition files at any depth, optional
- * {@code .xid} and {@code .loc} files, and a {@code textures/} tree. Files and
+ * <p>A pack root contains definition files at any depth, optional {@code .xid} and
+ * {@code .loc} files, and a {@code textures/} tree. A definition file is JSON and
+ * is named {@code .json}; the older {@code .xie} extension is the same format under
+ * a different name and is still read, so existing packs keep working unchanged. Files and
  * directories whose name starts with {@code _} are skipped — that is the
  * convention the existing content already uses for work in progress
- * ({@code _wip/}, {@code _plox_update/}, {@code _campfire.xie}).
+ * ({@code _wip/}, {@code _plox_update/}, {@code _campfire.json}).
  *
  * <p>Files are visited in sorted order so a pack always parses identically,
  * which matters because later declarations win on conflict.
  */
 public final class XieParser {
 
+    /** The definition file extension. */
+    public static final String JSON_EXTENSION = ".json";
+    /** The definition file extension before the format admitted it was JSON. */
     public static final String XIE_EXTENSION = ".xie";
     public static final String XID_EXTENSION = ".xid";
     public static final String LOC_EXTENSION = ".loc";
 
     /** Directory under the game directory that user content packs live in. */
     public static final String CONTENT_DIR_NAME = "xiecontent";
+
+    /** The JSON Schema describing a definition file, as a classpath resource. */
+    public static final String SCHEMA_RESOURCE = "/xie-content.schema.json";
+    /** The file name the schema is installed under, next to the packs. */
+    public static final String SCHEMA_FILE_NAME = "xie-content.schema.json";
 
     /**
      * @param pack        everything the pack declared that the reader could use
@@ -77,6 +89,27 @@ public final class XieParser {
         return results;
     }
 
+    /**
+     * Writes the schema into {@code container}, next to the packs, so a definition
+     * file can point its editor at it with {@code "$schema": "../xie-content.schema.json"}.
+     *
+     * <p>Overwritten on every call, because the schema tracks this build of the mod
+     * and an author who upgrades should see the new properties, not last year's.
+     *
+     * @return where it was written
+     */
+    public static Path installSchema(Path container) throws IOException {
+        Path target = container.resolve(SCHEMA_FILE_NAME);
+        try (InputStream in = XieParser.class.getResourceAsStream(SCHEMA_RESOURCE)) {
+            if (in == null) {
+                throw new IOException("schema resource " + SCHEMA_RESOURCE + " is not on the classpath");
+            }
+            Files.createDirectories(container);
+            Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+        }
+        return target;
+    }
+
     /** Parses one pack directory. Never throws for content problems, only for IO. */
     public static ParseResult parsePack(Path root) throws IOException {
         Diagnostics diagnostics = new Diagnostics();
@@ -106,7 +139,7 @@ public final class XieParser {
             String lower = file.getFileName().toString().toLowerCase(Locale.ROOT);
             String text = readText(file, relative, diagnostics);
 
-            if (lower.endsWith(XIE_EXTENSION)) {
+            if (isDefinitionFile(lower)) {
                 String basename = stripExtension(file.getFileName().toString());
                 XieFileReader.Result result = xieReader.read(relative, basename, new StringReader(text));
                 rejected += result.rejected();
@@ -206,9 +239,14 @@ public final class XieParser {
 
     private static boolean isContentFile(Path path) {
         String name = path.getFileName().toString().toLowerCase(Locale.ROOT);
-        return name.endsWith(XIE_EXTENSION)
+        return isDefinitionFile(name)
             || name.endsWith(XID_EXTENSION)
             || name.endsWith(LOC_EXTENSION);
+    }
+
+    /** @param lowerName a file name already lower-cased */
+    private static boolean isDefinitionFile(String lowerName) {
+        return lowerName.endsWith(JSON_EXTENSION) || lowerName.endsWith(XIE_EXTENSION);
     }
 
     private static String relativise(Path root, Path file) {

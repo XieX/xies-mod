@@ -9,7 +9,7 @@ import java.util.Optional;
 /**
  * A value that may vary per metadata value.
  *
- * <p>Covers both shapes the {@code .xie} format allows for the same property:
+ * <p>Covers both shapes the content format allows for the same property:
  *
  * <pre>
  *   "blockBounds": "0,0,0,1,0.2,1"                  -&gt; uniform
