@@ -1235,8 +1235,10 @@ Other systems
 -------------
 
 - **Biome words with no modern counterpart** — `marsh` and `shrubland` came from the
-  biome mods of 2013 and nothing tags anything as either, so `shrub` reaches two of
-  its four declared biomes. `BiomeNames` is where a mapping would go.
+  biome mods of 2013 and nothing tags anything as either. Each takes its nearest
+  neighbour in `BiomeNames`: a marsh is a wetland and joins `#c:is_swamp`, and a
+  shrubland is dry open scrub and joins `#c:is_savanna`. The wild shrubs, which
+  declared both, now reach every biome they asked for rather than two of four.
 - **`seed` is `seeds`, and always was.** `JobItem.doWork` dispatched
   `subtype.equals("seeds") || subtype.equals("seed")` to one `doSeeds`. Only
   `cheese.json` and `zombie_pigmelon.json` write the singular, both in deferred packs,
@@ -1258,9 +1260,9 @@ Other systems
   culls:
   - `weapons/` and `ultimatefist/` add 7 items and 7 recipes and skip nothing.
   - `SurvivalTweaks/` and `_wheatOverride.json` add the two pickaxe overrides, the
-    wheat loot table, 10 recipes and the five stone-tool culls, and skip one more
-    recipe — `tweaks@furnace`, whose `clayBlock` is a 1.6 name the rename table does
-    not answer for.
+    wheat loot table, 11 recipes and the five stone-tool culls, and skip nothing —
+    `tweaks@furnace` names `clayBlock`, which was the one 1.6 name the rename
+    table did not answer for, and is `minecraft:clay` in it now.
   - `nether_crops/` adds 6 blocks from 5 definitions, 5 items from 3, 3 loot tables,
     5 recipes, 2 block tags and a tree, and skips exactly one thing: the `nethwerwart`
     typo in the sticks section above. Its `spikey` and its `fertilisable: false` were
@@ -1303,7 +1305,7 @@ The acceptance run
 ------------------
 
 Moved to [TESTING.md](TESTING.md), which is where it belongs: this file is temporary
-and the run is not. What each of the twelve checks measures, the three rules they
+and the run is not. What each of the fourteen checks measures, the three rules they
 follow, what the run arranges and puts back, what it found on its first day and where
 it does not reach are all there, along with the working notes below that were about
 driving the game rather than about the port.
@@ -1486,8 +1488,10 @@ left here is what the port itself cost time on, with the file that encodes each 
   distance `salt.json` asks for and 2197 at `Spawnable`'s default of 6. The emitter
   caps the radius, which only ever makes the test stricter.
 - **The run directory holds a copy of the content**, at
-  `neoforge/run/xiecontent/mod-content`. It does not track edits to `../mod-content`
-  — re-sync it after changing content.
+  `neoforge/run/xiecontent/mod-content`. It does not track edits to `../mod-content`,
+  and the bundled copy is never extracted over it — delete the directory and the next
+  launch installs the bundled content fresh from the build's own copy, which is the
+  re-sync.
 - **A block spritesheet is cut the same way an item one is.** The slicer used to be
   item-only, because the pack that needed it (`weapons`) has only items; `nether_crops`
   ships one sheet with a `sides` and an `ends` per block and no per-sprite PNGs, so

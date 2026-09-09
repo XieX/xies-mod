@@ -4,7 +4,7 @@ xies-mod
 Xie's content engine for Minecraft. Define blocks, items and recipes in plain text
 files rather than in Java.
 
-Currently being ported from Minecraft 1.6.2 (2013) to NeoForge.
+Ported from Minecraft 1.6.2 (2013) to NeoForge.
 
 Layout
 ------
@@ -17,22 +17,21 @@ Layout
 | `acceptance/` | The acceptance run: one command that starts a server, joins a client and asserts the behaviours a datapack cannot show. |
 
 Content lives in a separate repository so that packs can be written without using
-any of this one's content. The parser expects it beside this checkout at
-`../mod-content`, and at runtime reads packs from `<gamedir>/xiecontent/`.
+any of this one's content. The build expects it beside this checkout at
+`../mod-content` and bundles it into the jar, so one download is the whole mod. At
+runtime the mod reads packs from `<gamedir>/xiecontent/`, and the first launch that
+finds no `mod-content/` there extracts the bundled one. It is never overwritten
+after that: the content is opt-out, so deleting a definition file or renaming a
+directory with a leading underscore leaves that content out for good, and a newer
+jar over an older install says so in the log rather than putting anything back.
+Move the directory away and relaunch to take the new content.
 
 Building
 --------
 
 Needs **JDK 25** (Minecraft 26.1+ ships Java 25 to players, so mods target it).
 
-The Gradle wrapper jar is not committed yet. Generate it once with a system
-Gradle 9.2.1, or let your IDE do it when it imports the project:
-
-```bash
-gradle wrapper --gradle-version 9.2.1
-```
-
-Then:
+The Gradle wrapper is committed, so:
 
 ```bash
 ./gradlew :common:test
@@ -211,9 +210,10 @@ ids, so a pack said `"biomes": "swamp"` and the engine matched that against the
 biome's display name, which caught other mods' swamps by accident. Biome tags are
 the modern form of that accident, so a biome word maps to a `c:` tag wherever one
 exists — a mod that tags its own swamp gets wild tomatoes without either side
-knowing about the other. Two words have no modern counterpart at all: `marsh` and
-`shrubland` were biomes from the mod packs of the day, and nothing tags anything as
-either.
+knowing about the other. Two words have no modern counterpart of their own: `marsh`
+and `shrubland` were biomes from the mod packs of the day, and nothing tags anything
+as either, so each takes its nearest neighbour — a marsh joins the swamps and a
+shrubland the savannas.
 
 Aliases are the clearest win from the port. `$salady` used to be expanded into the
 cartesian product of concrete recipes at load time, turning one sammich recipe with
@@ -318,7 +318,7 @@ number was verified constantly and every *behaviour* exactly once, by hand, and 
 never again. A datapack can be validated by loading it; a stem fruiting, a tree
 dropping its fruit, bone meal being refused and a sickle spending durability cannot.
 So `acceptance/run.py` starts the server, joins a real client to it, and asserts them
-— sixty-nine assertions in under three minutes, pass or fail per assertion, non-zero
+— a hundred and one assertions in about three and a half minutes, pass or fail per assertion, non-zero
 exit on failure. It exists because there is no other way to ask: no command right-clicks a
 block, so a `useOn` needs synthetic input at a focused game window, and nothing
 random-ticks or scheduled-ticks at all unless a player is standing there, forceloading
@@ -328,7 +328,7 @@ It earned itself on the first day, on a tree that was supposed to stop shedding 
 eight of its apples were lying under it and turned out to shed a ninth about two times
 in five. That is the kind of failure verifying a behaviour once cannot find: watching
 a tree shed proves that it sheds, and watching it stop proves nothing until you have
-watched it fail to stop. [TESTING.md](TESTING.md) has the twelve checks, what each one
+watched it fail to stop. [TESTING.md](TESTING.md) has the fourteen checks, what each one
 is really measuring, and the rules they are written to.
 
 Every archetype the content uses is now ported, which changes what is left to find:
@@ -386,3 +386,10 @@ is its block model shown as a cube. The emitter picks between them by the block'
 now. Doing it one way for both worked for a block with a single texture and named a
 sprite that does not exist for one with a face per side — found by running two such
 blocks side by side for the first time.
+
+Licence
+-------
+
+The engine is [MIT](LICENSE). The content packs live in the separate content
+repository and are Creative Commons Attribution 4.0 (CC BY 4.0), because
+definition files and textures are closer to art than to software.

@@ -141,6 +141,8 @@ class ResourceNamesTest {
         assertEquals("sandstone", ResourceNames.toVanillaPath(ItemRef.parse("sandStone")));
         assertEquals("smooth_stone_slab", ResourceNames.toVanillaPath(ItemRef.parse("stoneSlab")));
         assertEquals("netherrack", ResourceNames.toVanillaPath(ItemRef.parse("hellrock")));
+        // SurvivalTweaks' furnace recipe, the one 1.6 block name that was still unmapped.
+        assertEquals("clay", ResourceNames.toVanillaPath(ItemRef.parse("clayBlock")));
         // A sword's canCut list, which defaults to exactly this one block.
         assertEquals("cobweb", ResourceNames.toVanillaPath(ItemRef.parse("web")));
         assertEquals("powered_rail", ResourceNames.toVanillaPath(ItemRef.parse("goldenRail")));

@@ -26,7 +26,9 @@ from .rcon import Rcon
 
 #: The five deferred packs the baseline counts are quoted against, and where
 #: each one lives inside the content repo. ``_wip/steel`` sits one level deeper
-#: than the rest.
+#: than the rest. They are taken from the source repo beside this checkout, not
+#: from the copy the mod installs into ``xiecontent/``: the jar bundles the live
+#: content only, so an underscored directory is never there to copy.
 DEFERRED_PACKS = {
     "weapons": "_plox_update/weapons",
     "ultimatefist": "_plox_update/ultimatefist",
@@ -140,9 +142,16 @@ class Session:
                 shutil.rmtree(world)
 
     def _arrange_packs(self):
-        content_repo = os.path.join(self.content_dir, "mod-content")
+        content_repo = os.path.join(os.path.dirname(self.repo), "mod-content")
         if not os.path.isdir(content_repo):
-            raise SessionError("no content at %s" % content_repo)
+            raise SessionError("no content repo at %s" % content_repo)
+
+        # The live content itself needs no arranging: the server installs the
+        # bundled copy on the first launch that finds none, and never touches one
+        # that is there.
+        if not os.path.isdir(os.path.join(self.content_dir, "mod-content")):
+            say("no mod-content in %s; the server will install the bundled copy"
+                % self.content_dir)
 
         for pack, source in DEFERRED_PACKS.items():
             target = os.path.join(self.content_dir, pack)

@@ -32,8 +32,8 @@ python acceptance/run.py
 It starts the server, joins a client, asserts a fixed list of in-game behaviours and
 prints pass or fail for each with a summary, exiting non-zero if anything failed.
 A hundred and one assertions, about three and a half minutes end to end, unattended. `--list`
-names the checks, `--only <name>` runs one, `--no-client` runs the two that rcon can
-answer alone, and a failure presses `F2` and names the screenshot.
+names the checks, `--only <name>` runs one, `--no-client` runs the one check that
+needs no player — `counts` — and a failure presses `F2` and names the screenshot.
 
 It needs Python 3 and a Windows desktop whose foreground it can take, because a
 `useOn` is a real right-click at a real window and there is no command for it.

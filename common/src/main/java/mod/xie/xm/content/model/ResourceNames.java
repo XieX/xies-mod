@@ -183,6 +183,10 @@ public final class ResourceNames {
             case "stonebrick" -> "stone_bricks";
             case "stonemoss", "cobblestonemossy" -> "mossy_cobblestone";
             case "hellrock" -> "netherrack";
+            // 1.6 spent two names on clay: the item was "clay" and the block
+            // "clayBlock". The block is minecraft:clay now, so the bare word keeps
+            // resolving to it untouched and only the block's old name needs a row.
+            case "clayblock" -> "clay";
             case "web" -> "cobweb";
             // "slowSand" is Block's own field name and "hellSand" its 1.6 texture
             // name; the nether packs write it the way a player says it.

@@ -18,7 +18,11 @@ nothing culls, and this mod's own red dye, which is what the cull was written to
 make reachable and which the culler spares by namespace.
 """
 
-NEEDS_CLIENT = False
+#: Not for a click: ``/recipe give`` needs a player to give to, and with nobody
+#: online every probe answers "No player was found" — which the culled half reads
+#: as "gone" and the live half as "missing", so the check would half-pass for the
+#: wrong reason rather than fail.
+NEEDS_CLIENT = True
 
 CULLED = [
     ("minecraft:red_dye_from_poppy", "the poppy recipe flowerbushes.json culls"),

@@ -26,6 +26,9 @@ java {
 sourceSets {
     named("main") {
         java.srcDir(layout.projectDirectory.dir("../common/src/main/java"))
+        // And its resources: the content schema lives there, and XieParser copies
+        // it out of the classpath into <gamedir>/xiecontent/ on every launch.
+        resources.srcDir(layout.projectDirectory.dir("../common/src/main/resources"))
     }
 }
 
@@ -91,10 +94,48 @@ val templateProperties = mapOf(
     "mod_description" to property("mod_description")
 )
 
+// The content repo beside this checkout is bundled into the jar, so one download
+// is the whole mod and a fresh install has something to play. It goes under
+// bundled/mod-content/ with an index beside it, because a jar cannot be listed
+// as a directory from the classpath; BundledContent reads the index and extracts
+// the files into <gamedir>/xiecontent/mod-content/ on the first launch that finds
+// none there. Files and directories starting with "_" are the content repo's own
+// work-in-progress convention and the parser would skip them anyway, so they are
+// left out of the jar rather than shipped dead.
+val contentRepo = layout.projectDirectory.dir("../../mod-content")
+val bundledRoot = "bundled"
+val bundledPack = "mod-content"
+
 tasks.named<ProcessResources>("processResources") {
     val replacements = templateProperties
     inputs.properties(replacements)
     from("src/main/templates") {
         expand(replacements)
+    }
+
+    if (contentRepo.asFile.isDirectory) {
+        from(contentRepo) {
+            into("$bundledRoot/$bundledPack")
+            exclude("**/_*", "**/_*/**", ".git/**", ".gitignore", "**/.DS_Store", "**/Thumbs.db")
+        }
+    } else {
+        logger.warn("No content repo at ${contentRepo.asFile}; the jar will carry no bundled content")
+    }
+
+    val version = templateProperties["mod_version"].toString()
+    val root = bundledRoot
+    val pack = bundledPack
+    doLast {
+        val packDir = destinationDir.resolve(root).resolve(pack)
+        if (!packDir.isDirectory) {
+            return@doLast
+        }
+        val index = packDir.walkTopDown()
+            .filter { it.isFile }
+            .map { it.relativeTo(packDir).invariantSeparatorsPath }
+            .sorted()
+            .joinToString("\n", postfix = "\n")
+        destinationDir.resolve(root).resolve("$pack.index").writeText(index)
+        destinationDir.resolve(root).resolve("$pack.version").writeText(version + "\n")
     }
 }

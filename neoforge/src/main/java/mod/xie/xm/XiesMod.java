@@ -3,6 +3,7 @@ package mod.xie.xm;
 import com.mojang.logging.LogUtils;
 
 import mod.xie.xm.content.model.ContentPack;
+import mod.xie.xm.content.parse.BundledContent;
 import mod.xie.xm.content.parse.Diagnostic;
 import mod.xie.xm.content.parse.XieParser;
 import mod.xie.xm.pack.XiePackProvider;
@@ -91,6 +92,29 @@ public class XiesMod {
             XieParser.installSchema(contentDir);
         } catch (IOException e) {
             LOGGER.warn("Could not write {} into {}", XieParser.SCHEMA_FILE_NAME, contentDir, e);
+        }
+
+        // The content shipped in the jar, extracted on the first launch that finds no
+        // copy and never overwritten after that: a deleted file or an underscored
+        // directory is the user opting out, and an upgrade must not undo it.
+        try {
+            BundledContent.Result bundled = BundledContent.install(contentDir);
+            switch (bundled.outcome()) {
+                case INSTALLED -> LOGGER.info(
+                    "Installed the bundled content pack, version {}, into {} ({} files). "
+                        + "Delete a file, or rename a directory with a leading underscore, "
+                        + "to leave that content out.",
+                    bundled.bundledVersion(), bundled.packDir(), bundled.files());
+                case OUTDATED -> LOGGER.warn(
+                    "{} was installed from version {} and this jar bundles version {}. "
+                        + "It is left as it is; move the directory away and relaunch to "
+                        + "install the new content.",
+                    bundled.packDir(), bundled.installedVersion(), bundled.bundledVersion());
+                case NOT_BUNDLED -> LOGGER.info("This build bundles no content");
+                case PRESENT -> { }
+            }
+        } catch (IOException e) {
+            LOGGER.error("Could not install the bundled content pack into {}", contentDir, e);
         }
 
         List<XieParser.ParseResult> results;

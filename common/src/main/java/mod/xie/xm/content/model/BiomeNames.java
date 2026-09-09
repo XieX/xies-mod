@@ -21,10 +21,12 @@ import java.util.Map;
  * gets wild tomatoes without anyone editing this table. Where no tag fits, a word
  * maps to concrete biome ids instead.
  *
- * <p>Some words have no modern counterpart at all. {@code marsh} and
+ * <p>Two words have no modern counterpart of their own. {@code marsh} and
  * {@code shrubland} were biomes from the mod packs of the day, not from vanilla, and
- * nothing tags anything as either — those entries resolve to nothing, and the caller
- * reports them rather than silently widening the biome list.
+ * nothing tags anything as either. Each takes its nearest neighbour instead: a marsh
+ * is a wetland, so it joins the swamps, and a shrubland is dry open scrub, which is
+ * what a savanna is. A word this table has no row for at all still resolves to
+ * nothing, and the caller reports it rather than silently widening the biome list.
  */
 public final class BiomeNames {
 
@@ -43,6 +45,7 @@ public final class BiomeNames {
         map("plains", "#c:is_plains");
         map("meadow", "minecraft:meadow");
         map("savanna", "#c:is_savanna");
+        map("shrubland", "#c:is_savanna");
         map("forest", "#c:is_forest");
         map("wood", "#c:is_forest");
         map("woods", "#c:is_forest");
@@ -52,6 +55,7 @@ public final class BiomeNames {
         map("junglehills", "#c:is_jungle");
         map("swamp", "#c:is_swamp");
         map("swampland", "#c:is_swamp");
+        map("marsh", "#c:is_swamp");
         map("desert", "#c:is_desert");
         map("deserthills", "#c:is_desert");
         map("taiga", "#c:is_taiga");

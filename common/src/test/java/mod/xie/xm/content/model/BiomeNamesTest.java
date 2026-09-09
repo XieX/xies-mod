@@ -25,11 +25,17 @@ class BiomeNamesTest {
     }
 
     @Test
-    void hasNothingForBiomesVanillaNeverHad() {
-        // Both came from the biome mods of the day; nothing modern tags anything as
-        // either, so they resolve to nothing rather than to something approximate.
-        assertTrue(BiomeNames.modern("marsh").isEmpty());
-        assertTrue(BiomeNames.modern("shrubland").isEmpty());
+    void takesTheNearestNeighbourForBiomesVanillaNeverHad() {
+        // Both came from the biome mods of the day and nothing modern tags anything
+        // as either, so each joins the tag it is closest to: a marsh is a wetland and
+        // a shrubland is dry open scrub.
+        assertEquals(List.of("#c:is_swamp"), BiomeNames.modern("marsh"));
+        assertEquals(List.of("#c:is_savanna"), BiomeNames.modern("shrubland"));
+    }
+
+    @Test
+    void hasNothingForAWordItDoesNotKnow() {
+        assertTrue(BiomeNames.modern("moon").isEmpty());
         assertTrue(BiomeNames.modern("").isEmpty());
         assertTrue(BiomeNames.modern(null).isEmpty());
     }
