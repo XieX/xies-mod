@@ -49,7 +49,7 @@ public final class XieBlockProperties {
         return common(def, properties, 3.5f);
     }
 
-    /** Properties for a plant-like block: no collision, ticks, breaks instantly-ish. */
+    /** Properties for a plant-like block: no collision, ticks, breaks instantly. */
     public static BlockBehaviour.Properties forPlant(BlockDef def) {
         BlockBehaviour.Properties properties = BlockBehaviour.Properties.of()
             .mapColor(mapColorFor(def))
@@ -58,7 +58,7 @@ public final class XieBlockProperties {
             .randomTicks()
             .pushReaction(PushReaction.DESTROY);
 
-        return common(def, properties, 0.15f);
+        return common(def, properties, 0f);
     }
 
     /**
