@@ -8,6 +8,7 @@ import mod.xie.xm.block.XieBushBlock;
 import mod.xie.xm.block.XieCropBlock;
 import mod.xie.xm.block.XieLogBlock;
 import mod.xie.xm.block.XiePlantBlock;
+import mod.xie.xm.block.XieRipeningBlock;
 import mod.xie.xm.block.XieSaplingBlock;
 import mod.xie.xm.block.XieStoveBlock;
 import mod.xie.xm.block.XieStoveBlockEntity;
@@ -27,6 +28,7 @@ import mod.xie.xm.content.model.ResourceNames;
 import mod.xie.xm.content.model.TreeShape;
 import mod.xie.xm.content.model.Variants;
 import mod.xie.xm.item.XieBowItem;
+import mod.xie.xm.item.XieSeedItem;
 import mod.xie.xm.item.XieStickItem;
 import mod.xie.xm.item.XieToolItem;
 
@@ -95,7 +97,8 @@ public final class XieRegistrar {
 
     /** Block archetypes this build can register. Grows as archetypes are ported. */
     private static final Set<String> SUPPORTED_BLOCKS =
-        Set.of("bush", "plant", "crop", "basic", "sapling", "tree", "log", "stem", "stove");
+        Set.of("bush", "plant", "crop", "basic", "sapling", "tree", "log", "stem", "stove",
+            "ripening");
 
     /** The one archetype that is a block entity, and the first in the port to be one. */
     private static final String STOVE = "stove";
@@ -115,12 +118,19 @@ public final class XieRegistrar {
     private static final String STEM = "stem";
 
     /**
+     * Ages like a growing block and is none of them: solid, needing neither light nor
+     * soil, and becoming another block when ripe. See {@link XieRipeningBlock}.
+     */
+    private static final String RIPENING = "ripening";
+
+    /**
      * Item archetypes this build can register.
      *
      * <p>{@code seed} and {@code seeds} are the same archetype and always were:
      * {@code JobItem.doWork} dispatched {@code subtype.equals("seeds") ||
-     * subtype.equals("seed")} to one {@code doSeeds}. Only {@code cheese.json} and
-     * {@code zombie_pigmelon.json} write the singular, which is why it went unnoticed.
+     * subtype.equals("seed")} to one {@code doSeeds}. Only {@code zombie_pigmelon.json}
+     * writes the singular, and {@code cheese.json} did until it went live, which is why
+     * it went unnoticed.
      */
     private static final Set<String> SUPPORTED_ITEMS =
         Set.of("basic", "food", "seeds", "seed", "tool", "sword", "bow", "stick");
@@ -329,6 +339,15 @@ public final class XieRegistrar {
             // Only a growing block has an age property, and the emitters key their
             // blockstate variants and loot conditions off exactly that.
             maxAges.put(path, config.maxAge());
+        } else if (def.archetype().equals(RIPENING)) {
+            XieRipeningBlock.Config config = ripeningConfig(pack, def);
+            holder = blocks.registerBlock(
+                path,
+                properties -> new XieRipeningBlock(properties, config),
+                properties -> XieBlockProperties.forRipening(def)
+            );
+            // Aged, so it gets a model per stage exactly as a growing block does.
+            maxAges.put(path, config.maxAge());
         } else {
             XieBasicBlock.Config config = basicConfig(pack, def, names, meta);
             holder = blocks.registerBlock(
@@ -400,6 +419,23 @@ public final class XieRegistrar {
 
         return new XiePlantBlock.Config(maxAge, growthRate, growthHeight, growsOn(pack, def),
             boundsFor(def, split, meta), fertilisable, spikey(def));
+    }
+
+    /**
+     * {@code maxGrowth} and {@code growthRate} as a plant reads them, and
+     * {@code growsInto} as a sapling does — the block it becomes — resolved to an id
+     * now and to a block when it first ripens.
+     */
+    private XieRipeningBlock.Config ripeningConfig(ContentPack pack, BlockDef def) {
+        int maxAge = def.props().getInt("maxGrowth", def.impliedMaxMeta());
+        int growthRate = def.props().getInt("growthRate", 100);
+        Optional<String> ripensInto = def.props().getString("growsInto")
+            .map(name -> resolveBlockId(pack, name.trim()));
+        if (ripensInto.isEmpty()) {
+            LOGGER.warn("Block {} is type \"ripening\" but declares no growsInto; "
+                + "it will age through its stages and stop", def.qualifiedName());
+        }
+        return new XieRipeningBlock.Config(maxAge, growthRate, ripensInto);
     }
 
     /**
@@ -1172,8 +1208,12 @@ public final class XieRegistrar {
             return items.registerItem(path, Item::new, properties -> common(pack, def, properties));
         }
 
+        // A container is handed back on planting as well as on crafting; see XieSeedItem.
         return items.registerItem(path,
-            properties -> new BlockItem(target.get(), properties.useItemDescriptionPrefix()),
+            properties -> container(pack, def)
+                .<Item>map(container -> new XieSeedItem(target.get(), container,
+                    properties.useItemDescriptionPrefix()))
+                .orElseGet(() -> new BlockItem(target.get(), properties.useItemDescriptionPrefix())),
             properties -> common(pack, def, properties));
     }
 

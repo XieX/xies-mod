@@ -207,7 +207,8 @@ ways every other Xie block is obtained — and it is also what makes
 `"cookedPorkchop:4": "zombiePigmelon"` a recipe rather than a skip. In 2013 the
 question never arose, because `ModLoader.registerBlock` gave every block an
 `ItemBlock` whether anything needed one or not. Only `cheeseBlock` and
-`zombiePigmelon` declare it, both in deferred packs, so no live count moves.
+`zombiePigmelon` declare it — the first live since cheese was ported, the second
+still in a deferred pack.
 
 Fruit trees
 -----------
@@ -572,6 +573,14 @@ rather than one PNG per sprite — which is the case `TexDef` keeps the indices 
 for. The emitter cuts the sprite out of the sheet when it finds no migrated file:
 sixteen sprites across, tile size from the width, which is how an `Icon` index
 worked. Live content is untouched by this, because it ships both and the file wins.
+
+That is also what `_plox_update/` means. The 2013 "Big ole shuffle" was the 1.5
+texture migration, and every pack still addressing a sheet was parked there to be
+updated rather than left broken — which is why cheese, the one pack in it with
+nothing else wrong, sat there for thirteen years. Porting one out of it is cutting
+its sheet into the per-name files the live content ships, dropping the legacy `id`s
+and moving the definition in; the indices stay, as they do on every live
+definition.
 
 Bows
 ----
@@ -1241,13 +1250,13 @@ Other systems
   declared both, now reach every biome they asked for rather than two of four.
 - **`seed` is `seeds`, and always was.** `JobItem.doWork` dispatched
   `subtype.equals("seeds") || subtype.equals("seed")` to one `doSeeds`. Only
-  `cheese.json` and `zombie_pigmelon.json` write the singular, both in deferred packs,
+  `cheese.json` and `zombie_pigmelon.json` wrote the singular, both in deferred packs,
   which is why a fully ported archetype was skipping definitions with "archetype not
   ported yet" over a spelling. Nothing else in the parser or the emitters keys off the
   literal string — `ItemDef.KNOWN_ARCHETYPES` and `SUPPORTED_ITEMS` were the two
   places, and the switch that dispatches them.
 - **Deferred content** — `_wip/` and `_plox_update/` are skipped by the `_` prefix
-  convention. They contain a steel ore set, cheese, nether crops with a flame tree,
+  convention. They contain a steel ore set, nether crops with a flame tree,
   a zombie pigmelon with a `stem` block, survival tool tweaks, and a `weapons` pack
   whose three swords and three bows all register. Copying a deferred directory into
   `<gamedir>/xiecontent/` as a pack of its own is how it gets exercised, because the
@@ -1270,16 +1279,22 @@ Other systems
     `texFile` looked like a third gap in the content until they turned out to name
     vanilla's own sheet. All three are carried now — see the three sections on them
     above.
-  - `cheese/` adds 1 block from 1 definition, 3 items from 2 — the third is
+  - `cheese/` added 1 block from 1 definition, 3 items from 2 — the third is
     `cheeseBlock`'s item form, since it drops itself — 1 block model, 3 item models,
-    3 textures, 1 loot table and 5 recipes, and **skips nothing at all**. It is the
-    only deferred pack that arrives complete. It contributes `cheeseSlice` to the
+    3 textures, 1 loot table and 5 recipes, and **skipped nothing at all**. It was the
+    only deferred pack that arrived complete, and it is live content now, as
+    `farming/foods/cheese.json`: the cookpot's `soupable` had been naming `cheeseSlice`
+    all along. It contributes `cheeseSlice` to the
     existing `#xiesmod:protein` tag rather than making a fourteenth, and it is the
     pack that carries the first `smelt` written in a `recipes` section rather than as
     a `cooked` on the ingredient — `"bucketOfCheese": {"smelt": "milkBucket"}`, which
     `JobRecipe.doWork` dispatched to `doSmelting` and the reader dispatches the same
-    way. Its two junk recipes are emitted as written, because they are what the file
-    says: `"furnace": "dirt"` really does make a furnace out of one dirt block.
+    way. Its two junk recipes, `"furnace": "dirt"` and `"milkBucket": "dirt,dirt"`,
+    were emitted as written while it was deferred, because they were what the file
+    said; they were test scaffolding, and were dropped when it went live. So was
+    `"cheeseBlock": "bucketOfCheese"`, deliberately: the block is got by pouring the
+    bucket out, which is also what gives the bucket back (see `XieSeedItem`), so it
+    adds 2 recipes now rather than 5.
   - `_wip/steel/` adds 4 blocks from 4 definitions, 10 items from 10, 4 block models,
     10 item models and 2 recipes, and is the pack that earned this session's whole
     reporting pass. Nothing in it is an archetype problem — four `basic` blocks and

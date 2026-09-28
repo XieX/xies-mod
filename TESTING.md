@@ -31,14 +31,14 @@ python acceptance/run.py
 
 It starts the server, joins a client, asserts a fixed list of in-game behaviours and
 prints pass or fail for each with a summary, exiting non-zero if anything failed.
-A hundred and one assertions, about three and a half minutes end to end, unattended. `--list`
+A hundred and eight assertions, about three and a half minutes end to end, unattended. `--list`
 names the checks, `--only <name>` runs one, `--no-client` runs the one check that
 needs no player — `counts` — and a failure presses `F2` and names the screenshot.
 
 It needs Python 3 and a Windows desktop whose foreground it can take, because a
 `useOn` is a real right-click at a real window and there is no command for it.
 
-**The fourteen checks, in descending order of what only a running game can tell you.**
+**The fifteen checks, in descending order of what only a running game can tell you.**
 
 | check | what it asserts |
 |---|---|
@@ -54,6 +54,7 @@ It needs Python 3 and a Windows desktop whose foreground it can take, because a
 | `bows` | `redstoneBow` fires with the button still down, hands back redstone, disallows pickup and burns; the same bow with arrows instead fires nothing; `boneBow` fires nothing until release and its arrow is cold; `blazeBow` fires with an empty inventory and its arrow is creative-only. |
 | `crafter` | A crafter fed the dressed-garden-salad recipe ejects the salad **and** the mayonnaise's bowl, which is `craftRemainder` and which no predicate can see. |
 | `cookpot` | Water starts an empty pot and is refused by one with a base; a carrot in an unfuelled pot is still raw after `cookTime`, and coal cooks it in exactly that; a bowl ladles the meal the tier predicts — one food a Weak Soup, one food and salt a Soup, two foods and salt a Stew — and on an empty or unfinished pot serves nothing and is kept; an apple, which is neither base, food, flavouring nor fuel, moves nothing. |
+| `ripen` | Six fresh cheese blocks, in the dark and on stone, all ripen into cheese blocks — which a plant's light rule would stall for ever. Bone meal from a dispenser does nothing to one and is kept, beside a vanilla sapling that takes it; broken before it ripens it yields nothing, beside a cheese block that drops itself. |
 | `blocks` | A salt deposit broken by hand becomes sand; a shrub comes away with its soil and a salt deposit does not. |
 | `cull` | The poppy and dandelion dye recipes are gone from the recipe registry, and a vanilla recipe nothing culls and this mod's own red dye are still in it. |
 
@@ -78,8 +79,8 @@ tells you something and one that agrees with you:
 
 **What it arranges, and puts back.** The run has to be able to happen on a working
 tree somebody else is using, so `acceptance/rig/session.py` restores every one of
-these afterwards: the five deferred packs are copied into `xiecontent/` and anything
-else in there is moved aside, since a sixth pack would move the counts;
+these afterwards: the four deferred packs are copied into `xiecontent/` and anything
+else in there is moved aside, since a fifth pack would move the counts;
 `server.properties` gets rcon and a flat world of its own called `acceptance-world`,
 so an arena is a fill rather than a landscape and no manual test world is disturbed;
 and `options.txt` gets `pauseOnLostFocus:false`, written while the client is not
@@ -110,7 +111,7 @@ running because a clean exit rewrites the file.
 **Where it does not reach.** Nothing here asserts a sound, a texture or anything else
 on the client's screen — the client is present because the server needs a player, not
 because the run looks at it. The screenshot on failure is evidence for a human, not an
-assertion. `SurvivalTweaks/` is not among the five packs, so the two pickaxe overrides
+assertion. `SurvivalTweaks/` is not among the four packs, so the two pickaxe overrides
 and the wheat loot table are still verified by hand; the culls it declares are not the
 ones the `cull` check uses, which are the live content's own.
 

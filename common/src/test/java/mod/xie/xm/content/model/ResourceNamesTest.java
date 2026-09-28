@@ -90,6 +90,21 @@ class ResourceNamesTest {
     }
 
     /**
+     * Foods added after 1.6 have no legacy name, so content writes the modern id in
+     * camelCase. An alias member that misses is left out of its tag without a word,
+     * so a wrong mapping here quietly drops rabbit from {@code $protein}.
+     */
+    @Test
+    void passesFoodsNewerThanTheFormatThrough() {
+        assertEquals("cooked_rabbit", ResourceNames.toVanillaPath(ItemRef.parse("cookedRabbit")));
+        assertEquals("cooked_mutton", ResourceNames.toVanillaPath(ItemRef.parse("cookedMutton")));
+        assertEquals("cooked_salmon", ResourceNames.toVanillaPath(ItemRef.parse("cookedSalmon")));
+        assertEquals("sweet_berries", ResourceNames.toVanillaPath(ItemRef.parse("sweetBerries")));
+        assertEquals("glow_berries", ResourceNames.toVanillaPath(ItemRef.parse("glowBerries")));
+        assertEquals("beetroot", ResourceNames.toVanillaPath(ItemRef.parse("beetroot")));
+    }
+
+    /**
      * {@code dyePowder} was one id with sixteen damage values, so the subtype is
      * the only thing that says which of sixteen modern items is meant. Content uses
      * {@code dyePowder:1:3} — a count of one, metadata three — for cocoa beans.

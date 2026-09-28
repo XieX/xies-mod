@@ -94,6 +94,16 @@ public final class XieBlockProperties {
     }
 
     /**
+     * Properties for a {@code ripening} block: a basic block that random-ticks.
+     *
+     * <p>It is terrain rather than vegetation — solid, standing on anything — so it
+     * starts from {@link #forBasic} and adds only the ticks it ages on.
+     */
+    public static BlockBehaviour.Properties forRipening(BlockDef def) {
+        return forBasic(def).randomTicks();
+    }
+
+    /**
      * Properties for a {@code log}: vanilla's own log, which the original's was too.
      *
      * <p>{@code XieBlockLog}'s constructor is four calls long — hardness 2.0, a wood

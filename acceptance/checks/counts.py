@@ -14,14 +14,14 @@ import re
 
 NEEDS_CLIENT = False
 
-#: Marker, pattern, and the expected numbers, with all five deferred packs and
+#: Marker, pattern, and the expected numbers, with all four deferred packs and
 #: the live content in ``xiecontent/``.
 BASELINES = [
     (
         "packs",
         r"Xie content: (\d+) packs, (\d+) blocks, (\d+) items, (\d+) recipes",
         ("packs", "block definitions", "item definitions", "recipes"),
-        (6, 27, 75, 121),
+        (5, 28, 75, 118),
     ),
     (
         "declarations rejected",
@@ -34,7 +34,7 @@ BASELINES = [
         r"queued (\d+) blocks and (\d+) items from (\d+) block and (\d+) item definitions, "
         r"and (\d+) items overriding",
         ("blocks", "items", "block definitions", "item definitions", "overrides"),
-        (36, 93, 27, 75, 0),
+        (37, 93, 28, 75, 0),
     ),
     (
         "emitted pack",
@@ -43,7 +43,7 @@ BASELINES = [
         r"(\d+) trees, (\d+) burn times, (\d+) vanilla files overridden",
         ("block models", "item models", "textures", "loot tables", "recipes", "alias tags",
          "block tags", "worldgen features", "trees", "burn times", "vanilla overrides"),
-        (102, 93, 170, 29, 130, 15, 2, 9, 6, 8, 0),
+        (106, 93, 174, 29, 127, 15, 2, 9, 6, 8, 0),
     ),
     (
         # The flame tree, and nothing else: `blazeTree` addresses vanilla's terrain.png

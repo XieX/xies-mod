@@ -70,7 +70,7 @@ to run one, `--no-client` for the subset rcon alone can answer.
 
 It needs Python 3 and a Windows desktop whose foreground it can take, because a
 `useOn` is a real right-click at a real window and there is no command for it. It
-arranges what it needs — the five deferred packs, its own flat world, and
+arranges what it needs — the four deferred packs, its own flat world, and
 `pauseOnLostFocus` — and puts all of it back afterwards. See
 [TESTING.md](TESTING.md) for what each check is measuring, why it is measured that
 way, and what driving Minecraft from a script turns out to cost.
@@ -148,9 +148,12 @@ Port status
 - [x] `stove` — the cookpot, a cauldron over a campfire that turns water, any of a
       dozen ingredients and a seasoning into soup or stew, fed by right-click. The
       port's first block entity, rebuilt from the mod posting rather than from a file
+- [x] `ripening` — a solid block that ages where it stands and becomes another, with
+      no light, soil or bone meal involved. Fresh cheese poured from a bucket turns
+      into a cheese block about a day later. New in the port rather than ported
 
-Seventeen distinct archetypes appear across the content repo, deferred packs included,
-and sixteen of them register. The one that does not is `furnace`, which is content
+Eighteen distinct archetypes appear across the content repo, deferred packs included,
+and seventeen of them register. The one that does not is `furnace`, which is content
 this port dropped rather than an archetype it cannot build — see the table below. See
 [PORTING.md](PORTING.md) for the full breakdown and the version-specific gotchas
 worth not rediscovering.
@@ -187,6 +190,12 @@ property, the per-stage collision boxes, where the block may be planted, how tal
 stacks, and bone meal. A bush is a plant that regrows when you pick it instead of
 being destroyed; a crop is a plant that grows faster on well-tended farmland. That
 is the whole difference, and it is one overridden method each.
+
+A `ripening` block ages too, and is deliberately not one of them. A plant is
+vanilla's `VegetationBlock` — walk-through, rooted in soil, needing light — and every
+rule it adds is a plant's. Fresh cheese is a solid block on a cellar floor, so the
+two share only the age property, through a small helper, and `growthRate` means the
+same thing in both.
 
 Fruit trees are the mod's most distinctive content — vanilla still has none — and
 they cost less code than anything else in it. The 2013 engine carried three tree

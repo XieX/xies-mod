@@ -54,7 +54,10 @@ public record BlockDef(
         // Not one of JobBlock's sixteen. The 2013 stove was lost with the Cooking
         // Mod pack, so this archetype is rebuilt from the mod posting rather than
         // ported: see XieStoveBlockEntity for the recipe table it describes.
-        "stove"
+        "stove",
+        // New in the port: a solid block that ages in place and becomes another,
+        // which is how fresh cheese turns into a cheese block. See XieRipeningBlock.
+        "ripening"
     );
 
     /**

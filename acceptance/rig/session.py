@@ -24,7 +24,7 @@ import time
 from . import winput
 from .rcon import Rcon
 
-#: The five deferred packs the baseline counts are quoted against, and where
+#: The four deferred packs the baseline counts are quoted against, and where
 #: each one lives inside the content repo. ``_wip/steel`` sits one level deeper
 #: than the rest. They are taken from the source repo beside this checkout, not
 #: from the copy the mod installs into ``xiecontent/``: the jar bundles the live
@@ -33,7 +33,6 @@ DEFERRED_PACKS = {
     "weapons": "_plox_update/weapons",
     "ultimatefist": "_plox_update/ultimatefist",
     "nether_crops": "_plox_update/nether_crops",
-    "cheese": "_plox_update/cheese",
     "steel": "_wip/steel",
 }
 

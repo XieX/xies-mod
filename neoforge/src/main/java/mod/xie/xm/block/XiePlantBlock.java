@@ -86,7 +86,7 @@ public class XiePlantBlock extends VegetationBlock implements BonemealableBlock 
                          boolean fertilisable, boolean spikey) {
 
         public Config {
-            maxAge = Math.clamp(maxAge, 1, 15);
+            maxAge = XieAges.clamp(maxAge);
             growthRate = Math.max(1, growthRate);
             growthHeight = Math.max(1, growthHeight);
             growsOn = Set.copyOf(growsOn);
@@ -105,45 +105,19 @@ public class XiePlantBlock extends VegetationBlock implements BonemealableBlock 
     public static final MapCodec<XiePlantBlock> CODEC =
         simpleCodec(properties -> new XiePlantBlock(properties, Config.PLACEHOLDER));
 
-    /**
-     * One {@code age} property per maximum value. A blockstate property has to be
-     * created before {@link #createBlockStateDefinition} runs, which happens inside
-     * the superclass constructor — before any instance field is assigned — so the
-     * property cannot simply be built from the config in the constructor body.
-     */
-    private static final IntegerProperty[] AGE_PROPERTIES = new IntegerProperty[16];
-
-    static {
-        for (int max = 1; max < AGE_PROPERTIES.length; max++) {
-            AGE_PROPERTIES[max] = IntegerProperty.create("age", 0, max);
-        }
-    }
-
-    /** Carries the max age into {@link #createBlockStateDefinition}. See above. */
-    private static final ThreadLocal<Integer> PENDING_MAX_AGE = new ThreadLocal<>();
-
     private final Config config;
     private final IntegerProperty ageProperty;
     private final List<VoxelShape> shapesByAge;
 
+    /** The age property is built before this constructor's body runs; see {@link XieAges}. */
     public XiePlantBlock(BlockBehaviour.Properties properties, Config config) {
-        super(prime(properties, config.maxAge()));
-        PENDING_MAX_AGE.remove();
+        super(XieAges.prime(properties, config.maxAge()));
+        XieAges.clear();
 
         this.config = config;
-        this.ageProperty = AGE_PROPERTIES[config.maxAge()];
+        this.ageProperty = XieAges.property(config.maxAge());
         this.shapesByAge = buildShapes(config);
         registerDefaultState(this.stateDefinition.any().setValue(this.ageProperty, 0));
-    }
-
-    /**
-     * Publishes the max age just before {@code super(...)} is entered. Argument
-     * expressions are evaluated before the superclass constructor runs, so the
-     * value is in place by the time {@link #createBlockStateDefinition} asks.
-     */
-    private static BlockBehaviour.Properties prime(BlockBehaviour.Properties properties, int maxAge) {
-        PENDING_MAX_AGE.set(Math.clamp(maxAge, 1, 15));
-        return properties;
     }
 
     private static List<VoxelShape> buildShapes(Config config) {
@@ -187,8 +161,7 @@ public class XiePlantBlock extends VegetationBlock implements BonemealableBlock 
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        Integer max = PENDING_MAX_AGE.get();
-        builder.add(AGE_PROPERTIES[max == null ? 1 : max]);
+        builder.add(XieAges.pending());
     }
 
     @Override

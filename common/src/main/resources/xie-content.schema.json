@@ -186,7 +186,8 @@
       "anyOf": [
         {
           "enum": ["basic", "plant", "crop", "stem", "grass", "chest", "bush", "tree", "log",
-                   "sapling", "furnace", "mounted", "facing", "pane", "fence", "glass", "stove"]
+                   "sapling", "furnace", "mounted", "facing", "pane", "fence", "glass", "stove",
+                   "ripening"]
         },
         { "type": "string" }
       ]
@@ -225,8 +226,8 @@
         "growsOn": { "description": "Blocks this may be planted on, e.g. \"farmland,dirt,grass\".", "$ref": "#/definitions/refList" },
         "growthRate": { "description": "Chance, in one part per N random ticks, of advancing a stage.", "$ref": "#/definitions/int" },
         "growthHeight": { "description": "crop: how many blocks tall it grows.", "$ref": "#/definitions/int" },
-        "maxGrowth": { "description": "Highest growth stage.", "$ref": "#/definitions/int" },
-        "growsInto": { "description": "sapling: the tree it becomes.", "$ref": "#/definitions/itemRef" },
+        "maxGrowth": { "description": "Highest growth stage, or ripening stage.", "$ref": "#/definitions/int" },
+        "growsInto": { "description": "sapling: the tree it becomes. ripening: the block it becomes once ripe.", "$ref": "#/definitions/itemRef" },
         "fertilisable": { "description": "Whether bone meal works on it.", "$ref": "#/definitions/boolean" },
         "fertilizable": { "description": "Same as fertilisable.", "$ref": "#/definitions/boolean" },
         "grows": { "description": "stem: the fruit block it grows beside.", "$ref": "#/definitions/itemRef" },
