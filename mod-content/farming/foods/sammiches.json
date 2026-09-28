@@ -4,7 +4,7 @@
     "snackSammich": {
       "name": "Snack Sammich",
       "type": "food",
-      "hunger": 10,
+      "hunger": 6,
       "nourishment": 0.6,
       "texFile": "xie_foods.png",
       "icon": 0
@@ -12,16 +12,16 @@
     "sammich": {
       "name": "Sammich",
       "type": "food",
-      "hunger": 12,
-      "nourishment": 0.8,
+      "hunger": 8,
+      "nourishment": 0.7,
       "texFile": "xie_foods.png",
       "icon": 1
     },
     "tastySammich": {
       "name": "Tasty Sammich",
       "type": "food",
-      "hunger": 14,
-      "nourishment": 0.9,
+      "hunger": 10,
+      "nourishment": 0.8,
       "texFile": "xie_foods.png",
       "icon": 2
     }
@@ -80,15 +80,15 @@
       "content": "bread,bread,bread,bread,$protein,$saucy"
     },
     "sammichSX": {
-      "product": "sammich:4",
+      "product": "snackSammich:4",
       "content": "bread,bread,bread,bread,$salady,$saucy"
     },
     "sammichX": {
-      "product": "sammich:2",
+      "product": "snackSammich:2",
       "content": "bread,bread,$saucy"
     }
   },
   "aliases": {
-    "protein": "porkchopCooked,beefCooked,chickenCooked,fishCooked"
+    "protein": "porkchopCooked,beefCooked,chickenCooked,fishCooked,cookedSalmon,cookedMutton,cookedRabbit"
   }
 }

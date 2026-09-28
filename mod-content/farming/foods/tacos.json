@@ -13,56 +13,56 @@
 		"tacoShell": {
 			"name": "Taco Shell",
 			"type": "food",
-			"hunger": 8,
-			"nourishment": 0.8,
+			"hunger": 6,
+			"nourishment": 0.6,
             "texFile": "xie_foods.png",
 			"icon": 33
 		},
 		"tortillaChips": {
 			"name": "Tortilla Chips",
 			"type": "food",
-			"hunger": 8,
-			"nourishment": 0.1,
+			"hunger": 2,
+			"nourishment": 0.3,
             "texFile": "xie_foods.png",
 			"icon": 34
 		},
 		"cornChips": {
 			"name": "Corn Chips",
 			"type": "food",
-			"hunger": 10,
-			"nourishment": 0.1,
+			"hunger": 3,
+			"nourishment": 0.3,
             "texFile": "xie_foods.png",
 			"icon": 35
 		},
 		"snackTaco": {
 			"name": "Snack Taco",
 			"type": "food",
-			"hunger": 12,
-			"nourishment": 0.9,
+			"hunger": 7,
+			"nourishment": 0.7,
             "texFile": "xie_foods.png",
 			"icon": 36
 		},
 		"taco": {
 			"name": "Taco",
 			"type": "food",
-			"hunger": 14,
-			"nourishment": 1.0,
+			"hunger": 9,
+			"nourishment": 0.8,
             "texFile": "xie_foods.png",
 			"icon": 37
 		},
 		"snackBurrito": {
 			"name": "Snack Burrito",
 			"type": "food",
-			"hunger": 12,
-			"nourishment": 0.9,
+			"hunger": 9,
+			"nourishment": 0.7,
             "texFile": "xie_foods.png",
 			"icon": 38
 		},
 		"burrito": {
 			"name": "Burrito",
 			"type": "food",
-			"hunger": 14,
-			"nourishment": 1.0,
+			"hunger": 10,
+			"nourishment": 0.8,
             "texFile": "xie_foods.png",
 			"icon": 39
 		}

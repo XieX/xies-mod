@@ -1,0 +1,49 @@
+{
+  "$schema": "../../_schema/xie-content.schema.json",
+  "blocks": {
+    "cheeseBlock": {
+      "name": "Cheese",
+      "tex": {
+        "texFile": "cheese.png",
+        "all": 0
+      },
+      "drops": "cheeseBlock"
+    },
+    "freshCheese": {
+      "name": "Fresh Cheese",
+      "type": "ripening",
+      "maxGrowth": 3,
+      "growthRate": 600,
+      "growsInto": "cheeseBlock",
+      "hardness": 0.5
+    }
+  },
+  "items": {
+    "cheeseSlice": {
+      "name": "Cheese",
+      "type": "food",
+      "hunger": 2,
+      "nourishment": 0.4,
+      "texFile": "cheese.png",
+      "icon": 1
+    },
+    "bucketOfCheese": {
+      "name": "Bucket of Cheese",
+      "type": "seeds",
+      "growsInto": "freshCheese",
+      "texFile": "cheese.png",
+      "icon": 2,
+      "container": "bucket",
+      "stacksize": 1
+    }
+  },
+  "recipes": {
+    "cheeseSlice:9": "cheeseBlock",
+    "bucketOfCheese": {
+      "smelt": "milkBucket"
+    }
+  },
+  "aliases": {
+    "protein": "cheeseSlice"
+  }
+}

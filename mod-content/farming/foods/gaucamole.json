@@ -11,6 +11,7 @@
       "hunger": 8,
       "nourishment": 0.6,
       "container": "bowl",
+      "stacksize": 1,
       "texFile": "xie_foods.png",
       "icon": 66
     }
