@@ -31,7 +31,7 @@ BONE_MEAL = "minecraft:bone_meal"
 CELLS = [
     ("blazeTreeSapling refuses bone meal", "xiesmod:blaze_tree_sapling",
      "minecraft:soul_sand", False),
-    ("a Xie sapling that does not refuse takes it", "xiesmod:cocoa_sapling",
+    ("a Xie sapling that does not refuse takes it", "xiesmod:apple_sapling",
      "minecraft:dirt", True),
     ("a vanilla sapling takes it, which is the rig working", "minecraft:oak_sapling",
      "minecraft:dirt", True),

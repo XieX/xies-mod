@@ -108,6 +108,31 @@ the game does:
 }
 ```
 
+The completion follows the `type`. A `block` or `item` lists only what every archetype
+reads, and an `allOf` of `if`/`then` branches keyed on the type adds the rest, each
+property in the one branch whose `if` names exactly the archetypes that consume it — so a
+bush is offered `growthRate` and a stove `cookTime`, and neither is offered the other's.
+The branches were taken from the registrar and the emitters rather than from the old
+description prefixes, which were wrong about more than a dozen properties and silent
+about eight more that the engine reads, and they are guidance rather than a fence:
+`additionalProperties` stays open, because another mod's archetype
+has properties this schema has never heard of, and a property declared outside its
+archetype's branches still validates and is left for the unread-property report to name.
+The one hard requirement is a stem's `grows`, without which the engine refuses to
+register it. The branches match the lower-case spelling, so a `"type": "Crop"`, which the
+engine accepts, gets the common properties and no more. The schema is also kept as
+`_schema/xie-content.schema.json` in the content repo, where its own files point, and the
+two copies are kept identical by hand.
+
+A drop's `amount` is not a stack size but a number of independent rolls, each yielding
+one item at `chance` percent, and a `chance` keyed by growth stage is how a plant pays
+more as it ripens: the tomato above drops nothing until stage 4 and then two rolls at
+half, one tomato on average. That is the 1.6 semantics exactly, emitted as a loot pool
+per run of stages. When the drop is the plant's own seed, keep chance times amount
+under one at the unripe stages, so breaking what you just planted gives back less than
+you put in. `soy.json` is the example: three rolls at 25% through stage 2, 50% at
+stage 3 and 90% when ripe.
+
 `.xid` files assigning numeric block and item ids are still parsed, but the ids are
 ignored — Minecraft dropped numeric ids in 1.7.
 
@@ -172,6 +197,7 @@ have been dropped rather than shipped as worse duplicates:
 | `glowberryBush` | Glow berries on cave vines (1.17) |
 | `melon` override | Vanilla melon mechanics |
 | `foragingStick` | Superseded by chest loot and villager trades |
+| `cocoaLeaves`, `cocoaSapling` | Cocoa pods on jungle logs, which 1.6 already had |
 
 The sibling Food Stacking and Hunger mods are obsolete outright — food stacks to 64
 in vanilla, and hunger has been a core mechanic since Beta 1.8.

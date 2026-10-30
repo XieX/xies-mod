@@ -30,8 +30,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * validate content against the schema. It checks the schema is well-formed and that
  * the lists it copies from Java — archetypes, section names, texture faces — have not
  * drifted from their source of truth. Drift the other way (a property the registrar
- * reads that the schema does not describe) is caught by nothing; keep the two in step
- * by hand when adding one.
+ * reads that the schema does not describe, or describes under the wrong archetype's
+ * {@code allOf} branch) is caught by nothing; keep the two in step by hand when adding
+ * one, and copy the result to the content repo's {@code _schema/}.
  */
 class ContentSchemaTest {
 

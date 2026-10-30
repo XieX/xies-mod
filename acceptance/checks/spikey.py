@@ -25,7 +25,7 @@ from ..rig.arena import Y, lane
 NEEDS_CLIENT = True
 
 SPIKEY = "xiesmod:blaze_tree"
-BLUNT = "xiesmod:cocoa_leaves"
+BLUNT = "xiesmod:apple_leaves"
 
 #: Leaves placed by ``fill`` decay: ``persistent`` defaults to false. Xie leaves
 #: measure their distance from ``#minecraft:logs`` like every other leaf, so

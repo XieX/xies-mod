@@ -61,7 +61,7 @@ def run(game, expect):
                 orchard.is_keystone(game, top))
 
     # ------------------------------------------------- a tree the world places
-    game.place_feature("xiesmod:cocoa_leaves_tree", generated)
+    game.place_feature("xiesmod:apple_leaves_tree", generated)
     wild_top = orchard.trunk_top(game, generated)
     canopy = game.block_is(wild_top, orchard.LEAVES)
     placed = expect.that("the world can place the same tree as a feature", canopy,

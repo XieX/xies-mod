@@ -215,9 +215,12 @@ Fruit trees
 
 The last two archetypes, and the mod's most distinctive content: vanilla still has
 no fruit trees thirteen years on. `sapling` and `tree` are a pair — a sapling grows
-into a tree — and between them they cover `cocoaSapling`, `fruitSapling`,
-`cocoaLeaves` and `fruitLeaves`, which is ten registered blocks once `names` splits
-the fruit ones four ways.
+into a tree — and between them they cover `fruitSapling` and `fruitLeaves`, which is
+eight registered blocks once `names` splits them four ways. The 2013 pack had a
+cocoa tree as well, grown from a sapling crafted with cocoa beans and shedding more
+of them, and it was dropped in October 2026: cocoa beans were already renewable in
+1.6, from pods planted on any jungle log, so the tree was only a second way to farm
+them.
 
 **`sapling` was a vanilla sapling with the serial numbers filed off.** It is a
 `plant` whose `growsInto` replaces it with something else, so it inherits everything
@@ -278,9 +281,10 @@ item entities and one per wild tree in every forest.
 
 **Saplings are the first blocks to register a `BlockItem`**, and the only ones. Every
 other Xie block is planted from a seed or placed by worldgen, so an item form would
-be one nobody could obtain. A sapling is the opposite case on both counts:
-`cocoaLeaves` drops `cocoaSapling` and a recipe crafts one from an oak sapling and
-cocoa beans, and neither is expressible without an item — which is exactly why
+be one nobody could obtain. A sapling is the opposite case on both counts: a fruit
+sapling grown from its seed is dug up by breaking it and replanted somewhere else,
+and `blazeTreeSapling` is crafted from a sapling and crafted into blaze rods in
+turn, and none of that is expressible without an item — which is exactly why
 vanilla saplings are block items too. A block with an item form and no declared
 `drops` drops itself, which is the one branch `XieBlockSapling` added to the drop
 code.
@@ -969,8 +973,7 @@ accusing the port of dropping things it does not drop:
 
 The four that remain are all real, and none of them is a loss this port introduced:
 
-- **`growsOn` on a `tree`** — `fruitLeaves`, `cocoaLeaves` and `blazeTree` all declare
-  it, and **1.6 read it on no tree either**. `JobBlock` consults `growsOn` in exactly
+- **`growsOn` on a `tree`** — `fruitLeaves` and `blazeTree` both declare it, and **1.6 read it on no tree either**. `JobBlock` consults `growsOn` in exactly
   two places, `doStem` and `setPlantProps`; `doTree` reads `sheds`, `colorize`, `shape`,
   `shedSaturation`, `trunkMeta` and `trunk`, and never asks. Leaves are not planted, so
   there was nothing for it to mean — where a fruit tree may stand is the sapling's
@@ -1240,6 +1243,42 @@ at parse time. Every `readX` in `XieFileReader` answers with an empty `Optional`
 declaration it has refused, which is one place to count them, and the total is now said
 outright at load: "3 declarations rejected and not counted above".
 
+The schema follows the archetype
+--------------------------------
+
+`xie-content.schema.json` listed every block property on one `block` and every item
+property on one `item`, with the archetype a property belonged to written as a prefix in
+its description, so an editor offered `cookTime` on a bush. It is an `allOf` of
+`if`/`then` branches keyed on `type` now, and **the branches come from the consumers,
+not the prefixes**, because the prefixes were wrong often enough to matter. `spikey` said `tree:` and
+is read by seven archetypes; `growthHeight` said `crop:` and is read by all four growing
+ones; `container` and `cooked` said `food:` and are read for every item, `cooked` for a
+block with an item form too; `flame` said `sword, bow` and a sword never reads it, while a
+bow reads it as a flag rather than seconds; `power` said "speed multiplier" and is levels
+of Power; `names` said "Ignored" and is what splits a definition into subtypes; and
+`uses` and `enchantability` carried no prefix and a `tool` reads neither, its tier
+deciding both. Eight properties the engine reads were missing outright — `shape`,
+`punch`, `cannotHarvest`, `canCut`, `potionEffects`, and `cooked` and `smelted` on a
+block — and are in their branches now.
+
+Each property sits in the one branch whose `if` lists exactly the archetypes that read
+it, so the value schema is written once; a branch whose list includes `basic` leaves out
+`required: ["type"]`, which is what makes it apply to a definition with no type at all.
+Three calls in it are judgement rather than transcription. **`stacksize` is offered only
+where it can do something**: every archetype reads it, but a sword, bow, stick or tool
+then sets a durability, which forces a stack of one over whatever was asked. **A stem is
+not offered `tex`**, because it draws vanilla's melon stem whatever it declares — which
+means `zombiePigmelonStem`'s `"tex": "#melonstem"`, the one thing in the content the old
+schema rejected, now passes and is left to the reader's own diagnostic. **Keys that
+nothing reads stay listed where porting a 2013 pack will meet them** — `smeltsInto`,
+`toolMaterial`, `armorMaterial` and an item's `textureBase` — described as never read, so
+the editor says what the unread-property report would. The value forms are untouched:
+`damage` and `power` are read as whole numbers but stay `number`, because narrowing
+them could only turn a pack that loads into one that fails validation. Nothing in a
+branch is `required` except a stem's `grows`, the one property whose absence stops
+registration; a sapling, seed or ripening block without `growsInto` registers and says
+so.
+
 Other systems
 -------------
 
@@ -1255,6 +1294,28 @@ Other systems
   ported yet" over a spelling. Nothing else in the parser or the emitters keys off the
   literal string — `ItemDef.KNOWN_ARCHETYPES` and `SUPPORTED_ITEMS` were the two
   places, and the switch that dispatches them.
+- **Soy's drop chances were sprite indices, and are its 2013 numbers again.** A drop's
+  `amount` is independent rolls at `chance` percent each (`Droppables`, and
+  `XieDataEmitter.addDropPools`), and `soyCrop` asked for three at 64, 65, 66, 67 and
+  68 — about two beans from breaking a bush planted a moment before, out of a bean that
+  is also the seed, so planting and breaking duplicated beans with no growing. 1.6 did
+  exactly the same, but the numbers were never meant: `default/soy.xie` had 25, 50 and
+  90, and on 2013-02-02 `753d12c` replaced the chance map with one shaped like a
+  `xie_crops.png` tex map, which "Soy fix" then wrote into the real `tex` as 64–68. The
+  June shuffle to five stages collapsed both maps through the same ranges, and those
+  ranges carry the original table across as `0-2: 25, 3: 50, 4+: 90` — 0.75 beans from
+  an unripe break, 1.5 at stage 3, 2.7 from a ripe one or a ripe pick. Xie chose that
+  over vanilla's shapes: cocoa and nether wart give back exactly one, which `drops`
+  cannot say while `amount` is one number per item, and a sweet berry bush gives back
+  nothing young. No vanilla plant pays out for zero growth, and now neither does soy.
+- **A crop that pays for its own seed unripe is warned about at emission.** Nothing
+  failed on soy's numbers, so nothing said anything. `SeedReturns` asks every `plant`,
+  `bush`, `crop` and `stem` whether it drops the `seeds` item whose `growsInto` names it
+  at an age-0 chance times `amount` of one or more, within its own pack as `seedFor`
+  does, and `XieDataEmitter` logs a warning per block with the average yield and writes
+  the table regardless — it is not counted under "Not emitted", because it was. It
+  reads past the consuming accessors, so it hides nothing from the unread-property
+  report. Live content gives no warning, and `RealContentTest` holds it there.
 - **Deferred content** — `_wip/` and `_plox_update/` are skipped by the `_` prefix
   convention. They contain a steel ore set, nether crops with a flame tree,
   a zombie pigmelon with a `stem` block, survival tool tweaks, and a `weapons` pack

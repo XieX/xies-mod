@@ -13,10 +13,9 @@ import java.util.Optional;
  * {@code trunkMeta} picks the wood. Those are separate blocks now, so the pair has
  * to collapse back into a single block id.
  *
- * <p>Both live tree definitions need it, and each writes it differently.
- * {@code cocoaLeaves} says {@code "trunk": "log", "trunkMeta": "3"} — a jungle
- * trunk. {@code fruitLeaves} declares no {@code trunk} at all and only
- * {@code "trunkMeta": "0,0,2,1"}, one entry per subtype, because
+ * <p>A tree can write it two ways. {@code "trunk": "log", "trunkMeta": "3"} names
+ * both halves — a jungle trunk. {@code fruitLeaves} declares no {@code trunk} at
+ * all and only {@code "trunkMeta": "0,0,2,1"}, one entry per subtype, because
  * {@code XieBlockLeaves} initialised {@code trunkID} to the log block already: the
  * apple and orange trees are oak, the lemon birch and the avocado spruce.
  *

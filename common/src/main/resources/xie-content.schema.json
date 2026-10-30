@@ -193,6 +193,7 @@
       ]
     },
     "block": {
+      "description": "A block. The properties below apply to every archetype the engine registers; the allOf branches add the ones each archetype reads, keyed on the lower-case type (no type means basic). A property outside its archetype's branches is still accepted, and the engine reports it as unread.",
       "type": "object",
       "properties": {
         "name": { "description": "Display name. Defaults to the key.", "type": "string" },
@@ -200,54 +201,155 @@
         "override": { "description": "Replace an existing block, named by reference, with this definition.", "$ref": "#/definitions/itemRef" },
         "overide": { "description": "Accepted misspelling of override.", "$ref": "#/definitions/itemRef" },
         "drops": { "description": "What breaking the block yields.", "$ref": "#/definitions/dropTable" },
-        "sheds": { "description": "tree: what falls from the leaves of its own accord, written like drops.", "$ref": "#/definitions/dropTable" },
-        "shedSaturation": { "description": "tree: how many shed items may lie under one tree before it stops shedding.", "$ref": "#/definitions/int" },
-        "tex": { "$ref": "#/definitions/tex" },
-        "texFile": { "description": "Spritesheet file name, when the texture is given flat rather than in tex.", "type": "string" },
-        "icon": { "description": "Spritesheet index, when the texture is given flat rather than in tex.", "$ref": "#/definitions/metaInt" },
-        "textureBase": { "description": "Reuse another block's textures, e.g. \"crops\".", "type": "string" },
-        "blockBounds": { "$ref": "#/definitions/metaBounds" },
-        "material": {
-          "description": "Legacy 1.6 material, which sets default hardness, sound and map colour.",
-          "anyOf": [
-            { "enum": ["rock", "wood", "sand", "ground", "grass", "leaves", "plants", "vine", "glass", "iron", "cloth", "ice", "snow", "cactus", "clay", "sponge", "web", "air"] },
-            { "type": "string" }
-          ]
-        },
         "hardness": { "description": "Time to break. Zero breaks instantly.", "$ref": "#/definitions/number" },
         "resistance": { "description": "Explosion resistance.", "$ref": "#/definitions/number" },
-        "stepSound": { "description": "Sound group: stone, wood, gravel, grass, metal, glass, cloth, sand, snow, ladder, anvil.", "type": "string" },
-        "stepsound": { "description": "Same as stepSound.", "type": "string" },
-        "walkthroughable": { "description": "No collision box.", "$ref": "#/definitions/boolean" },
-        "renderType": { "description": "How to draw it: cross (like grass), crop, or a block model name.", "type": "string" },
         "lightValue": { "description": "Emitted light, 0 to 15.", "$ref": "#/definitions/int" },
         "lightLevel": { "description": "Same as lightValue.", "$ref": "#/definitions/int" },
-        "becomesWhenDestroyed": { "description": "Block left in place after this one is broken.", "$ref": "#/definitions/itemRef" },
-        "growsOn": { "description": "Blocks this may be planted on, e.g. \"farmland,dirt,grass\".", "$ref": "#/definitions/refList" },
-        "growthRate": { "description": "Chance, in one part per N random ticks, of advancing a stage.", "$ref": "#/definitions/int" },
-        "growthHeight": { "description": "crop: how many blocks tall it grows.", "$ref": "#/definitions/int" },
-        "maxGrowth": { "description": "Highest growth stage, or ripening stage.", "$ref": "#/definitions/int" },
-        "growsInto": { "description": "sapling: the tree it becomes. ripening: the block it becomes once ripe.", "$ref": "#/definitions/itemRef" },
-        "fertilisable": { "description": "Whether bone meal works on it.", "$ref": "#/definitions/boolean" },
-        "fertilizable": { "description": "Same as fertilisable.", "$ref": "#/definitions/boolean" },
-        "grows": { "description": "stem: the fruit block it grows beside.", "$ref": "#/definitions/itemRef" },
-        "plantType": { "description": "stem: crop, plains, desert, beach, cave, water, nether.", "type": "string" },
-        "trunk": { "description": "tree: the log block.", "$ref": "#/definitions/itemRef" },
-        "trunkMeta": { "description": "tree: metadata of the log block, one per subtype when the tree declares names.", "$ref": "#/definitions/intList" },
-        "spikey": { "description": "tree: hurts to touch.", "$ref": "#/definitions/boolean" },
-        "inheritMeta": { "$ref": "#/definitions/boolean" },
-        "fuel": { "description": "Burn time in ticks when used as furnace fuel.", "$ref": "#/definitions/metaInt" },
-        "cookTime": { "description": "furnace, stove: ticks per operation.", "$ref": "#/definitions/int" },
-        "fuelCapacity": { "description": "stove: ticks of fuel it holds.", "$ref": "#/definitions/int" },
-        "foodCapacity": { "description": "stove: ingredient slots.", "$ref": "#/definitions/int" },
-        "flavourCapacity": { "description": "stove: flavouring slots.", "$ref": "#/definitions/int" },
-        "waterBase": { "description": "stove: what fills the pot, e.g. \"bucketWater\".", "$ref": "#/definitions/itemRef" },
-        "ingredients": { "description": "stove: what may go in the pot, usually an alias.", "$ref": "#/definitions/refList" },
-        "flavourings": { "description": "stove: what may season the pot, usually an alias.", "$ref": "#/definitions/refList" },
+        "fuel": { "description": "Burn time in ticks when used as furnace fuel. Only a block with an item form, a sapling or one that drops itself, can burn.", "$ref": "#/definitions/metaInt" },
+        "cooked": { "description": "The item this block's item form smelts into: a furnace recipe, plus smoker and campfire ones when the result is food.", "$ref": "#/definitions/itemRef" },
+        "smelted": { "description": "Same as cooked.", "$ref": "#/definitions/itemRef" },
         "id": { "description": "Legacy numeric id. Ignored.", "$ref": "#/definitions/int" },
-        "names": { "description": "Legacy per-metadata display names. Ignored.", "type": "string" }
+        "names": { "description": "Subtype display names. Two or more split the definition into one block per name, and metadata keys in drops, bounds and textures pick the subtype.", "$ref": "#/definitions/stringList" }
       },
-      "additionalProperties": true
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "enum": ["basic", "plant", "bush", "crop", "sapling", "tree", "log", "stove", "ripening"] } } },
+          "then": {
+            "properties": {
+              "tex": { "$ref": "#/definitions/tex" },
+              "texFile": { "description": "Spritesheet file name, when the texture is given flat rather than in tex.", "type": "string" },
+              "icon": { "description": "Spritesheet index, when the texture is given flat rather than in tex.", "$ref": "#/definitions/metaInt" },
+              "renderType": { "description": "How to draw it: cross (or flower, billboard, sapling), crop (or crops), and anything else is a cube. Defaults to cross for bush, plant and sapling, crop for crop, and a cube otherwise.", "type": "string" },
+              "material": {
+                "description": "Legacy 1.6 material, which sets the map colour and, without stepSound, the sound.",
+                "anyOf": [
+                  { "enum": ["rock", "wood", "sand", "ground", "grass", "leaves", "plants", "vine", "glass", "iron", "cloth", "ice", "snow", "cactus", "clay", "sponge", "web", "air"] },
+                  { "type": "string" }
+                ]
+              },
+              "stepSound": { "description": "Sound group: stone, wood, gravel, grass, metal, glass, cloth, sand, snow, ladder, anvil.", "type": "string" },
+              "stepsound": { "description": "Same as stepSound.", "type": "string" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "enum": ["basic", "plant", "bush", "crop", "sapling", "tree", "log", "ripening"] } } },
+          "then": {
+            "properties": {
+              "textureBase": { "description": "Reuse another block's textures for the faces this one does not draw, e.g. \"crops\". Only a cube-shaped renderType has faces to fill.", "type": "string" },
+              "blockBounds": { "$ref": "#/definitions/metaBounds" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "enum": ["basic", "plant", "bush", "crop", "sapling", "tree", "log"] } } },
+          "then": {
+            "properties": {
+              "spikey": { "description": "Hurts anything standing in it.", "$ref": "#/definitions/boolean" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "enum": ["basic", "plant", "bush", "crop", "sapling", "stem"] } } },
+          "then": {
+            "properties": {
+              "growsOn": { "description": "Blocks this may be planted on, e.g. \"farmland,dirt,grass\". A basic block reads it only when walkthroughable.", "$ref": "#/definitions/refList" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": ["plant", "bush", "crop", "sapling", "ripening"] } } },
+          "then": {
+            "properties": {
+              "growthRate": { "description": "Chance, in one part per N random ticks, of advancing a stage.", "$ref": "#/definitions/int" },
+              "maxGrowth": { "description": "Highest growth stage, or ripening stage.", "$ref": "#/definitions/int" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": ["plant", "bush", "crop", "sapling"] } } },
+          "then": {
+            "properties": {
+              "growthHeight": { "description": "How many blocks tall it grows.", "$ref": "#/definitions/int" },
+              "fertilisable": { "description": "Whether bone meal works on it.", "$ref": "#/definitions/boolean" },
+              "fertilizable": { "description": "Same as fertilisable.", "$ref": "#/definitions/boolean" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "enum": ["basic", "ripening"] } } },
+          "then": {
+            "properties": {
+              "walkthroughable": { "description": "No collision box. A basic block declaring it is vegetation, and needs a growsOn block beneath it.", "$ref": "#/definitions/boolean" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "enum": ["basic", "log"] } } },
+          "then": {
+            "properties": {
+              "becomesWhenDestroyed": { "description": "Block left in place after this one is broken.", "$ref": "#/definitions/itemRef" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": ["sapling", "ripening"] } } },
+          "then": {
+            "properties": {
+              "growsInto": { "description": "A sapling: the tree it becomes. A ripening block: the block it becomes once ripe.", "$ref": "#/definitions/itemRef" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "sapling" } } },
+          "then": {
+            "properties": {
+              "inheritMeta": { "description": "With names, each subtype grows the matching subtype of growsInto rather than the first.", "$ref": "#/definitions/boolean" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "tree" } } },
+          "then": {
+            "properties": {
+              "sheds": { "description": "What falls from the leaves of its own accord, written like drops.", "$ref": "#/definitions/dropTable" },
+              "shedSaturation": { "description": "How many shed items may lie under one tree before it stops shedding.", "$ref": "#/definitions/int" },
+              "trunk": { "description": "The log block.", "$ref": "#/definitions/itemRef" },
+              "trunkMeta": { "description": "Metadata of the log block, one per subtype when the tree declares names.", "$ref": "#/definitions/intList" },
+              "shape": { "description": "Silhouette: oak (the default), conifer (or pine), or tall.", "type": "string" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "stem" } } },
+          "then": {
+            "required": ["grows"],
+            "properties": {
+              "grows": { "description": "The fruit block it grows beside. A stem without one is not registered.", "$ref": "#/definitions/itemRef" },
+              "plantType": { "description": "Where it may be planted, when it declares no growsOn: crop, plains, desert, beach, cave, water, nether.", "type": "string" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "stove" } } },
+          "then": {
+            "properties": {
+              "cookTime": { "description": "Ticks per operation.", "$ref": "#/definitions/int" },
+              "fuelCapacity": { "description": "Ticks of fuel it holds.", "$ref": "#/definitions/int" },
+              "foodCapacity": { "description": "Ingredient slots.", "$ref": "#/definitions/int" },
+              "flavourCapacity": { "description": "Flavouring slots.", "$ref": "#/definitions/int" },
+              "waterBase": { "description": "What fills the pot, e.g. \"bucketWater\".", "$ref": "#/definitions/itemRef" },
+              "ingredients": { "description": "What may go in the pot, as an alias.", "$ref": "#/definitions/refList" },
+              "flavourings": { "description": "What may season the pot, as an alias.", "$ref": "#/definitions/refList" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": ["grass", "chest", "furnace", "mounted", "facing", "pane", "fence", "glass"] } } },
+          "then": { "description": "A 2013 archetype this build does not register: the definition is skipped and every property it declares is reported as unread." }
+        }
+      ]
     },
 
     "itemSection": {
@@ -267,59 +369,141 @@
       ]
     },
     "item": {
+      "description": "An item. The properties below apply to every archetype the engine registers; the allOf branches add the ones each archetype reads, keyed on the lower-case type (no type means basic). A property outside its archetype's branches is still accepted, and the engine reports it as unread.",
       "type": "object",
       "properties": {
         "name": { "description": "Display name. Defaults to the key.", "type": "string" },
         "type": { "$ref": "#/definitions/itemType" },
-        "override": { "description": "Replace an existing item, named by reference, with this definition.", "$ref": "#/definitions/itemRef" },
+        "override": { "description": "Replace an existing item, named by reference, with this definition. Only a tool or a sword can override.", "$ref": "#/definitions/itemRef" },
         "overide": { "description": "Accepted misspelling of override.", "$ref": "#/definitions/itemRef" },
         "texFile": { "description": "Spritesheet file name under the pack's textures/ directory.", "type": "string" },
         "icon": { "description": "Index into texFile.", "$ref": "#/definitions/metaInt" },
         "tex": { "$ref": "#/definitions/tex" },
-        "textureBase": { "type": "string" },
-        "stacksize": { "description": "Maximum stack size.", "$ref": "#/definitions/int" },
+        "textureBase": { "description": "Not read for items, which draw only their own sprite.", "type": "string" },
         "fuel": { "description": "Burn time in ticks when used as furnace fuel.", "$ref": "#/definitions/metaInt" },
-        "container": { "description": "food: the item left behind after eating, e.g. \"bowl\".", "$ref": "#/definitions/itemRef" },
-        "drops": { "description": "food: what you are left holding after eating, written like a block's drops.", "$ref": "#/definitions/dropTable" },
-        "hunger": { "description": "food: hunger points restored.", "$ref": "#/definitions/int" },
-        "nourishment": { "description": "food: saturation modifier, usually 0 to 1.", "$ref": "#/definitions/number" },
-        "cooked": { "description": "food: the item this smelts into.", "$ref": "#/definitions/itemRef" },
-        "action": { "description": "food: use animation, eat or drink.", "type": "string" },
-        "potionEffect": { "description": "food: effect applied on eating.", "type": "string" },
-        "growsInto": { "description": "seeds: the block planted.", "$ref": "#/definitions/itemRef" },
-        "inheritMeta": { "$ref": "#/definitions/boolean" },
-        "uses": { "description": "Durability.", "$ref": "#/definitions/int" },
-        "damage": { "description": "sword, tool: attack damage.", "$ref": "#/definitions/number" },
-        "enchantability": { "$ref": "#/definitions/int" },
-        "canBlock": { "description": "sword: can be used to block.", "$ref": "#/definitions/boolean" },
-        "flame": { "description": "sword, bow: seconds of fire set on hit.", "$ref": "#/definitions/int" },
-        "efficiency": { "description": "tool: mining speed.", "$ref": "#/definitions/number" },
-        "material": { "description": "tool: wood, stone, iron, gold, diamond.", "type": "string" },
-        "blocksEffective": { "description": "tool: blocks it mines quickly.", "$ref": "#/definitions/refList" },
-        "canHarvest": { "description": "tool: blocks that drop only when broken with it.", "$ref": "#/definitions/refList" },
-        "transforms": {
-          "description": "tool: block it right-clicks to the block that becomes.",
-          "type": "object",
-          "additionalProperties": { "$ref": "#/definitions/itemRef" }
-        },
-        "ammo": { "description": "bow: the item fired.", "$ref": "#/definitions/itemRef" },
-        "ammoConsumed": { "description": "bow: whether firing uses up the ammo.", "$ref": "#/definitions/boolean" },
-        "ammoless": { "description": "bow: fires with no ammo at all.", "$ref": "#/definitions/boolean" },
-        "semiautomatic": { "description": "bow: fires on click rather than on release.", "$ref": "#/definitions/boolean" },
-        "power": { "description": "bow: projectile speed multiplier.", "$ref": "#/definitions/number" },
-        "destroyChance": { "description": "stick: percent chance of breaking on use.", "$ref": "#/definitions/int" },
-        "blocks": {
-          "description": "stick: block it is used on, to what that block then yields. First matching entry wins.",
-          "type": "object",
-          "additionalProperties": { "$ref": "#/definitions/dropTable" }
-        },
-        "smeltsInto": { "description": "Legacy; use a smelt recipe instead.", "$ref": "#/definitions/itemRef" },
-        "toolMaterial": { "description": "set: a tool material definition.", "type": "object" },
-        "armorMaterial": { "description": "set: an armour material definition.", "type": "object" },
+        "container": { "description": "The item left behind after crafting with this one, and after eating it, e.g. \"bowl\".", "$ref": "#/definitions/itemRef" },
+        "cooked": { "description": "The item this smelts into: a furnace recipe, plus smoker and campfire ones when the result is food.", "$ref": "#/definitions/itemRef" },
+        "smelted": { "description": "Same as cooked.", "$ref": "#/definitions/itemRef" },
+        "smeltsInto": { "description": "Never read; use cooked or a smelt recipe instead.", "$ref": "#/definitions/itemRef" },
+        "toolMaterial": { "description": "Never implemented, in 2013 or now.", "type": "object" },
+        "armorMaterial": { "description": "Never implemented, in 2013 or now.", "type": "object" },
         "id": { "description": "Legacy numeric id. Ignored.", "$ref": "#/definitions/int" },
-        "names": { "description": "Legacy per-metadata display names. Ignored.", "type": "string" }
+        "names": { "description": "Subtype display names. Two or more split the definition into one item per name, and metadata keys pick the subtype.", "$ref": "#/definitions/stringList" }
       },
-      "additionalProperties": true
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "enum": ["basic", "food", "seeds", "seed"] } } },
+          "then": {
+            "properties": {
+              "stacksize": { "description": "Maximum stack size, 1 to 99.", "$ref": "#/definitions/int" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "food" } } },
+          "then": {
+            "properties": {
+              "hunger": { "description": "Hunger points restored.", "$ref": "#/definitions/int" },
+              "nourishment": { "description": "Saturation modifier, usually 0 to 1.", "$ref": "#/definitions/number" },
+              "action": { "description": "Use animation, eat or drink.", "type": "string" },
+              "potionEffect": { "description": "Effect applied on eating, uniform or keyed by subtype.", "anyOf": [{ "type": "string" }, { "type": "object" }] },
+              "potionEffects": { "description": "Same as potionEffect.", "anyOf": [{ "type": "string" }, { "type": "object" }] },
+              "drops": { "description": "What you are left holding after eating, written like a block's drops. Only a single item that always drops is carried, and container takes precedence.", "$ref": "#/definitions/dropTable" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": ["seeds", "seed"] } } },
+          "then": {
+            "properties": {
+              "growsInto": { "description": "The block planted. Without one the seed is a plain item.", "$ref": "#/definitions/itemRef" },
+              "inheritMeta": { "description": "With names, each subtype plants the matching subtype of growsInto rather than the first.", "$ref": "#/definitions/boolean" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": ["tool", "sword"] } } },
+          "then": {
+            "properties": {
+              "damage": { "description": "Attack damage, which a tool adds to its material's bonus. Read as a whole number.", "$ref": "#/definitions/number" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": ["sword", "bow", "stick"] } } },
+          "then": {
+            "properties": {
+              "uses": { "description": "Durability.", "$ref": "#/definitions/int" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": ["sword", "bow"] } } },
+          "then": {
+            "properties": {
+              "enchantability": { "description": "How well it takes enchantments.", "$ref": "#/definitions/int" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "tool" } } },
+          "then": {
+            "properties": {
+              "efficiency": { "description": "Mining speed against blocksEffective. Defaults to the material's.", "$ref": "#/definitions/number" },
+              "material": { "description": "Tier, which sets durability, enchantability, repair item and damage bonus: wood, stone, copper, iron, gold, diamond, netherite.", "type": "string" },
+              "blocksEffective": { "description": "Blocks it mines quickly, or \"all\".", "$ref": "#/definitions/refList" },
+              "canHarvest": { "description": "Blocks that drop only when broken with it. Without one, it harvests what it is effective against.", "$ref": "#/definitions/refList" },
+              "cannotHarvest": { "description": "Blocks that never drop when broken with it.", "$ref": "#/definitions/refList" },
+              "transforms": {
+                "description": "Block it right-clicks to the block that becomes.",
+                "type": "object",
+                "additionalProperties": { "$ref": "#/definitions/itemRef" }
+              }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "sword" } } },
+          "then": {
+            "properties": {
+              "canBlock": { "description": "Can be raised to block. Default true.", "$ref": "#/definitions/boolean" },
+              "canCut": { "description": "Blocks it cuts quickly and harvests. Defaults to cobweb.", "$ref": "#/definitions/refList" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "bow" } } },
+          "then": {
+            "properties": {
+              "ammo": { "description": "The items it fires.", "$ref": "#/definitions/refList" },
+              "ammoConsumed": { "description": "Whether firing uses up the ammo.", "$ref": "#/definitions/boolean" },
+              "ammoless": { "description": "Fires with no ammo at all.", "$ref": "#/definitions/boolean" },
+              "semiautomatic": { "description": "Fires on click rather than on release.", "$ref": "#/definitions/boolean" },
+              "power": { "description": "Levels of Power added to whatever the bow is enchanted with. Read as a whole number.", "$ref": "#/definitions/number" },
+              "punch": { "description": "Levels of Punch added to whatever the bow is enchanted with.", "$ref": "#/definitions/int" },
+              "flame": { "description": "Any value above zero sets every arrow alight, as Flame does. Not a duration.", "$ref": "#/definitions/int" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "stick" } } },
+          "then": {
+            "properties": {
+              "destroyChance": { "description": "Percent chance of breaking on use. Default 66.", "$ref": "#/definitions/int" },
+              "blocks": {
+                "description": "Block it is used on, to what that block then yields. First matching entry wins.",
+                "type": "object",
+                "additionalProperties": { "$ref": "#/definitions/dropTable" }
+              }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": ["armor", "armour", "bucket", "potion", "block", "set", "fertiliser", "interface"] } } },
+          "then": { "description": "A 2013 archetype this build does not register: the definition is skipped and every property it declares is reported as unread." }
+        }
+      ]
     },
 
     "recipeSection": {

@@ -176,7 +176,7 @@ on announces itself the moment it stops being true.
     refuses anything short of the full height rather than placing a clipped tree, and
     `StraightTrunkPlacer` always writes a log at the origin. A `true` return means a
     log where the sapling was and a `false` one means the sapling: neither is air.
-  - **The support rule cannot drop it.** `cocoaSapling` declares no `growsOn`, so its
+  - **The support rule cannot drop it.** `fruitSapling` declares no `growsOn`, so its
     ground is `VegetationBlock`'s `#minecraft:dirt` or farmland. The lane floor is
     grass, the soil it is planted on is dirt, and the grass that spreads back onto that
     dirt while it stands there is in the same tag as both.

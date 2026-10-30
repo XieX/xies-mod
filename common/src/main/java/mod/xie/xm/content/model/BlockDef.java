@@ -138,6 +138,11 @@ public record BlockDef(
         return tex;
     }
 
+    /** {@link #drops()} without marking it consumed, for diagnostics. */
+    DropTable peekDrops() {
+        return drops;
+    }
+
     public boolean isOverride() {
         return override.isPresent();
     }

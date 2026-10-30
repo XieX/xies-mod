@@ -16,6 +16,7 @@ import mod.xie.xm.content.model.MetaMap;
 import mod.xie.xm.content.model.PropertyMap;
 import mod.xie.xm.content.model.RecipeDef;
 import mod.xie.xm.content.model.ResourceNames;
+import mod.xie.xm.content.model.SeedReturns;
 import mod.xie.xm.content.model.Variants;
 import mod.xie.xm.reg.RegisteredContent;
 import mod.xie.xm.reg.XieOverrides;
@@ -306,6 +307,15 @@ public final class XieDataEmitter {
 
             for (ItemDef def : pack.items().values()) {
                 skippedDrops += checkStickDrops(def);
+            }
+
+            // Written all the same: the content may mean it, and only the content can
+            // say what it should be instead.
+            for (SeedReturns.Finding found : SeedReturns.in(pack.blocks(), pack.items())) {
+                LOGGER.warn("Block {} drops its own seed \"{}\" at {}% x {} when just planted, "
+                        + "{} per break on average: planting and breaking it costs no seed",
+                    found.block().qualifiedName(), found.seed().name(), found.chance(),
+                    found.amount(), found.perBreak());
             }
 
             for (RecipeDef recipe : pack.recipes()) {

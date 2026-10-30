@@ -10,8 +10,8 @@ sapling is in the way of the trunk the feature is about to place.
 from ..rig.arena import GROUND, Y
 from ..rig.session import say
 
-SAPLING = "xiesmod:cocoa_sapling"
-LEAVES = "xiesmod:cocoa_leaves"
+SAPLING = "xiesmod:apple_sapling"
+LEAVES = "xiesmod:apple_leaves"
 SOIL = "minecraft:dirt"
 
 #: A sapling will not grow into a neighbour's canopy: ``TreeFeature`` checks a
@@ -93,7 +93,7 @@ def vanished(game, pos):
       ``TreeFeature.doPlace`` refuses anything short of the full height, and
       ``StraightTrunkPlacer`` always writes a log at the origin. True means a
       log where the sapling was; false puts the sapling back.
-    * the support rule cannot drop it. ``cocoaSapling`` declares no ``growsOn``,
+    * the support rule cannot drop it. ``fruitSapling`` declares no ``growsOn``,
       so its ground is ``VegetationBlock``'s ``#minecraft:dirt`` or farmland, and
       both the lane floor and the soil this plants on are in that tag.
     * it is not the plant-and-bone-meal sequence as such: sixty plants in a

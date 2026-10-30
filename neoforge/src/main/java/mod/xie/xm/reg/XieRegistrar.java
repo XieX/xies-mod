@@ -389,10 +389,10 @@ public final class XieRegistrar {
      * <p>Two kinds of block get one, and no others. Every other Xie block is either
      * planted from a seed or placed by worldgen, so an item form would be one nobody
      * could obtain; a sapling is the opposite case on both counts, and a block that
-     * {@linkplain #dropsItself drops itself} is the other. {@code cocoaLeaves} drops
-     * {@code cocoaSapling} and a recipe crafts one out of an oak sapling and cocoa
-     * beans, and neither is expressible without an item — which is exactly why
-     * vanilla saplings are block items too.
+     * {@linkplain #dropsItself drops itself} is the other. A fruit sapling grown from
+     * its seed is dug up and replanted, and {@code blazeTreeSapling} is crafted from a
+     * sapling and into blaze rods, and none of that is expressible without an item —
+     * which is exactly why vanilla saplings are block items too.
      */
     private void registerBlockItem(String path, DeferredBlock<Block> block) {
         DeferredItem<Item> item = items.registerItem(path,

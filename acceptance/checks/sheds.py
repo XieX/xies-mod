@@ -7,8 +7,8 @@ it stops once eight of the fruit are already lying nearby, which is what keeps
 an orchard from burying itself.
 
 Saturation is a null case, so it is taken against a positive control in the
-same run and by the same measurement: two identical planted trees, nine cocoa
-beans scattered around one of them, and the count read back at both.
+same run and by the same measurement: two identical planted trees, nine apples
+scattered around one of them, and the count read back at both.
 
 The markers take three precautions, and all three are the same fact — the tree
 counts item *entities*, and a merged stack of nine is one entity and therefore
@@ -26,7 +26,7 @@ from ..rig.arena import GROUND, Y, lane
 
 NEEDS_CLIENT = True
 
-FRUIT = "minecraft:cocoa_beans"
+FRUIT = "minecraft:apple"
 SATURATION = 8
 MARKERS = SATURATION + 1
 APART = 16
@@ -85,7 +85,7 @@ def run(game, expect):
         game.random_ticks(3)
 
     expect.that("a keystone tree sheds its fruit", shed > 0,
-                "%d cocoa beans under it, the first after %.0fs"
+                "%d apples under it, the first after %.0fs"
                 % (shed, time.monotonic() - started - WINDOW))
     expect.that("shedSaturation stops a tree with eight fruit already lying nearby",
                 still == MARKERS,

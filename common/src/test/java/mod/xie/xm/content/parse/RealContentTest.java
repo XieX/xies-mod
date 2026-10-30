@@ -6,6 +6,7 @@ import mod.xie.xm.content.model.ContentPack;
 import mod.xie.xm.content.model.ItemDef;
 import mod.xie.xm.content.model.ItemRef;
 import mod.xie.xm.content.model.RecipeDef;
+import mod.xie.xm.content.model.SeedReturns;
 import mod.xie.xm.content.model.SpawnDef;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -101,13 +102,18 @@ class RealContentTest {
         assertEquals(20, orange.chanceFor(1), "the orange tree sheds oranges");
         assertEquals(0, orange.chanceFor(0), "the apple tree does not");
         assertEquals(8, leaves.props().getInt("shedSaturation", 0));
-
-        BlockDef cocoa = result.pack().blocks().get("cocoaLeaves");
-        assertNotNull(cocoa, "expected cocoaLeaves from farming/trees/cocoatree.json");
-        assertEquals(List.of("cocoaBeans"),
-            cocoa.sheds().drops().stream().map(drop -> drop.item().name()).toList());
-        assertTrue(result.pack().blocks().get("cocoaSapling").sheds().isEmpty(),
+        assertTrue(result.pack().blocks().get("fruitSapling").sheds().isEmpty(),
             "a sapling sheds nothing");
+    }
+
+    /** What the emitter warns about, held at none: no crop pays for its seed unripe. */
+    @Test
+    void noCropGivesBackItsSeedTheMomentItIsPlanted() {
+        List<String> found = SeedReturns.in(result.pack().blocks(), result.pack().items()).stream()
+            .map(finding -> finding.block().qualifiedName() + " drops " + finding.perBreak()
+                + " " + finding.seed().name() + " at age 0")
+            .toList();
+        assertTrue(found.isEmpty(), found::toString);
     }
 
     /**

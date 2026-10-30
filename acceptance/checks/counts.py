@@ -21,7 +21,7 @@ BASELINES = [
         "packs",
         r"Xie content: (\d+) packs, (\d+) blocks, (\d+) items, (\d+) recipes",
         ("packs", "block definitions", "item definitions", "recipes"),
-        (5, 28, 75, 118),
+        (5, 26, 75, 117),
     ),
     (
         "declarations rejected",
@@ -34,7 +34,7 @@ BASELINES = [
         r"queued (\d+) blocks and (\d+) items from (\d+) block and (\d+) item definitions, "
         r"and (\d+) items overriding",
         ("blocks", "items", "block definitions", "item definitions", "overrides"),
-        (37, 93, 28, 75, 0),
+        (35, 92, 26, 75, 0),
     ),
     (
         "emitted pack",
@@ -43,7 +43,7 @@ BASELINES = [
         r"(\d+) trees, (\d+) burn times, (\d+) vanilla files overridden",
         ("block models", "item models", "textures", "loot tables", "recipes", "alias tags",
          "block tags", "worldgen features", "trees", "burn times", "vanilla overrides"),
-        (106, 93, 174, 29, 127, 15, 2, 9, 6, 8, 0),
+        (103, 92, 171, 27, 126, 15, 2, 9, 5, 7, 0),
     ),
     (
         # The flame tree, and nothing else: `blazeTree` addresses vanilla's terrain.png
@@ -65,7 +65,7 @@ BASELINES = [
         "properties nobody reads",
         r"(\d+) properties across (\d+) definitions are declared by content and read by nothing",
         ("properties", "definitions"),
-        (20, 15),
+        (19, 14),
     ),
 ]
 

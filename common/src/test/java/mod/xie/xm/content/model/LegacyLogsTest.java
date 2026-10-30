@@ -30,7 +30,7 @@ class LegacyLogsTest {
         assertEquals("oak_log", LegacyLogs.pathOrOak(-1));
     }
 
-    /** {@code cocoaLeaves} writes {@code "trunk": "log"}; a spawn entry might say 17. */
+    /** A tree may write {@code "trunk": "log"}; a spawn entry might say 17. */
     @Test
     void recognisesTheLogBlockByNameAndById() {
         assertTrue(LegacyLogs.isLegacyLog("log"));
