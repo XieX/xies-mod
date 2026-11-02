@@ -145,6 +145,7 @@ Port status
 - [x] Registrar: definitions to `DeferredRegister` (every block and item archetype the content uses)
 - [x] Emitter: generated resource pack (blockstates, models, textures, lang)
 - [x] Emitter: generated datapack (loot tables from `drops`, recipes, alias tags)
+- [x] Recipe-book unlock advancements for every recipe, variants grouped by product
 - [x] Multi-variant definitions (`names`) as one registered object per subtype
 - [x] Perennial harvest on `bush`, following vanilla's sweet berry bush
 - [x] Annual `crop` with vanilla's farmland-adjacency growth bonus, and `growthHeight`
@@ -271,6 +272,17 @@ Aliases are the clearest win from the port. `$salady` used to be expanded into t
 cartesian product of concrete recipes at load time, turning one sammich recipe with
 three alias slots into hundreds of registered ones. It is now a single item tag and
 the recipe stays a single recipe.
+
+The recipe book needed the same care, because it shows a recipe only once the player
+has unlocked it, and vanilla unlocks each of its own with an advancement that fires
+the first time an ingredient lands in the inventory. Every recipe the engine writes
+gets one in vanilla's shape, with an ingredient criterion for each distinct thing the
+recipe asks for, an alias tested by its tag — so picking up corn kernels puts the
+tortilla in the book and any protein puts the tacos there. The variants of one
+product share a recipe `group`, which is how vanilla folds its red dye recipes into a
+single entry: the dozen alias combinations for a snack taco are one entry in the book
+with the variants behind it, and the full taco is another. Without JEI or EMI that
+book is the only place a player finds out what the content can make.
 
 Multi-variant definitions are the other place the two versions of Minecraft
 disagree structurally. A 1.6 id carried up to sixteen subtypes told apart by a

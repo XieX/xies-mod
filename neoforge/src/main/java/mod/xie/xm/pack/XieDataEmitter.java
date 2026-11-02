@@ -122,6 +122,7 @@ public final class XieDataEmitter {
      *
      * @param lootTables    block loot tables written
      * @param recipes       recipes written
+     * @param advancements  recipe-book unlock advancements written, one per recipe
      * @param tags          alias item tags written
      * @param blockTags     block tags written: a tool's mining rules, a stem's soil,
      *                      and the log tag a {@code log} joins
@@ -135,8 +136,8 @@ public final class XieDataEmitter {
      * @param overrides     files written into the override pack, replacing a vanilla
      *                      id rather than adding one of ours
      */
-    public record Counts(int lootTables, int recipes, int tags, int blockTags, int features,
-                         int trees, int fuels, int skippedDrops, int skippedRecipes,
+    public record Counts(int lootTables, int recipes, int advancements, int tags, int blockTags,
+                         int features, int trees, int fuels, int skippedDrops, int skippedRecipes,
                          int skippedSpawns, int skippedCulls, int overrides) { }
 
     private final Path outputRoot;
@@ -209,6 +210,9 @@ public final class XieDataEmitter {
     /** Files written into the override pack, which is registered only if there are any. */
     private int overrides;
 
+    /** Unlock advancements written; see {@link #writeRecipeFile}. */
+    private int advancements;
+
     public XieDataEmitter(Path outputRoot, Path overrideRoot, Path worldgenRoot,
                           ItemLookup lookup, BlockLookup blockLookup) {
         this.outputRoot = outputRoot;
@@ -243,6 +247,7 @@ public final class XieDataEmitter {
         subtypePaths.clear();
         culledItems.clear();
         overrides = 0;
+        advancements = 0;
         this.registered = registered;
 
         for (ContentPack pack : packs) {
@@ -361,8 +366,9 @@ public final class XieDataEmitter {
 
         XieWorldgenEmitter.Counts spawns = worldgen.emit(packs, registered.trees());
 
-        return new Counts(lootTables, recipes, tags, blockTags, spawns.features(), spawns.trees(),
-            fuels, skippedDrops, skippedRecipes.size(), spawns.skipped(), skippedCulls, overrides);
+        return new Counts(lootTables, recipes, advancements, tags, blockTags, spawns.features(),
+            spawns.trees(), fuels, skippedDrops, skippedRecipes.size(), spawns.skipped(),
+            skippedCulls, overrides);
     }
 
     /** The items every {@code cull} entry named; empty until {@link #emit} has run. */
@@ -872,6 +878,7 @@ public final class XieDataEmitter {
 
         Map<Character, ItemRef> symbols = recipe.symbolMap();
         JsonObject key = new JsonObject();
+        List<String> ingredients = new ArrayList<>();
         for (Map.Entry<Character, ItemRef> bound : symbols.entrySet()) {
             Optional<String> ingredient = ingredient(bound.getValue());
             if (ingredient.isEmpty()) {
@@ -880,6 +887,7 @@ public final class XieDataEmitter {
                 return false;
             }
             key.addProperty(String.valueOf(bound.getKey()), ingredient.get());
+            ingredients.add(ingredient.get());
         }
 
         JsonArray pattern = new JsonArray();
@@ -903,7 +911,7 @@ public final class XieDataEmitter {
         root.add("key", key);
         root.add("pattern", pattern);
         root.add("result", result.get());
-        return write(recipe, "", root);
+        return write(recipe, "", root, ingredients);
     }
 
     private boolean writeShapeless(RecipeDef recipe) throws IOException {
@@ -920,7 +928,7 @@ public final class XieDataEmitter {
         // Ingredient stack counts are ignored: one reference is one grid slot, which
         // is what the 1.6 shapeless matcher did too. Content that wants two of
         // something writes it twice.
-        JsonArray ingredients = new JsonArray();
+        List<String> ingredients = new ArrayList<>();
         for (ItemRef ref : recipe.ingredients()) {
             Optional<String> ingredient = ingredient(ref);
             if (ingredient.isEmpty()) {
@@ -931,11 +939,13 @@ public final class XieDataEmitter {
             ingredients.add(ingredient.get());
         }
 
+        JsonArray grid = new JsonArray();
+        ingredients.forEach(grid::add);
         JsonObject root = new JsonObject();
         root.addProperty("type", "minecraft:crafting_shapeless");
-        root.add("ingredients", ingredients);
+        root.add("ingredients", grid);
         root.add("result", result.get());
-        return write(recipe, "", root);
+        return write(recipe, "", root, ingredients);
     }
 
     /**
@@ -966,7 +976,8 @@ public final class XieDataEmitter {
             // Deep-copy the result: several files may be written from one definition.
             root.add("result", result.get().deepCopy());
 
-            if (write(recipe, inputs.size() > 1 ? "_from_" + i : "", root)) {
+            String suffix = inputs.size() > 1 ? "_from_" + i : "";
+            if (write(recipe, suffix, root, List.of(ingredient.get()))) {
                 written++;
             }
         }
@@ -1040,14 +1051,14 @@ public final class XieDataEmitter {
             }
             JsonObject root = new JsonObject();
             root.addProperty("type", cooker.recipeType());
-            root.addProperty("ingredient", XiesMod.MOD_ID + ":" + inputPath);
+            String ingredient = XiesMod.MOD_ID + ":" + inputPath;
+            root.addProperty("ingredient", ingredient);
             root.addProperty("experience", SMELT_EXPERIENCE);
             root.addProperty("cookingtime", cooker.cookingTime());
             root.add("result", result.deepCopy());
 
             String name = cooker.recipeType().substring(cooker.recipeType().indexOf(':') + 1);
-            String id = uniqueRecipeId(inputPath + "_" + name);
-            PackJson.write(dataRoot.resolve("recipe").resolve(id + ".json"), root);
+            writeRecipeFile(uniqueRecipeId(inputPath + "_" + name), root, List.of(ingredient));
             written++;
         }
         return written;
@@ -1175,10 +1186,82 @@ public final class XieDataEmitter {
         return Optional.of(result);
     }
 
-    private boolean write(RecipeDef recipe, String suffix, JsonObject root) throws IOException {
-        String id = uniqueRecipeId(ResourceNames.toPath(recipe.name()) + suffix);
-        PackJson.write(dataRoot.resolve("recipe").resolve(id + ".json"), root);
+    private boolean write(RecipeDef recipe, String suffix, JsonObject root,
+                          List<String> ingredients) throws IOException {
+        writeRecipeFile(uniqueRecipeId(ResourceNames.toPath(recipe.name()) + suffix), root,
+            ingredients);
         return true;
+    }
+
+    /**
+     * Writes one recipe and the advancement that puts it in the recipe book.
+     *
+     * <p>Vanilla's recipe book shows only the recipes a player has unlocked, and
+     * every vanilla recipe is unlocked by an advancement under {@code recipes/} that
+     * fires when the player first holds an ingredient. This writes the same file,
+     * with a criterion for every distinct ingredient rather than one hand-picked key
+     * ingredient, since the content names no key: any of them unlocks it, and an
+     * alias is tested by its tag exactly as vanilla tests {@code #minecraft:eggs} for
+     * a cake.
+     *
+     * <p>It also sets the recipe's {@code group} to the product's id path, which is
+     * how vanilla folds its several red dye recipes into one book entry. Without it
+     * the alias variants of one taco would be a dozen entries, and a product shared
+     * with vanilla joins vanilla's own group.
+     */
+    private void writeRecipeFile(String id, JsonObject root, List<String> ingredients)
+            throws IOException {
+        String product = root.getAsJsonObject("result").get("id").getAsString();
+        root.addProperty("group", product.substring(product.indexOf(':') + 1));
+        PackJson.write(dataRoot.resolve("recipe").resolve(id + ".json"), root);
+
+        String recipeId = XiesMod.MOD_ID + ":" + id;
+        JsonObject criteria = new JsonObject();
+        JsonArray anyOf = new JsonArray();
+
+        JsonObject unlocked = new JsonObject();
+        unlocked.addProperty("recipe", recipeId);
+        criteria.add("has_the_recipe", criterion("minecraft:recipe_unlocked", unlocked));
+        anyOf.add("has_the_recipe");
+
+        for (String ingredient : new LinkedHashSet<>(ingredients)) {
+            String name = "has_" + ingredient.substring(ingredient.indexOf(':') + 1);
+            if (criteria.has(name)) {
+                // The same path in two namespaces: keep both, told apart in full.
+                name = "has_" + ingredient.replace("#", "").replace(':', '_');
+            }
+            JsonObject item = new JsonObject();
+            item.addProperty("items", ingredient);
+            JsonArray items = new JsonArray();
+            items.add(item);
+            JsonObject held = new JsonObject();
+            held.add("items", items);
+            criteria.add(name, criterion("minecraft:inventory_changed", held));
+            anyOf.add(name);
+        }
+
+        JsonArray requirements = new JsonArray();
+        requirements.add(anyOf);
+        JsonArray recipes = new JsonArray();
+        recipes.add(recipeId);
+        JsonObject rewards = new JsonObject();
+        rewards.add("recipes", recipes);
+
+        JsonObject advancement = new JsonObject();
+        advancement.addProperty("parent", "minecraft:recipes/root");
+        advancement.add("criteria", criteria);
+        advancement.add("requirements", requirements);
+        advancement.add("rewards", rewards);
+        PackJson.write(dataRoot.resolve("advancement").resolve("recipes").resolve(id + ".json"),
+            advancement);
+        advancements++;
+    }
+
+    private static JsonObject criterion(String trigger, JsonObject conditions) {
+        JsonObject criterion = new JsonObject();
+        criterion.add("conditions", conditions);
+        criterion.addProperty("trigger", trigger);
+        return criterion;
     }
 
     /**

@@ -39,11 +39,12 @@ BASELINES = [
     (
         "emitted pack",
         r"(\d+) block models, (\d+) item models, (\d+) textures, (\d+) loot tables, "
-        r"(\d+) recipes, (\d+) alias tags, (\d+) block tags, (\d+) worldgen features, "
-        r"(\d+) trees, (\d+) burn times, (\d+) vanilla files overridden",
-        ("block models", "item models", "textures", "loot tables", "recipes", "alias tags",
-         "block tags", "worldgen features", "trees", "burn times", "vanilla overrides"),
-        (108, 93, 176, 32, 129, 15, 2, 9, 5, 7, 0),
+        r"(\d+) recipes, (\d+) recipe advancements, (\d+) alias tags, (\d+) block tags, "
+        r"(\d+) worldgen features, (\d+) trees, (\d+) burn times, (\d+) vanilla files overridden",
+        ("block models", "item models", "textures", "loot tables", "recipes",
+         "recipe advancements", "alias tags", "block tags", "worldgen features", "trees",
+         "burn times", "vanilla overrides"),
+        (108, 93, 176, 32, 129, 129, 15, 2, 9, 5, 7, 0),
     ),
     (
         # The flame tree, and nothing else: `blazeTree` addresses vanilla's terrain.png

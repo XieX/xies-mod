@@ -258,11 +258,12 @@ public final class XiePackEmitter {
         writeDataPackMeta(worldgenRoot, "What Xie's Mod content spawns in new chunks", formats);
 
         LOGGER.info("Emitted pack to {}: {} block models, {} item models, {} textures, "
-                + "{} loot tables, {} recipes, {} alias tags, {} block tags, {} worldgen features, "
-                + "{} trees, {} burn times, {} vanilla files overridden",
+                + "{} loot tables, {} recipes, {} recipe advancements, {} alias tags, "
+                + "{} block tags, {} worldgen features, {} trees, {} burn times, "
+                + "{} vanilla files overridden",
             outputRoot, blockModels, itemModels, textures,
-            data.lootTables(), data.recipes(), data.tags(), data.blockTags(), data.features(),
-            data.trees(), data.fuels(), data.overrides());
+            data.lootTables(), data.recipes(), data.advancements(), data.tags(), data.blockTags(),
+            data.features(), data.trees(), data.fuels(), data.overrides());
 
         if (borrowed > 0) {
             // Not counted among the textures above, because no file was written: the
