@@ -66,7 +66,7 @@ public final class XieFileReader {
     // PropertyMap of its own over the same object when a definition declares them flat
     // rather than nested in "tex" — so the definition's own map never sees the read.
     private static final String[] BLOCK_STRUCTURAL =
-        {"name", "type", "override", "overide", "drops", "sheds", "tex", "blockbounds",
+        {"name", "type", "override", "overide", "drops", "fruit", "tex", "blockbounds",
          "texfile", "icon", "texturebase"};
 
     private static final String[] ITEM_STRUCTURAL =
@@ -283,7 +283,7 @@ public final class XieFileReader {
      *
      * <p>Reading a key here proves the parser understood it and nothing more. Half of
      * {@link #BLOCK_STRUCTURAL} produces a value that some archetypes want and others
-     * never ask for — {@code sheds} is a {@code tree}'s alone, and a {@code stem} takes
+     * never ask for — {@code fruit} is a {@code tree}'s alone, and a {@code stem} takes
      * neither a {@code blockBounds} nor a sprite — so marking them consumed at parse
      * time hid exactly the gap {@code blazeTree}'s {@code blockBounds} was: parsed,
      * correct, and asked for by nobody. See {@link PropertyMap#markStructural}.
@@ -313,22 +313,22 @@ public final class XieFileReader {
         Optional<ItemRef> override = readOverride(props);
 
         DropTable drops = readDrops(origin, props.raw("drops").orElse(null));
-        // "sheds" is written exactly like "drops" — the original built both with
-        // expandDropsNode — but means something else: what a tree lets fall of its
-        // own accord rather than what breaking it yields.
-        DropTable sheds = readDrops(origin, props.raw("sheds").orElse(null));
+        // "fruit" is written exactly like "drops" — the original built its "sheds"
+        // with the same expandDropsNode — but means something else: what picking a
+        // ripe leaf yields rather than what breaking it does.
+        DropTable fruit = readDrops(origin, props.raw("fruit").orElse(null));
         TexDef tex = readTex(origin, object, "block");
         Optional<MetaMap<Bounds>> bounds = readBounds(origin, props);
 
         props.markUsed(BLOCK_STRUCTURAL);
         deferred(props, !drops.isEmpty(), "drops");
-        deferred(props, !sheds.isEmpty(), "sheds");
+        deferred(props, !fruit.isEmpty(), "fruit");
         deferred(props, bounds.isPresent(), "blockBounds");
         deferred(props, tex.hasSprites(), "tex", "texFile", "icon");
         deferred(props, tex.base().isPresent(), "textureBase");
 
         BlockDef block = new BlockDef(origin, origin.name(), displayName, archetype,
-            override, drops, sheds, tex, bounds, props);
+            override, drops, fruit, tex, bounds, props);
 
         if (!block.hasKnownArchetype()) {
             diagnostics.warning(origin.toString(),

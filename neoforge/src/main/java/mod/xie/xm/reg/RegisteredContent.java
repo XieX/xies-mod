@@ -52,10 +52,12 @@ public record RegisteredContent(
      * configured feature, which is the only form the tree takes: worldgen places it
      * and a growing sapling places it, and neither needs anything else.
      *
-     * @param trunkId namespaced id of the log the trunk is built from
-     * @param shape   which of 1.6's three tree generators this is
+     * @param trunkId   namespaced id of the log the trunk is built from
+     * @param shape     which of 1.6's three tree generators this is
+     * @param fruitAges the ripe stage of its leaves, or zero for a tree that bears
+     *                  nothing; the feature places a few leaves already ripe
      */
-    public record Tree(String trunkId, TreeShape shape) { }
+    public record Tree(String trunkId, TreeShape shape, int fruitAges) { }
 
     public RegisteredContent {
         blockPaths = Map.copyOf(blockPaths);

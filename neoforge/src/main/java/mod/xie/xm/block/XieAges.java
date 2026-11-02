@@ -3,6 +3,8 @@ package mod.xie.xm.block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
+import java.util.Optional;
+
 /**
  * The {@code age} property of a block whose number of stages the content decides.
  *
@@ -64,7 +66,22 @@ final class XieAges {
      */
     static IntegerProperty pending() {
         Integer max = PENDING.get();
-        return PROPERTIES[max == null ? 1 : max];
+        return PROPERTIES[max == null || max == 0 ? 1 : max];
+    }
+
+    /**
+     * As {@link #prime}, for a block that may have no stages at all: zero primes no
+     * property, which is what a {@link XieTreeBlock} that bears nothing has.
+     */
+    static BlockBehaviour.Properties primeOptional(BlockBehaviour.Properties properties, int maxAge) {
+        PENDING.set(maxAge <= 0 ? 0 : clamp(maxAge));
+        return properties;
+    }
+
+    /** The property for the block under construction, or empty when it primed none. */
+    static Optional<IntegerProperty> pendingOptional() {
+        Integer max = PENDING.get();
+        return max == null || max == 0 ? Optional.empty() : Optional.of(PROPERTIES[max]);
     }
 
     static void clear() {

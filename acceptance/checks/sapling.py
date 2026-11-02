@@ -1,12 +1,13 @@
-"""A sapling growing into its tree, and the keystone that only a planted one gets.
+"""A sapling growing into its tree, and the fruit both kinds of tree come up with.
 
 ``sapling`` is a ``plant`` whose ripe growth roll replaces it with something
 else, and the something else is a datapack ``minecraft:tree`` feature — so what
-this checks is the join between the two, plus the asymmetry ``TreeGenerator``
-had and this port keeps: **only a planted tree sheds.** The keystone is a
-blockstate rather than an item on the ground, so the same measurement — the
-first block above the trunk — reads the planted tree's keystone and the
-generated tree's lack of one.
+this checks is the join between the two, plus what the feature's leaves carry.
+``TreeGenerator`` gave only a planted tree a keystone to shed from; the fruit
+leaf dropped that asymmetry with the keystone, and the feature places about one
+leaf in ten ripe whether the world or a sapling grew the tree. So the same
+measurement — ripe leaves counted over the canopy — reads both, and a generated
+tree with none would be the old asymmetry creeping back.
 
 Eight blocks of spacing is not decoration. ``TreeFeature`` checks a column one
 wider than the trunk for the whole height and leaves are not
@@ -57,8 +58,9 @@ def run(game, expect):
     expect.that("the tree is leaves of this mod's own",
                 game.block_is(top, orchard.LEAVES),
                 "%s above a trunk of %d" % (_at(game, top), top[1] - planted[1]))
-    expect.that("the leaf above the trunk of a planted tree is the keystone",
-                orchard.is_keystone(game, top))
+    ripe = orchard.ripe_leaves(game, top)
+    expect.that("a planted tree comes up with a few leaves already ripe", ripe > 0,
+                "%d ripe in a canopy of about fifty, at one in ten" % ripe)
 
     # ------------------------------------------------- a tree the world places
     game.place_feature("xiesmod:apple_leaves_tree", generated)
@@ -67,8 +69,9 @@ def run(game, expect):
     placed = expect.that("the world can place the same tree as a feature", canopy,
                          "" if canopy else "no canopy above %s" % (generated,))
     if placed:
-        expect.that("a generated tree has no keystone, so it never sheds",
-                    not orchard.is_keystone(game, wild_top))
+        wild_ripe = orchard.ripe_leaves(game, wild_top)
+        expect.that("and a tree the world places bears fruit too", wild_ripe > 0,
+                    "%d ripe in its canopy; every tree bears now" % wild_ripe)
 
     # ------------------------------------------------------------- the spacing
     if grew:

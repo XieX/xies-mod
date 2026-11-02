@@ -37,7 +37,7 @@ import java.util.Set;
  *       the port skips wholesale reports every key it has, which says how much of it
  *       is going unused rather than just that it was skipped.</li>
  *   <li><strong>A structure that parsed and then went nowhere</strong>, which is the
- *       one this could not see until it was taught to. {@code drops}, {@code sheds},
+ *       one this could not see until it was taught to. {@code drops}, {@code fruit},
  *       {@code blocks}, {@code blockBounds} and the texture keys are read by
  *       {@code XieFileReader} for every definition, so marking them consumed there
  *       proved only that the parser understood them — and {@code blazeTree}'s

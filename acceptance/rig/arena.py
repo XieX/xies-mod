@@ -23,7 +23,7 @@ REFERENCE = (0, 0)
 #: there to the next lane's corner.
 LANES = {
     "stem": (100, 100),
-    "sheds": (100, 120),
+    "fruit": (100, 120),
     "sapling": (100, 140),
     "decay": (140, 140),
     "spikey": (100, 160),

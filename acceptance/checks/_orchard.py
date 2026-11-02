@@ -1,4 +1,4 @@
-"""What the two tree checks both need: a planted tree, and its keystone leaf.
+"""What the two tree checks both need: a planted tree, and the fruit on it.
 
 A sapling is grown by hand rather than by waiting, because bone meal on a ripe
 Xie sapling is ``growWhenRipe`` outright — no roll — and because the hand path
@@ -131,9 +131,9 @@ def vanished(game, pos):
 def trunk_top(game, base, limit=32):
     """The first position above the trunk that is not a log.
 
-    That is exactly where ``XieTreeBlock.markKeystone`` puts the keystone, and
-    therefore the one position where a generated tree's *absence* of one can be
-    read with the same measurement as a planted tree's presence.
+    That is where ``StraightTrunkPlacer`` attaches the foliage, so it is the
+    canopy's own reference point: the blob placer hangs its four layers from
+    there downward.
     """
     y = base[1]
     while y < base[1] + limit and game.block_is((base[0], y, base[2]), "#minecraft:logs"):
@@ -141,8 +141,28 @@ def trunk_top(game, base, limit=32):
     return (base[0], y, base[2])
 
 
-def is_keystone(game, pos):
-    return game.block_is(pos, "%s[keystone=true]" % LEAVES)
+#: The oak blob canopy, from the attachment point: four layers down, five wide.
+CANOPY_RADIUS = 2
+CANOPY_LAYERS = 4
+
+
+def ripe_leaves(game, top, leaves=LEAVES):
+    """How many leaves of the canopy hanging from ``top`` are ripe.
+
+    One probe per position, a hundred of them, because there is no command that
+    counts blocks without changing them. The tree feature places about one leaf
+    in ten ripe, so a canopy of fifty with none at all is a one-in-two-hundred
+    accident: rare enough to read as a failure, and worth one rerun before it is
+    believed.
+    """
+    ripe = 0
+    for dy in range(0, -CANOPY_LAYERS, -1):
+        for dx in range(-CANOPY_RADIUS, CANOPY_RADIUS + 1):
+            for dz in range(-CANOPY_RADIUS, CANOPY_RADIUS + 1):
+                pos = (top[0] + dx, top[1] + dy, top[2] + dz)
+                if game.block_is(pos, "%s[age=1]" % leaves):
+                    ripe += 1
+    return ripe
 
 
 def what(game, pos):

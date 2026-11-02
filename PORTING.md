@@ -241,43 +241,83 @@ trunk and `straight_trunk_placer` with a base of 4 and a random of 2 rolls the s
 4 to 6. `TreeShape` picks between the three; nothing in the content declares one, so
 every fruit tree is an oak.
 
-That leaves `XieTreeBlock` holding only what vanilla has no equivalent for:
+That leaves `XieTreeBlock` holding the fruit — and the fruit was redesigned in October
+2026 rather than ported. Leaf decay is `LeavesBlock`'s either way: the forty lines of
+flood fill in `XieBlockLeaves.updateTick` were 1.6's `BlockLeaves` verbatim, and the
+modern one keeps a `distance` property instead and reaches the same answer without
+the array.
 
-- **`sheds`** — a tree drops its fruit on the ground of its own accord, which is the
-  whole point of a fruit tree and the one thing a datapack cannot express. One leaf
-  per tree does the shedding, the one directly above the topmost log; 1.6 called it
-  the keystone and packed it into a metadata bit, and it is a blockstate property
-  now. Having exactly one is not an accident of the old format — a canopy is fifty
-  blocks, and fifty leaves each rolling for fruit is fifty times the fruit.
-- **`shedSaturation`** — stop once eight of the fruit are already lying nearby. It is
-  what keeps an orchard from burying itself, and it is why shedding does not need
-  rate-limiting on top. **The count is taken where the fruit is about to be put**, as
-  1.6 took it, which makes it worth exactly as much as that position is right — see
-  below.
-- **Where the fruit lands had to be read rather than copied, twice.** The original
-  walks the neighbouring column down while it is *solid* and stops at the first air,
-  which is the opposite of finding the ground; that much was corrected when the
-  archetype was written. What was left is subtler and only a running game could show
-  it. The keystone sits inside the canopy, so a neighbouring column is air above
-  *leaves* about as often as it is air above the ground, and a descent that stops at
-  the first surface leaves the fruit on the canopy's own shoulder. As a landing spot
-  that is harmless, since the item falls out of the leaves anyway — but the
-  saturation count is taken there, so a tree aiming at its own foliage counts the
-  fruit lying under it as lying nowhere near, and sheds past the eight that were
-  meant to stop it. `groundBeside` skips leaves and logs now. It was found by
-  [the acceptance run](TESTING.md#the-acceptance-run) on its first day: the tree with
-  nine cocoa beans under it shed a tenth in two runs out of five, depending on the
-  trunk's height and which of the eight directions came up — which is exactly the kind of thing a
-  human verifying a behaviour once would have watched work and never seen fail.
-- Leaf decay is `LeavesBlock`'s. The forty lines of flood fill in
-  `XieBlockLeaves.updateTick` were 1.6's `BlockLeaves` verbatim; the modern one keeps
-  a `distance` property instead and reaches the same answer without the array.
+**What 2013 did.** One leaf per tree — the keystone, directly above the topmost log,
+packed into a metadata bit — rolled on every random tick to drop an item on the ground
+beside the tree, and `shedSaturation` stopped it once eight were lying nearby. Only a
+planted tree had a keystone; `TreeGenerator` skipped it for a wild one, because a
+forest of trees quietly dropping fruit is an item entity per tree. The port carried all
+of that first, keystone and saturation and the descent to the ground, and the
+acceptance run found on its first day that the saturation count was being taken on
+the canopy's own shoulder — see [TESTING.md](TESTING.md#the-acceptance-run), where the
+finding is kept.
 
-**Only a planted tree sheds.** `TreeGenerator` set the keystone when a sapling grew
-and skipped it when `Spawnable` generated the tree, and that asymmetry is kept: a
-wild fruit tree still yields fruit when you break its leaves, but an orchard you
-planted is what fruits on its own. It is also the difference between a handful of
-item entities and one per wild tree in every forest.
+**What it does now.** Vanilla still has no fruit trees, but since 1.14 it has reached
+the same design for fruit twice, on the sweet berry bush and the cave vine: the fruit
+grows *on the block*, shows, and is handed over on a right-click that leaves the block
+standing. A fruit leaf follows them:
+
+- it carries an `age`, from `maxGrowth` — one unless the content asks for more, so a
+  leaf is bare or ripe — and a tree with no `fruit` carries none, so `blazeTree`'s
+  blockstate is a vanilla leaf's;
+- it ripens on its own random ticks when it is on the outside of the canopy — any
+  face open to the air, the underside included, which is the face a player on the
+  ground can reach — and no ripe leaf that is open to the air stands beside it, with
+  a crop's `1 in 25` roll scaled by `growthRate`, which means the same thing here as
+  on every other archetype that ages. The neighbour rule spaces the fruit out and caps
+  what a tree nobody picks holds at about a third of its outside, the way vanilla's
+  mushrooms cap their spread by a count of their own kind nearby, and it costs
+  nothing: the six reads are the ones the exposure test makes. A buried ripe leaf,
+  which the feature may place, does not count, or it would hold its side of the
+  canopy bare for good;
+- a right-click on a ripe leaf pops the fruit out of the face that was clicked, plays
+  the berry-pick sound and resets the leaf, which is `SweetBerryBushBlock.useWithoutItem`
+  to the line. Not a punch: a left-click is the start of mining, a bare hand breaks a
+  leaf in a third of a second and creative breaks it at once, so the leaf being shaken
+  would as often be the leaf being destroyed;
+- bone meal ripens a leaf one stage, as it puts the berries on a cave vine;
+- a `persistent` leaf, which is one a player placed, bears nothing. A hedge of
+  sheared leaves is not an orchard, and vanilla draws the same line when it refuses
+  to decay them.
+
+The fruit itself is a *harvest loot table*, `xiesmod:harvest/apple_leaves`, at the
+kind of address vanilla keeps `minecraft:harvest/cave_vine` — written from `fruit`,
+which replaces `sheds` in the content and is read exactly as it was, keyed by the
+metadata that chose the subtype. The block asks for the table by its own name and
+never resolves an item.
+
+**Why it is cheaper, not dearer.** Random ticks are sampled: the server picks three
+positions per chunk section per tick and consults whatever block is there, so fifty
+leaves that may ripen cost nothing fifty keystones would not have, and
+`isRandomlyTicking` is asked only of the block that came up. What the keystone needed
+and this does not is an item entity per fruit and an entity scan per shed. The costs
+that do scale are small — `age` beside `distance`, `persistent` and `waterlogged`
+doubles a fruit tree's blockstates, and a stage change remeshes a chunk section far
+less often than a wheat field does.
+
+**Every tree bears, wild or planted.** With no entities to litter a forest the
+asymmetry has no reason left, and a wild lemon tree with lemons on it is the better
+find. The tree feature's `foliage_provider` is a `weighted_state_provider` over the
+ages, nine bare leaves to one ripe, so a tree generates — and a sapling grows — with a
+few already on it, as vanilla's sweet berry patches generate at full age, and the
+rest ripen on their own. The sapling no longer marks anything after `growTree`.
+
+**What the prototype leaves open** is yield and drawing. A canopy has some forty
+exposed leaves against one keystone, and the first playtest, at a crop's rate, found
+a tree laden within minutes. `fruitLeaves` now sets `growthRate` to 25, a quarter of
+a crop's speed, which at vanilla's three random ticks per section is a fruit every
+few minutes from a tree and a dozen on one nobody picks; the feature's ripe weight
+came down from one in seven to one in ten at the same time. Those are a second guess
+to play against, not a calibration. The ripe sprites, `fruitLeaves_<subtype>_1.png`, are placeholders drawn by
+a script — five dots of fruit colour on the leaf — until real ones replace them; a
+split block that ages looks for one sprite per subtype per stage, and a stage with no
+sprite of its own falls back to the subtype's bare one. The neighbour rule is
+asserted by the acceptance run; exposure itself — a buried leaf never ripening — is not.
 
 **Saplings are the first blocks to register a `BlockItem`**, and the only ones. Every
 other Xie block is planted from a seed or placed by worldgen, so an item form would
@@ -313,12 +353,20 @@ Three things needed a decision rather than a translation:
   ground. A plant wants exactly that; a block that replaces terrain wants one lower.
   Whether `spawnsIn` admits air decides the heightmap, the y offset, and the
   decoration step — `vegetal_decoration` with the flowers, or `underground_ores`
-  with the disks, which is where vanilla puts `disk_sand`.
+  with the disks, which is where vanilla puts `disk_sand`. A plant's heightmap is
+  `MOTION_BLOCKING_NO_LEAVES`, as vanilla's pale moss patch uses, so a plant spawning
+  in a forest is looked for on the forest floor rather than on its canopy. That took
+  wild tomato from 34% to 47% of forest attempts and wild corn from 77% to 93% of
+  savanna ones.
 - **A tree is already a feature.** An entry spawning a `tree` block writes only a
   placed feature and a biome modifier, pointing at the configured feature that block
-  already has — the same one a sapling grows. The placement itself is unchanged,
-  because that is how vanilla scatters its own trees, and the feature refuses a
-  position it does not fit.
+  already has — the same one a sapling grows. It gets the plants' leaf-free
+  heightmap, which suits `TreeFeature` since it grows a trunk up through leaves, and
+  one more rule taken from that feature: `#minecraft:replaceable_by_trees` counts as
+  air for `spawnsIn`, so short grass and ferns don't block it.
+  Without these, the single column an attempt gets landed on a jungle's canopy or in
+  its ferns nearly every time, and avocados, which spawn only in jungles and swamps,
+  were almost never found. Water still stops the heightmap, so a tree needs dry land.
 
 The target has to be a block this mod registered. An entry naming a vanilla block is
 either unported or, for `melon`, content dropped because vanilla supersedes it, and
@@ -328,6 +376,47 @@ the content asked for. Those are counted and named, like recipes.
 An entry keyed by an *alias* resolves through it, which is what `Xie.parseBlock` did
 before anything else. `fruit.json` declares no spawn entry named `fruitLeaves`, only
 four named for the trees, and the alias is the whole of the link between them.
+
+**Wild corn and wild tomato never generated, in any version.** `wildshrubs.json`
+aliased them as `shrub:1` and `shrub:2`, which in `name:count:meta` is a count and no
+subtype, so both entries placed the plain shrub. 2013 lost the subtype too:
+`JobSpawn.initSpawn` resolved the alias through `Xie.parseBlock`, which returns only
+the block, and `Spawnable(Block)` defaulted to subtype 0. The foraging rod hid it by
+handing out corn and tomato seeds from shrubs. With the rod gone, nothing else
+supplied either crop in survival, so the content now says `shrub:1:1` and `shrub:1:2`,
+which is how `fruit.json` writes its aliases.
+
+Wild tomato's `spawnsIn` was air alone, and a modern forest floor is not bare: leaf
+litter, which 1.21.5 added, covers about two columns in five. With `leafLitter` and
+`tallgrass` added, as corn already allowed tall grass, it lands in 82% of forest
+attempts rather than 47%. Swamps stay near 14%, because most of their ground is
+underwater.
+
+**Worldgen is a pack of its own,** "Xie's Mod worldgen" (`xiesmod_generated_worldgen`),
+in `_generated/_worldgen` beside the override pack. It holds every placed feature,
+biome modifier and biome tag, plus the configured features only spawns use. The tree
+features stay in the content pack, because a sapling grows by placing them. The pack
+is built in but not required, so the server enables it in any world that hasn't
+disabled it, including an existing world the first time it loads with the mod. A
+player can untick it under Data Packs when creating a world, or run `/datapack
+disable` and reopen the world; a `/reload` is not enough, because biome modifiers are
+read when a world opens. Splicing supplies every seed and sapling without it, but salt
+comes only from salt deposits, so a world without the pack has no salt.
+
+**A biome word can leave biomes out.** `BiomeNames.excluded` names what a tag took in
+that the 1.6 word never meant. So far that is only the forests: `#c:is_forest` gained
+the snowy grove and the pale garden, so `forest`, `wood`, `woods` and `woodland` take
+the tag minus `#c:is_snowy` and `minecraft:pale_garden`. No tag holds the pale garden
+alone, since `#c:is_spooky` includes the dark forest too. A tag can only add, so such
+a word is written as NeoForge's `neoforge:and` of the tag with a `neoforge:not` for each
+exclusion, joined to the entry's other words with `neoforge:or`.
+
+The fruit trees were also narrowed in content, so that each biome has its own fruit.
+Apple lost `taiga` and `jungle`, orange lost `forest` and `jungle`, and lemon lost
+`hills` and `foresthills`. That leaves apple and lemon in forests, orange in
+savannas, which it had dominated anyway as the only tree there, and avocado in
+jungles and swamps. In 1.6, `savanna`, `meadow`, `marsh` and `shrubland` matched only
+Biomes O' Plenty biomes, because vanilla had none of them until 1.7.
 
 Eating, cooking and burning
 ---------------------------
@@ -1021,9 +1110,9 @@ Structures that parse and go nowhere
 
 The blind spot the report above had, and the harder half of the same question.
 `untouchedKeys()` works for a scalar because the only thing that ever reads one is a
-consumer. It said nothing about `drops`, `sheds`, `blocks`, `blockBounds` and the
+consumer. It said nothing about `drops`, `fruit`, `blocks`, `blockBounds` and the
 texture keys, because `XieFileReader` reads *those* for every definition it
-understands — into `BlockDef.bounds()`, `.drops()`, `.sheds()`, `.tex()` and
+understands — into `BlockDef.bounds()`, `.drops()`, `.fruit()`, `.tex()` and
 `ItemDef.blockDrops()` — and marked them consumed on the spot. Which was true, and
 proved only that the parser understood them.
 
@@ -1075,7 +1164,7 @@ before the code says it. Left column is where `JobBlock` and `JobItem` read the 
 | structure | 1.6 read it for | the port consumes it for |
 |---|---|---|
 | block `drops` | every archetype, in `expandCommonBlockParameters` | every registered block: the loot tables, and the item-form test |
-| `sheds` | `tree` alone, in `doTree` | `tree` alone, in `treeConfig` |
+| `fruit`, which was `sheds` | `tree` alone, in `doTree` | `tree` alone, in `treeConfig` and the harvest loot table |
 | `blockBounds` | every archetype | `basic`, `log`, `tree` and the four growing ones — **not `stem`** |
 | block `tex`, `texFile`, `icon` | every archetype | every registered block **but `stem`** |
 | `textureBase` | every archetype, in `doTextureBase` | **cube-styled blocks only**, in a model's face entries |
@@ -1427,7 +1516,9 @@ left here is what the port itself cost time on, with the file that encodes each 
   `onBlockDestroyedByPlayer`: `ServerPlayerGameMode.removeBlock` calls it after the
   block has been cleared, on both the survival and the creative branch, which is what
   `becomesWhenDestroyed` needs. `MultiPlayerGameMode` calls it client-side too as a
-  prediction, so guard on `isClientSide`.
+  prediction, and the replacement should be placed there as well: the client has
+  already guessed air, and a successful break is not acknowledged directly, so a
+  server-only replacement shows a hole until the end-of-tick block broadcast.
 - **A block with no `age` property needs the empty variant key** — `{"variants":
   {"": {...}}}`. Emitting `age=0` for a block that has no such property is a
   blockstate load error, not a no-op, and the same goes for naming `age` in a loot

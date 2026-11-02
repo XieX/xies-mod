@@ -284,13 +284,19 @@ public final class XieRegistrar {
         DeferredBlock<Block> holder;
 
         if (def.archetype().equals(TREE)) {
-            XieTreeBlock.Config config = treeConfig(pack, def, meta);
+            XieTreeBlock.Config config = treeConfig(def, meta);
             holder = blocks.registerBlock(
                 path,
                 properties -> new XieTreeBlock(properties, config),
                 properties -> XieBlockProperties.forTree(def)
             );
-            trees.put(path, new RegisteredContent.Tree(trunkFor(pack, def, meta), TreeShape.forBlock(def)));
+            if (config.bearsFruit()) {
+                // Aged like a growing block, so the emitters give it a model per
+                // ripeness stage — and no age at all when it bears nothing.
+                maxAges.put(path, config.maxAge());
+            }
+            trees.put(path, new RegisteredContent.Tree(trunkFor(pack, def, meta),
+                TreeShape.forBlock(def), config.maxAge()));
         } else if (def.archetype().equals(LOG)) {
             XieLogBlock.Config config = new XieLogBlock.Config(
                 def.props().getString("becomesWhenDestroyed").map(name -> resolveBlockId(pack, name)),
@@ -413,12 +419,14 @@ public final class XieRegistrar {
         int growthRate = def.props().getInt("growthRate", 100);
         int growthHeight = def.props().getInt("growthHeight", 1);
 
-        // Both spellings, because JobBlock read both.
-        boolean fertilisable = def.props().getBoolean("fertilisable",
-            def.props().getBoolean("fertilizable", true));
-
         return new XiePlantBlock.Config(maxAge, growthRate, growthHeight, growsOn(pack, def),
-            boundsFor(def, split, meta), fertilisable, spikey(def));
+            boundsFor(def, split, meta), fertilisable(def), spikey(def));
+    }
+
+    /** Both spellings, because {@code JobBlock} read both. */
+    private static boolean fertilisable(BlockDef def) {
+        return def.props().getBoolean("fertilisable",
+            def.props().getBoolean("fertilizable", true));
     }
 
     /**
@@ -611,24 +619,21 @@ public final class XieRegistrar {
     // ------------------------------------------------------------------ trees
 
     /**
-     * What a tree lets fall of its own accord, narrowed to one subtype.
+     * Whether, and how fast, one subtype of a tree bears fruit.
      *
-     * <p>{@code sheds} is keyed by metadata exactly as {@code drops} is, and for a
+     * <p>{@code fruit} is keyed by metadata exactly as {@code drops} is, and for a
      * split definition metadata chose the subtype rather than a growth stage — so
-     * the apple tree takes the 20% written against 0 and the orange tree the one
-     * written against 1, and each is blind to the other's.
+     * the apple tree reads the entry written against 0 and the orange tree the one
+     * written against 1, and a subtype with no entry of its own bears nothing. What
+     * the fruit <em>is</em> never reaches the block: {@code XieDataEmitter} writes it
+     * as the harvest loot table the block asks for by name, so only the ripe stage and
+     * the speed are config.
      */
-    private XieTreeBlock.Config treeConfig(ContentPack pack, BlockDef def, int meta) {
-        List<XieTreeBlock.Shed> sheds = new ArrayList<>();
-        for (DropTable.Drop shed : def.sheds().drops()) {
-            int chance = Math.clamp(shed.chanceFor(meta), 0, 100);
-            if (chance > 0) {
-                sheds.add(new XieTreeBlock.Shed(
-                    resolveItemId(pack, shed.item()), chance, shed.amount()));
-            }
-        }
-        return new XieTreeBlock.Config(sheds, def.props().getInt("shedSaturation", 0),
-            spikey(def),
+    private XieTreeBlock.Config treeConfig(BlockDef def, int meta) {
+        boolean bears = def.fruit().drops().stream().anyMatch(drop -> drop.chanceFor(meta) > 0);
+        int maxAge = bears ? def.props().getInt("maxGrowth", 1) : 0;
+        return new XieTreeBlock.Config(maxAge, def.props().getInt("growthRate", 100),
+            fertilisable(def), spikey(def),
             boundsFor(def, false, meta).flatMap(MetaMap::first)
                 .filter(box -> !box.isFullBlock()));
     }
@@ -994,8 +999,8 @@ public final class XieRegistrar {
      * <p>Resolved to ids here and to blocks later, for the reason
      * {@link #resolveBlockId} gives: the registries are still filling, so all this
      * can do is derive the id a name <em>would</em> have. {@link XieToolItem} looks
-     * the blocks up when it first needs them, as {@link XieTreeBlock} does with what
-     * it sheds.
+     * the blocks up when it first needs them, as {@link XieTreeBlock} does with its
+     * harvest loot table.
      *
      * <p>Two shapes of the property from 2013 are not carried, and neither loses
      * anything, because both were dead on arrival. A bare string — {@code

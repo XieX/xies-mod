@@ -34,6 +34,18 @@ class BiomeNamesTest {
     }
 
     @Test
+    void leavesTheColdAndPaleForestsOutOfForest() {
+        // #c:is_forest gained the grove and the pale garden after 1.6, whose forests
+        // were all temperate.
+        List<String> notForest = List.of("#c:is_snowy", "minecraft:pale_garden");
+        assertEquals(notForest, BiomeNames.excluded("forest"));
+        assertEquals(notForest, BiomeNames.excluded("Wood"));
+        assertTrue(BiomeNames.excluded("jungle").isEmpty());
+        assertTrue(BiomeNames.excluded("moon").isEmpty());
+        assertTrue(BiomeNames.excluded(null).isEmpty());
+    }
+
+    @Test
     void hasNothingForAWordItDoesNotKnow() {
         assertTrue(BiomeNames.modern("moon").isEmpty());
         assertTrue(BiomeNames.modern("").isEmpty());

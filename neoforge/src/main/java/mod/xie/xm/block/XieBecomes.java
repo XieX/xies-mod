@@ -39,14 +39,15 @@ final class XieBecomes {
      * {@code playerDestroy}, which creative never reaches. Nothing else destroys a
      * block through it, so an explosion still just removes it, as it did in 1.6.
      *
-     * <p>{@code MultiPlayerGameMode} calls it client-side too, as a prediction; that
-     * client is told what happened by the server's own block update, so it is left to
-     * be.
+     * <p>{@code MultiPlayerGameMode} calls it client-side too, as a prediction, and
+     * the replacement is placed there as well. The client has already guessed air by
+     * this point, and on a successful break the server sends no direct acknowledgement:
+     * the sand arrives with the chunk's block changes at the end of the server tick,
+     * so skipping the client showed a hole for a tick or two. Vanilla predicts the
+     * same way where it can — {@code DoublePlantBlock} removes its other half on both
+     * sides.
      */
     void applyOnDestroy(LevelAccessor level, BlockPos pos) {
-        if (level.isClientSide()) {
-            return;
-        }
         state().ifPresent(become -> level.setBlock(pos, become, Block.UPDATE_ALL));
     }
 

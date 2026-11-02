@@ -23,7 +23,7 @@ import traceback
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from acceptance.checks import (  # noqa: E402
-    blocks, bows, cookpot, counts, crafter, cull, decay, fertilisable, fist, sapling, sheds,
+    blocks, bows, cookpot, counts, crafter, cull, decay, fertilisable, fist, fruit, sapling,
     ripen, sickle, spikey, stem,
 )
 from acceptance.rig.arena import REFERENCE  # noqa: E402
@@ -36,7 +36,7 @@ from acceptance.rig.session import Session, SessionError  # noqa: E402
 CHECKS = [
     ("counts", counts),
     ("stem", stem),
-    ("sheds", sheds),
+    ("fruit", fruit),
     ("sapling", sapling),
     ("decay", decay),
     ("spikey", spikey),

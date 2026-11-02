@@ -85,7 +85,7 @@ public final class PropertyMap {
      * unread again so that the report waits for whoever uses that structure.
      *
      * <p>The distinction the rest of this class cannot draw. {@code drops},
-     * {@code sheds}, {@code blockBounds}, {@code blocks} and the texture keys are all
+     * {@code fruit}, {@code blockBounds}, {@code blocks} and the texture keys are all
      * read by {@code XieFileReader} the moment a definition is parsed, so marking them
      * consumed there says only that the parser understood them — which was true of
      * {@code blazeTree}'s {@code blockBounds} for as long as it was going missing.

@@ -81,14 +81,14 @@ public class XieSaplingBlock extends XiePlantBlock {
      * rather than reimplementing those three steps also puts the growth through
      * NeoForge's {@code BlockGrowFeatureEvent}, so another mod can substitute or
      * veto the tree without knowing this one exists.
+     *
+     * <p>Nothing is done to the tree afterwards. The feature places leaves that
+     * already carry their {@code age}, so a planted tree and a wild one bear fruit
+     * the same way; see {@link XieTreeBlock}.
      */
     @Override
     protected void growWhenRipe(ServerLevel level, BlockPos pos, BlockState state, RandomSource random) {
-        grower.ifPresent(tree -> {
-            if (tree.growTree(level, level.getChunkSource().getGenerator(), pos, state, random)) {
-                // The feature has no idea this tree fruits; only a planted one does.
-                XieTreeBlock.markKeystone(level, pos);
-            }
-        });
+        grower.ifPresent(tree ->
+            tree.growTree(level, level.getChunkSource().getGenerator(), pos, state, random));
     }
 }

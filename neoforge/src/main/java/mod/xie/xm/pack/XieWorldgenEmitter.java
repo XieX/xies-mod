@@ -94,6 +94,9 @@ public final class XieWorldgenEmitter {
     /** The block tag rather than the block: cave air and void air are air too. */
     private static final String AIR = "minecraft:air";
 
+    /** What a tree may grow over as though it were air: {@code TreeFeature.validTreePos}. */
+    private static final String TREE_ROOM = "#minecraft:replaceable_by_trees";
+
     /** The spread {@code Spawnable.attemptSpawn} used around a chosen point. */
     private static final int XZ_SPREAD = 8;
     private static final int Y_SPREAD = 2;
@@ -113,7 +116,11 @@ public final class XieWorldgenEmitter {
     private static final String STEP_IN_AIR = "vegetal_decoration";
     private static final String STEP_IN_TERRAIN = "underground_ores";
 
+    /** Where tree features go: a sapling needs them whether or not anything spawns. */
     private final Path dataRoot;
+
+    /** Where everything else goes, in the worldgen pack a world can switch off. */
+    private final Path spawnRoot;
     private final BlockRefs refs;
 
     /** Feature ids already written; spawn names repeat across files, as recipes do. */
@@ -122,8 +129,9 @@ public final class XieWorldgenEmitter {
     /** Leaves block id path to its tree, for the run in progress. */
     private Map<String, RegisteredContent.Tree> trees = Map.of();
 
-    public XieWorldgenEmitter(Path dataRoot, BlockRefs refs) {
+    public XieWorldgenEmitter(Path dataRoot, Path spawnRoot, BlockRefs refs) {
         this.dataRoot = dataRoot;
+        this.spawnRoot = spawnRoot;
         this.refs = refs;
     }
 
@@ -219,23 +227,31 @@ public final class XieWorldgenEmitter {
 
         String id = uniqueId(ResourceNames.toPath(spawn.name()));
 
+        // A tree already has a feature — the one a sapling grows — so the entry
+        // contributes only a placed feature pointing at it, and the feature refuses
+        // a position it does not fit.
+        String featureId = treeFeatureFor(blockId).orElse(null);
+
+        // A plant or tree looks for ground beneath any canopy: otherwise the one column
+        // an attempt gets lands on a forest's leaves about as often as on its floor,
+        // and on a jungle's nearly every time. A tree also treats the plants it would
+        // overgrow as room, because TreeFeature does. Water still stops the heightmap,
+        // so either still needs dry land.
         JsonArray placement = new JsonArray();
         placement.add(rarityFilter(spawn.rarity()));
         placement.add(typed("minecraft:in_square"));
-        placement.add(heightmap(intoAir ? "MOTION_BLOCKING" : "OCEAN_FLOOR_WG"));
+        placement.add(heightmap(intoAir ? "MOTION_BLOCKING_NO_LEAVES" : "OCEAN_FLOOR_WG"));
         placement.add(typed("minecraft:biome"));
-
-        // A tree already has a feature — the one a sapling grows — so the entry
-        // contributes only a placed feature pointing at it. Nothing else about the
-        // placement changes: vanilla's own trees are scattered exactly this way,
-        // and the feature refuses a position it does not fit.
-        String featureId = treeFeatureFor(blockId).orElse(null);
 
         if (featureId != null) {
             scatter(placement, spawn, yShift);
             if (spawn.hasPlacementRules()) {
+                List<String> room = new ArrayList<>(in);
+                if (in.contains(AIR)) {
+                    room.add(TREE_ROOM);
+                }
                 placement.add(blockPredicateFilter(
-                    predicate(in, on, under, near, spawn.nearDistance(), Optional.empty())));
+                    predicate(room, on, under, near, spawn.nearDistance(), Optional.empty())));
             }
         } else {
             JsonObject feature;
@@ -259,7 +275,7 @@ public final class XieWorldgenEmitter {
                 }
             }
             featureId = XiesMod.MOD_ID + ":" + id;
-            PackJson.write(dataRoot.resolve("worldgen").resolve("configured_feature")
+            PackJson.write(spawnRoot.resolve("worldgen").resolve("configured_feature")
                 .resolve(id + ".json"), feature);
         }
 
@@ -269,13 +285,13 @@ public final class XieWorldgenEmitter {
 
         JsonObject modifier = new JsonObject();
         modifier.addProperty("type", "neoforge:add_features");
-        modifier.addProperty("biomes", biomeSet(id, biomes));
+        modifier.add("biomes", biomeHolder(id, spawn));
         modifier.addProperty("features", XiesMod.MOD_ID + ":" + id);
         modifier.addProperty("step", intoAir ? STEP_IN_AIR : STEP_IN_TERRAIN);
 
-        Path worldgen = dataRoot.resolve("worldgen");
+        Path worldgen = spawnRoot.resolve("worldgen");
         PackJson.write(worldgen.resolve("placed_feature").resolve(id + ".json"), placed);
-        PackJson.write(dataRoot.resolve("neoforge").resolve("biome_modifier").resolve(id + ".json"),
+        PackJson.write(spawnRoot.resolve("neoforge").resolve("biome_modifier").resolve(id + ".json"),
             modifier);
         return Optional.empty();
     }
@@ -357,9 +373,64 @@ public final class XieWorldgenEmitter {
         tag.add("values", values);
 
         String path = "spawns_in/" + id;
-        PackJson.write(dataRoot.resolve("tags").resolve("worldgen").resolve("biome")
+        PackJson.write(spawnRoot.resolve("tags").resolve("worldgen").resolve("biome")
             .resolve(path + ".json"), tag);
         return "#" + XiesMod.MOD_ID + ":" + path;
+    }
+
+    /**
+     * The {@code biomes} field of the modifier, including any biomes a word
+     * {@linkplain BiomeNames#excluded leaves out}.
+     *
+     * <p>A tag only ever adds, so an excluding word cannot join the others in
+     * {@link #biomeSet}'s tag. It becomes NeoForge's composite holder set instead —
+     * its tag {@code and} {@code not} each exclusion — joined to the rest with
+     * {@code or}.
+     */
+    private JsonElement biomeHolder(String id, SpawnDef spawn) throws IOException {
+        Set<String> plain = new LinkedHashSet<>();
+        Set<JsonElement> narrowed = new LinkedHashSet<>();
+        if (spawn.biomes().isEmpty()) {
+            plain.add(BiomeNames.ANY_OVERWORLD);
+        }
+        for (String declared : spawn.biomes()) {
+            List<String> excluded = BiomeNames.excluded(declared);
+            if (excluded.isEmpty()) {
+                plain.addAll(BiomeNames.modern(declared));
+                continue;
+            }
+            JsonArray values = new JsonArray();
+            BiomeNames.modern(declared).forEach(values::add);
+            for (String out : excluded) {
+                JsonObject not = typed("neoforge:not");
+                // A single id is wrapped, because only a tag may stand alone everywhere.
+                if (out.startsWith("#")) {
+                    not.addProperty("value", out);
+                } else {
+                    JsonArray ids = new JsonArray();
+                    ids.add(out);
+                    not.add("value", ids);
+                }
+                values.add(not);
+            }
+            JsonObject and = typed("neoforge:and");
+            and.add("values", values);
+            narrowed.add(and);
+        }
+
+        List<JsonElement> parts = new ArrayList<>();
+        if (!plain.isEmpty()) {
+            parts.add(new JsonPrimitive(biomeSet(id, List.copyOf(plain))));
+        }
+        parts.addAll(narrowed);
+        if (parts.size() == 1) {
+            return parts.get(0);
+        }
+        JsonArray values = new JsonArray();
+        parts.forEach(values::add);
+        JsonObject or = typed("neoforge:or");
+        or.add("values", values);
+        return or;
     }
 
     /** The modern biome references this entry allows, or everything when it says nothing. */
@@ -410,17 +481,20 @@ public final class XieWorldgenEmitter {
      *
      * <p>Air is tested through its tag rather than by name, because cave air and void
      * air are air as far as anything placing a block is concerned, and vanilla's own
-     * patch features test it that way.
+     * patch features test it that way. Any other {@code #}-prefixed id is a tag too.
      */
     private JsonObject matching(List<String> ids, int dx, int dy, int dz) {
-        List<String> concrete = ids.stream().filter(id -> !id.equals(AIR)).toList();
+        List<String> concrete = ids.stream()
+            .filter(id -> !id.equals(AIR) && !id.startsWith("#")).toList();
         JsonArray parts = new JsonArray();
-        if (concrete.size() < ids.size()) {
-            JsonObject air = new JsonObject();
-            air.addProperty("type", "minecraft:matching_block_tag");
-            air.addProperty("tag", AIR);
-            offset(air, dx, dy, dz);
-            parts.add(air);
+        for (String id : ids) {
+            if (id.equals(AIR) || id.startsWith("#")) {
+                JsonObject tag = new JsonObject();
+                tag.addProperty("type", "minecraft:matching_block_tag");
+                tag.addProperty("tag", id.startsWith("#") ? id.substring(1) : id);
+                offset(tag, dx, dy, dz);
+                parts.add(tag);
+            }
         }
         if (!concrete.isEmpty()) {
             JsonObject blocks = new JsonObject();
@@ -562,7 +636,9 @@ public final class XieWorldgenEmitter {
     private static JsonObject treeFeature(String leavesId, RegisteredContent.Tree tree) {
         JsonObject config = new JsonObject();
         config.add("trunk_provider", axisProvider(tree.trunkId()));
-        config.add("foliage_provider", stateProvider(leavesId));
+        config.add("foliage_provider", tree.fruitAges() > 0
+            ? fruitingFoliage(leavesId, tree.fruitAges())
+            : stateProvider(leavesId));
         config.add("decorators", new JsonArray());
 
         switch (tree.shape()) {
@@ -615,6 +691,40 @@ public final class XieWorldgenEmitter {
         size.addProperty("lower_size", lowerSize);
         size.addProperty("upper_size", upperSize);
         return size;
+    }
+
+    /** How many bare leaves a fruiting canopy generates for each one already ripe. */
+    private static final int BARE_LEAVES_PER_RIPE = 9;
+
+    /**
+     * The leaves of a tree that bears fruit: mostly bare, with one in
+     * {@value #BARE_LEAVES_PER_RIPE} plus one already ripe — or, on a tree with more
+     * than one ripeness stage, one at each later stage.
+     *
+     * <p>Vanilla's sweet berry patches generate at full age so that a bush found in a
+     * taiga has berries on it, and a fruit tree found in a forest should likewise have
+     * some fruit on it. The same feature places the tree a sapling grows, so a planted
+     * tree comes up with a few as well; the rest ripen on their own. Leaves inside the
+     * canopy draw a ripe state too, but neither show it nor hold a neighbour bare: the
+     * ripening rule in {@code XieTreeBlock} counts only a ripe neighbour that is open
+     * to the air, and is about what grows, not what was placed.
+     */
+    private static JsonObject fruitingFoliage(String leavesId, int maxAge) {
+        JsonArray entries = new JsonArray();
+        for (int age = 0; age <= maxAge; age++) {
+            JsonObject properties = new JsonObject();
+            properties.addProperty("age", String.valueOf(age));
+            JsonObject state = blockState(leavesId);
+            state.add("Properties", properties);
+
+            JsonObject entry = new JsonObject();
+            entry.addProperty("weight", age == 0 ? BARE_LEAVES_PER_RIPE : 1);
+            entry.add("data", state);
+            entries.add(entry);
+        }
+        JsonObject provider = typed("minecraft:weighted_state_provider");
+        provider.add("entries", entries);
+        return provider;
     }
 
     /** A log, which unlike a leaf has to say which way up it is. */

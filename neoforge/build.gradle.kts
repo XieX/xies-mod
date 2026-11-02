@@ -105,6 +105,11 @@ val templateProperties = mapOf(
 val contentRepo = layout.projectDirectory.dir("../../mod-content")
 val bundledRoot = "bundled"
 val bundledPack = "mod-content"
+// The content repo's files point "$schema" at its own _schema/ snapshot, which is left
+// out of the jar. Extracted, they sit under xiecontent/mod-content/, and the schema the
+// mod installs is at the top of xiecontent/, so each reference is rewritten to climb out
+// to it.
+val schemaRef = Regex("\"[^\"]*_schema/xie-content\\.schema\\.json\"")
 
 tasks.named<ProcessResources>("processResources") {
     val replacements = templateProperties
@@ -125,11 +130,25 @@ tasks.named<ProcessResources>("processResources") {
     val version = templateProperties["mod_version"].toString()
     val root = bundledRoot
     val pack = bundledPack
+    val schema = schemaRef
     doLast {
         val packDir = destinationDir.resolve(root).resolve(pack)
         if (!packDir.isDirectory) {
             return@doLast
         }
+        // Done here rather than with a copy filter, which would rewrite every line ending
+        // to the build machine's.
+        packDir.walkTopDown()
+            .filter { it.isFile && it.extension == "json" }
+            .forEach { file ->
+                val depth = file.relativeTo(packDir).invariantSeparatorsPath.count { it == '/' } + 1
+                val target = "\"" + "../".repeat(depth) + "xie-content.schema.json\""
+                val text = file.readText(Charsets.UTF_8)
+                val rewritten = text.replace(schema) { target }
+                if (rewritten != text) {
+                    file.writeText(rewritten, Charsets.UTF_8)
+                }
+            }
         val index = packDir.walkTopDown()
             .filter { it.isFile }
             .map { it.relativeTo(packDir).invariantSeparatorsPath }

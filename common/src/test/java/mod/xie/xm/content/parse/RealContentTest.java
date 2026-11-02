@@ -81,29 +81,28 @@ class RealContentTest {
     }
 
     /**
-     * {@code sheds} is written exactly like {@code drops} and means something else,
+     * {@code fruit} is written exactly like {@code drops} and means something else,
      * so it is parsed by the same code into a field of its own. Getting the two
      * confused would make a fruit tree drop its whole harvest when you break a leaf.
      */
     @Test
-    void readsShedsSeparatelyFromDrops() {
+    void readsFruitSeparatelyFromDrops() {
         BlockDef leaves = result.pack().blocks().get("fruitLeaves");
         assertNotNull(leaves, "expected fruitLeaves from farming/trees/fruit.json");
         assertEquals("tree", leaves.archetype());
 
         assertEquals(List.of("apple", "orange", "lemon", "avocado"),
-            leaves.sheds().drops().stream().map(drop -> drop.item().name()).toList());
+            leaves.fruit().drops().stream().map(drop -> drop.item().name()).toList());
         assertEquals(List.of("apple", "orange", "lemon", "avocado"),
             leaves.drops().drops().stream().map(drop -> drop.item().name()).toList());
 
         // Metadata picks the subtype here rather than a growth stage, so each fruit
         // belongs to exactly one of the four trees.
-        var orange = leaves.sheds().drops().get(1);
-        assertEquals(20, orange.chanceFor(1), "the orange tree sheds oranges");
+        var orange = leaves.fruit().drops().get(1);
+        assertEquals(100, orange.chanceFor(1), "the orange tree bears oranges");
         assertEquals(0, orange.chanceFor(0), "the apple tree does not");
-        assertEquals(8, leaves.props().getInt("shedSaturation", 0));
-        assertTrue(result.pack().blocks().get("fruitSapling").sheds().isEmpty(),
-            "a sapling sheds nothing");
+        assertTrue(result.pack().blocks().get("fruitSapling").fruit().isEmpty(),
+            "a sapling bears nothing");
     }
 
     /** What the emitter warns about, held at none: no crop pays for its seed unripe. */

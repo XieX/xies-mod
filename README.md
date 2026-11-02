@@ -61,8 +61,8 @@ python acceptance/run.py
 ```
 
 The **acceptance run**: it starts the dedicated server, joins a real client to it,
-and asserts the behaviours only a running game can show — a stem fruiting, a tree
-shedding, a sapling growing, a canopy that stays up on a trunk this mod invented,
+and asserts the behaviours only a running game can show — a stem fruiting, a leaf
+ripening and picked, a sapling growing, a canopy that stays up on a trunk this mod invented,
 bone meal being refused, the sickle, the Ultimate Fist, the bows, a craft remainder,
 a block that comes away with its soil, and the culled recipes. It prints pass or fail per assertion and exits non-zero on any
 failure, so it can be left alone. Add `--list` to see the checks, `--only <name>`
@@ -122,7 +122,8 @@ The one hard requirement is a stem's `grows`, without which the engine refuses t
 register it. The branches match the lower-case spelling, so a `"type": "Crop"`, which the
 engine accepts, gets the common properties and no more. The schema is also kept as
 `_schema/xie-content.schema.json` in the content repo, where its own files point, and the
-two copies are kept identical by hand.
+two copies are kept identical by hand. `_schema/` is not bundled, so the build rewrites
+each bundled file's `$schema` to climb out of `mod-content/` to the installed schema.
 
 A drop's `amount` is not a stack size but a number of independent rolls, each yielding
 one item at `chance` percent, and a `chance` keyed by growth stage is how a plant pays
@@ -149,7 +150,7 @@ Port status
 - [x] Annual `crop` with vanilla's farmland-adjacency growth bonus, and `growthHeight`
 - [x] `basic` blocks — `becomesWhenDestroyed`, `walkthroughable`, `textureBase`
 - [x] Worldgen from `spawns` — configured features, placed features, biome modifiers
-- [x] Fruit trees — `sapling` and `tree`, with `sheds` and `shedSaturation`
+- [x] Fruit trees — `sapling` and `tree`, with `fruit` ripening on the leaves and picked off them
 - [x] Food as data components — `container`, `action`, `potionEffect` and a food's `drops`
 - [x] `cooked` as furnace, smoker and campfire recipes; `fuel` as furnace burn times
 - [x] `cull` recipes, as a pass over the recipe JSON as it loads
@@ -202,7 +203,11 @@ have been dropped rather than shipped as worse duplicates:
 The sibling Food Stacking and Hunger mods are obsolete outright — food stacks to 64
 in vanilla, and hunger has been a core mechanic since Beta 1.8.
 
-Vanilla has still never added fruit trees, salt, tofu, or sandwiches.
+Vanilla has still never added fruit trees, salt, tofu, or sandwiches. Salt does now
+have a renewable source for worlds whose deserts were generated before the mod was
+installed: a dried kelp block smelts into a salt block, which crafts into four salt
+and back, as a storage block does. Nine kelp to four salt, so a deposit on the beach
+is still the cheaper find. New in the port rather than ported.
 
 The generated pack is written to `<gamedir>/xiecontent/_generated/` on every launch
 rather than served from memory, so you can open it and see exactly what a
@@ -228,9 +233,10 @@ they cost less code than anything else in it. The 2013 engine carried three tree
 generators, and all three were Minecraft's own oak, spruce and pine copied out of
 vanilla, so a `tree` is emitted as a `minecraft:tree` configured feature and vanilla
 places it, for worldgen and for a growing sapling alike. Leaf decay is vanilla's too.
-What is left is the part vanilla has no equivalent for: a planted tree drops its
-fruit on the ground, from one leaf just above the trunk, and stops once eight of them
-are lying there.
+What is left is the fruit, and that follows vanilla's berries rather than the 2013
+keystone: a leaf on the outside of the canopy, with no ripe leaf beside it, ripens on
+its own random ticks, shows its fruit, and hands it over on a right-click that leaves the leaf standing, with
+the harvest written as a loot table the way a cave vine's is.
 
 Worldgen is the clearest case of the port deleting code rather than moving it. In
 2013 a generator ran on every chunk populate and hand-placed blocks; now a `spawns`
@@ -248,7 +254,18 @@ exists — a mod that tags its own swamp gets wild tomatoes without either side
 knowing about the other. Two words have no modern counterpart of their own: `marsh`
 and `shrubland` were biomes from the mod packs of the day, and nothing tags anything
 as either, so each takes its nearest neighbour — a marsh joins the swamps and a
-shrubland the savannas.
+shrubland the savannas. A tag can also reach further than the word did:
+`#c:is_forest` now includes the snowy grove and the pale garden, so `forest` takes the
+tag minus those two.
+
+Everything the `spawns` sections add to the world goes in a datapack of its own,
+"Xie's Mod worldgen". It is on by default, in new worlds and in existing ones the
+first time they load with the mod, and only chunks generated afterwards are
+affected. To leave it out, untick it under Data Packs when creating a world, or run
+`/datapack disable "xiesmod_generated_worldgen"` and reopen the world. Saplings
+still grow either way. What is lost is the content that only worldgen supplies:
+wild corn and wild tomato plants, and salt, which comes only from salt deposits.
+Every seed and sapling can still be made by splicing.
 
 Aliases are the clearest win from the port. `$salady` used to be expanded into the
 cartesian product of concrete recipes at load time, turning one sammich recipe with
@@ -380,7 +397,7 @@ the 2013 engine parsed into a method whose body is `// TODO FTFESAD` — so the 
 were never used by anything, and there is nothing to port but the intention.
 
 That report had a blind spot of its own, and it has been closed. A property the parser
-turns into a structure of its own — what a block drops, what a tree sheds, the blocks a
+turns into a structure of its own — what a block drops, what a tree bears, the blocks a
 sickle reaps, a collision box, a texture assignment — was marked read the moment the
 parser read it, which said nothing about whether any archetype then wanted the value.
 That is how a fruit tree's collision box went missing in silence for as long as it did:

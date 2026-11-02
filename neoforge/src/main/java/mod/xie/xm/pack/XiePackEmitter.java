@@ -81,6 +81,15 @@ public final class XiePackEmitter {
      */
     public static final String OVERRIDE_DIR_NAME = "_overrides";
 
+    /**
+     * A third pack root, holding what the {@code spawns} sections put into the world:
+     * placed features, biome modifiers and the features only they use. It is separate
+     * so that a world can leave it out, for anyone who would rather not see new
+     * chunks change, while the tree features a sapling grows stay in the content pack,
+     * where nothing switches them off.
+     */
+    public static final String WORLDGEN_DIR_NAME = "_worldgen";
+
     /** The vanilla parent model each {@link RenderStyle} is drawn with. */
     private static final Map<RenderStyle, String> STYLE_PARENTS = Map.of(
         RenderStyle.CROSS, "minecraft:block/cross",
@@ -133,6 +142,7 @@ public final class XiePackEmitter {
 
     private final Path outputRoot;
     private final Path overrideRoot;
+    private final Path worldgenRoot;
     private final Path contentRoot;
     private final XieDataEmitter dataEmitter;
 
@@ -142,11 +152,18 @@ public final class XiePackEmitter {
         this.contentRoot = contentRoot;
         this.outputRoot = contentRoot.resolve(OUTPUT_DIR_NAME);
         this.overrideRoot = outputRoot.resolve(OVERRIDE_DIR_NAME);
-        this.dataEmitter = new XieDataEmitter(outputRoot, overrideRoot, itemLookup, blockLookup);
+        this.worldgenRoot = outputRoot.resolve(WORLDGEN_DIR_NAME);
+        this.dataEmitter = new XieDataEmitter(outputRoot, overrideRoot, worldgenRoot,
+            itemLookup, blockLookup);
     }
 
     public Path outputRoot() {
         return outputRoot;
+    }
+
+    /** The worldgen pack root, which like the override pack exists even when empty. */
+    public Path worldgenRoot() {
+        return worldgenRoot;
     }
 
     /**
@@ -237,7 +254,8 @@ public final class XiePackEmitter {
         }
 
         XieDataEmitter.Counts data = dataEmitter.emit(packs, registered);
-        writeOverridePackMeta(formats);
+        writeDataPackMeta(overrideRoot, "Xie's Mod vanilla overrides", formats);
+        writeDataPackMeta(worldgenRoot, "What Xie's Mod content spawns in new chunks", formats);
 
         LOGGER.info("Emitted pack to {}: {} block models, {} item models, {} textures, "
                 + "{} loot tables, {} recipes, {} alias tags, {} block tags, {} worldgen features, "
@@ -305,20 +323,21 @@ public final class XiePackEmitter {
     }
 
     /**
-     * The override pack's own metadata. Datapack formats only — it never holds
-     * {@code assets/}, because the one thing an override needs is to outrank vanilla
-     * and nothing on the resource side has asked for that.
+     * Metadata for the override and worldgen packs. Datapack formats only — neither
+     * holds {@code assets/}: an override needs only to outrank vanilla, and nothing
+     * on the resource side has asked for that, while worldgen is data by nature.
      */
-    private void writeOverridePackMeta(PackFormats formats) throws IOException {
+    private void writeDataPackMeta(Path root, String description, PackFormats formats)
+            throws IOException {
         JsonObject pack = new JsonObject();
-        pack.addProperty("description", "Xie's Mod vanilla overrides");
+        pack.addProperty("description", description);
         pack.addProperty("pack_format", formats.dataMajor());
         pack.add("min_format", packFormat(formats.dataMajor(), 0));
         pack.add("max_format", packFormat(formats.dataMajor(), formats.dataMinor()));
 
-        JsonObject root = new JsonObject();
-        root.add("pack", pack);
-        write(overrideRoot.resolve("pack.mcmeta"), root);
+        JsonObject meta = new JsonObject();
+        meta.add("pack", pack);
+        write(root.resolve("pack.mcmeta"), meta);
     }
 
     private static JsonArray packFormat(int major, int minor) {
@@ -724,7 +743,14 @@ public final class XiePackEmitter {
         Map<String, String> borrowed = new LinkedHashMap<>();
         for (int age = 0; age <= stages.maxAge(); age++) {
             int sprite = split ? meta : age;
-            Path candidate = findSprite(source, def.name(), sprite)
+            // A split block that also ages — a fruit tree's leaves — draws one sprite
+            // per subtype per stage, fruitLeaves_0_1 for the apple tree's ripe leaf.
+            // A stage with no sprite of its own is the subtype's bare one.
+            Optional<Path> staged = split && age > 0
+                ? findSprite(source, def.name() + "_" + meta, age)
+                : Optional.empty();
+            Path candidate = staged
+                .or(() -> findSprite(source, def.name(), sprite))
                 .or(() -> findTexture(source, def.name()))
                 .orElse(lastFound);
             if (candidate == null) {

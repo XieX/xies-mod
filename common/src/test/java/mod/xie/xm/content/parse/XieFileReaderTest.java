@@ -469,18 +469,19 @@ class XieFileReaderTest {
     }
 
     /**
-     * {@code sheds} is a {@code tree}'s alone — {@code JobBlock} reads it in
-     * {@code doTree} and nowhere else — so a definition declaring it on anything else
-     * loses it, and the report is the only thing that will ever say so.
+     * {@code fruit} is a {@code tree}'s alone — as {@code JobBlock} read the
+     * {@code sheds} it replaces in {@code doTree} and nowhere else — so a definition
+     * declaring it on anything else loses it, and the report is the only thing that
+     * will ever say so.
      */
     @Test
-    void reportsAShedsNoArchetypeWillRead() {
+    void reportsAFruitNoArchetypeWillRead() {
         XieFileReader.Result result = read("""
             { "blocks": { "b": { "name": "B", "type": "basic",
-                "sheds": { "apple": { "chance": 20 } } } } }
+                "fruit": { "apple": { "chance": 100 } } } } }
             """);
         BlockDef block = result.blocks().get("b");
-        assertEquals(java.util.Set.of("sheds"), block.props().unconsumedStructures());
+        assertEquals(java.util.Set.of("fruit"), block.props().unconsumedStructures());
     }
 
     /**

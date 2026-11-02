@@ -27,6 +27,11 @@ import java.util.Map;
  * is a wetland, so it joins the swamps, and a shrubland is dry open scrub, which is
  * what a savanna is. A word this table has no row for at all still resolves to
  * nothing, and the caller reports it rather than silently widening the biome list.
+ *
+ * <p>A tag can also reach further than the word did. 1.6's only forests were Forest
+ * and ForestHills, but {@code #c:is_forest} has since taken in the snowy grove and
+ * the pale garden, where an orchard or a tomato plant has no business. So a word can
+ * name what it leaves out as well as what it means.
  */
 public final class BiomeNames {
 
@@ -34,11 +39,16 @@ public final class BiomeNames {
     public static final String ANY_OVERWORLD = "#minecraft:is_overworld";
 
     private static final Map<String, List<String>> BIOMES = new LinkedHashMap<>();
+    private static final Map<String, List<String>> EXCLUDED = new LinkedHashMap<>();
 
     private BiomeNames() { }
 
     private static void map(String legacy, String... modern) {
         BIOMES.put(legacy, List.of(modern));
+    }
+
+    private static void exclude(String legacy, String... modern) {
+        EXCLUDED.put(legacy, List.of(modern));
     }
 
     static {
@@ -81,6 +91,11 @@ public final class BiomeNames {
         map("hell", "#c:is_nether");
         map("sky", "#c:is_end");
         map("end", "#c:is_end");
+
+        // No tag holds the pale garden alone: #c:is_spooky has the dark forest too.
+        for (String forest : List.of("forest", "wood", "woods", "woodland")) {
+            exclude(forest, "#c:is_snowy", "minecraft:pale_garden");
+        }
     }
 
     /**
@@ -92,10 +107,18 @@ public final class BiomeNames {
      * {@code biomes} field accepts.
      */
     public static List<String> modern(String legacyName) {
-        if (legacyName == null) {
-            return List.of();
-        }
-        String key = legacyName.trim().toLowerCase(Locale.ROOT).replace(" ", "");
-        return BIOMES.getOrDefault(key, List.of());
+        return BIOMES.getOrDefault(key(legacyName), List.of());
+    }
+
+    /**
+     * The biomes inside {@link #modern} that the word never meant, as tags or ids, or
+     * an empty list when it takes all of them.
+     */
+    public static List<String> excluded(String legacyName) {
+        return EXCLUDED.getOrDefault(key(legacyName), List.of());
+    }
+
+    private static String key(String legacyName) {
+        return legacyName == null ? "" : legacyName.trim().toLowerCase(Locale.ROOT).replace(" ", "");
     }
 }

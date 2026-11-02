@@ -51,9 +51,13 @@ public final class XiePackProvider {
     /** The override pack, which is a separate pack because it needs to outrank vanilla. */
     public static final String OVERRIDE_PACK_ID = PACK_ID + "_overrides";
 
+    /** The worldgen pack, which is a separate pack because a world may leave it out. */
+    public static final String WORLDGEN_PACK_ID = PACK_ID + "_worldgen";
+
     /** The generated output, once written. Guarded by {@link #LOCK}. */
     private static Path generatedRoot;
     private static Path overrideRoot;
+    private static Path worldgenRoot;
     private static boolean generationFailed;
 
     private static final Object LOCK = new Object();
@@ -71,7 +75,7 @@ public final class XiePackProvider {
         // user pack can override, not something that overrides them. For the
         // datapack side always-active also means required, which is what the blocks
         // need — a registered block whose loot table is switched off drops nothing.
-        addPack(event, type, PACK_ID, "Xie's Mod content", root, Pack.Position.BOTTOM);
+        addPack(event, type, PACK_ID, "Xie's Mod content", root, Pack.Position.BOTTOM, true);
 
         // The exact opposite, which is why it is a pack of its own. A definition that
         // declares "override" writes a file at a vanilla id, and a pack below vanilla
@@ -85,12 +89,23 @@ public final class XiePackProvider {
         // every world that once loaded it.
         if (type == PackType.SERVER_DATA && overrideRoot != null) {
             addPack(event, type, OVERRIDE_PACK_ID, "Xie's Mod vanilla overrides",
-                overrideRoot, Pack.Position.TOP);
+                overrideRoot, Pack.Position.TOP, true);
+        }
+
+        // The one pack a world may do without. Not required, so it is listed on the
+        // Create World screen's data packs and /datapack can disable it; built in, so
+        // the server enables it in any world that has not disabled it, including an
+        // existing world the first time it loads with the mod. Its biome modifiers are
+        // read when a world opens, so switching it takes a reopen, not a /reload.
+        if (type == PackType.SERVER_DATA && worldgenRoot != null) {
+            addPack(event, type, WORLDGEN_PACK_ID, "Xie's Mod worldgen",
+                worldgenRoot, Pack.Position.BOTTOM, false);
         }
     }
 
     private static void addPack(AddPackFindersEvent event, PackType type, String id,
-                                String title, Path root, Pack.Position position) {
+                                String title, Path root, Pack.Position position,
+                                boolean required) {
         PackLocationInfo location = new PackLocationInfo(
             id,
             Component.literal(title),
@@ -110,7 +125,7 @@ public final class XiePackProvider {
         };
 
         Pack pack = Pack.readMetaAndCreate(
-            location, resources, type, new PackSelectionConfig(true, position, false));
+            location, resources, type, new PackSelectionConfig(required, position, false));
 
         if (pack == null) {
             LOGGER.error("Generated pack at {} could not be read back as {}", root, type);
@@ -153,6 +168,7 @@ public final class XiePackProvider {
             XieRecipeCuller.targets(emitter.culledItems());
 
             overrideRoot = emitter.overrideRoot();
+            worldgenRoot = emitter.worldgenRoot();
             generatedRoot = emitter.outputRoot();
             return generatedRoot;
         }

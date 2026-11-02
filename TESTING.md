@@ -19,7 +19,7 @@ times were emitted, plus what was skipped and why.
 Every *behaviour* used to be verified exactly once, by hand. Somebody started a
 client, joined the dev server, drove synthetic input at the game window, built a
 situation over rcon, read a result back, and wrote the conclusion into a document.
-Nothing re-checked it afterwards, so a regression in `XieTreeBlock`'s shedding,
+Nothing re-checked it afterwards, so a regression in `XieTreeBlock`'s harvest,
 `XieStickItem.useOn`, `XiePlantBlock`'s bone meal refusal or `XieToolItem`'s
 transforms would have gone unnoticed until a human happened to try it again.
 
@@ -44,8 +44,8 @@ It needs Python 3 and a Windows desktop whose foreground it can take, because a
 |---|---|
 | `counts` | Every number in the emission summary, against the fixed baseline in `acceptance/checks/counts.py`. The one check that needs no world at all. |
 | `stem` | A ripe `zombiePigmelonStem` fruits into `zombiePigmelon`, the fruit lands on the stem's own soil, and the stem becomes an attached stem *facing it*. Plus the null: a stem whose neighbours have stone under them ripens forever. |
-| `sheds` | A planted tree drops its fruit, and `shedSaturation` stops an identical tree with nine already lying under it. |
-| `sapling` | Bone meal grows a sapling into its tree, the leaf above the trunk is the keystone, and the same tree placed as a *feature* has none — which is "only a planted tree sheds", read as a blockstate rather than watched for an hour. |
+| `fruit` | A right-click on a ripe leaf hands over its apple and leaves the leaf standing and bare, and gives nothing on a bare one; bone meal ripens a bare leaf and is refused by a `persistent` one; a leaf open to the air ripens on its own under random ticks while, over the same window, the persistent one stays bare and so does a bare leaf with a ripe one beside it. |
+| `sapling` | Bone meal grows a sapling into its tree, and both that tree and the same tree placed as a *feature* come up with a few leaves already ripe — every tree bears, which is the 2013 keystone's asymmetry dropped on purpose and read as a count over the canopy. |
 | `decay` | A canopy beside a `blazeLog` measures one block from it and is still there after four hundred ticks of ticking; the same canopy on stone measures seven and dies. `XieTreeBlock` *is* a `LeavesBlock`, so this is the one generated tag entry that every fruit tree in the game stands on. |
 | `spikey` | Walking into `blazeTree` costs health, and the stop position is `wall + 0.1 - 0.3` — the inset canopy — where the same walk into leaves that are not spikey stops at `wall - 0.3` and costs nothing. |
 | `fertilisable` | `blazeTreeSapling` refuses bone meal from a dispenser and keeps the stack; a Xie sapling that does not refuse, and a vanilla one, both consume it. |
@@ -93,9 +93,11 @@ running because a clean exit rewrites the file.
   to be put, and the keystone leaf sits inside the canopy, so the fruit was often about
   to be put on the tree's own foliage rather than on the ground — and a tree aiming at
   its own shoulder counts the fruit lying under it as lying nowhere near.
-  `XieTreeBlock.groundBeside` skips leaves and logs now. It is the sort of failure a
-  human verifying a behaviour once cannot find: watching a tree shed proves that it
-  sheds, and watching it stop proves nothing until you have watched it not stop.
+  `XieTreeBlock.groundBeside` skipped leaves and logs from then on. It is the sort of
+  failure a human verifying a behaviour once cannot find: watching a tree shed proves
+  that it sheds, and watching it stop proves nothing until you have watched it not
+  stop. Shedding itself went in October 2026, replaced by fruit picked off the leaves
+  — see `fruit` — and the check that found this went with it; the lesson did not.
 - **The zombie pigmelon fruits**, which nothing had ever confirmed. It was the first
   thing the run was pointed at, and the archetype it was reasoned out of — vanilla's
   own `StemBlock`, with no class of this mod's own anywhere in it — turned out to be
@@ -296,7 +298,7 @@ what it looks like.
   chat, which the rcon reply never carries, so a test written that way answers with an
   empty body whichever way it went. Bare `execute if block <pos> <block>` answers
   "Test passed" or "Test failed" in the reply itself, and takes a `#tag` and a
-  blockstate as happily as a block id — which is how the run reads a keystone leaf
+  blockstate as happily as a block id — which is how the run reads a ripe leaf
   and an attached stem's facing without touching an item.
 - **Entities can be counted, not just found.** `execute store result score <holder>
   <objective> if entity <selector>` stores the number matched rather than a boolean,

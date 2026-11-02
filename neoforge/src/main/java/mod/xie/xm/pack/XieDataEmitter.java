@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 
 import mod.xie.xm.XiesMod;
+import mod.xie.xm.block.XieTreeBlock;
 import mod.xie.xm.content.model.AliasDef;
 import mod.xie.xm.content.model.BlockDef;
 import mod.xie.xm.content.model.ContentPack;
@@ -208,14 +209,15 @@ public final class XieDataEmitter {
     /** Files written into the override pack, which is registered only if there are any. */
     private int overrides;
 
-    public XieDataEmitter(Path outputRoot, Path overrideRoot,
+    public XieDataEmitter(Path outputRoot, Path overrideRoot, Path worldgenRoot,
                           ItemLookup lookup, BlockLookup blockLookup) {
         this.outputRoot = outputRoot;
         this.overrideRoot = overrideRoot;
         this.dataRoot = outputRoot.resolve("data").resolve(XiesMod.MOD_ID);
         this.lookup = lookup;
         this.blockLookup = blockLookup;
-        this.worldgen = new XieWorldgenEmitter(dataRoot, new XieWorldgenEmitter.BlockRefs() {
+        Path spawnRoot = worldgenRoot.resolve("data").resolve(XiesMod.MOD_ID);
+        this.worldgen = new XieWorldgenEmitter(dataRoot, spawnRoot, new XieWorldgenEmitter.BlockRefs() {
             @Override
             public Optional<String> modBlock(ItemRef ref) {
                 return XieDataEmitter.this.modBlock(ref);
@@ -287,6 +289,11 @@ public final class XieDataEmitter {
                 List<String> names = Variants.namesIn(def.props());
                 for (int meta = 0; meta < paths.size(); meta++) {
                     String path = paths.get(meta);
+                    if (def.archetype().equals("tree")) {
+                        LootResult harvest = writeHarvestTable(def, names, meta, path);
+                        lootTables += harvest.written() ? 1 : 0;
+                        skippedDrops += harvest.skippedDrops();
+                    }
                     if (def.drops().isEmpty()) {
                         // A block that declares no drops yields nothing — unless it
                         // has an item form, in which case it yields itself. That is
@@ -407,6 +414,46 @@ public final class XieDataEmitter {
 
         PackJson.write(dataRoot.resolve("loot_table").resolve("blocks").resolve(path + ".json"),
             blockLootRoot(XiesMod.MOD_ID + ":blocks/" + path, pools));
+        return new LootResult(true, skipped);
+    }
+
+    /**
+     * What picking a ripe leaf yields, at {@code xiesmod:harvest/<path>}: the id
+     * {@code XieTreeBlock} asks for, and the same kind of address vanilla keeps its own
+     * picked things at, {@code minecraft:harvest/sweet_berry_bush} and
+     * {@code harvest/cave_vine}.
+     *
+     * <p>{@code fruit} is read as a split block's {@code drops} are: the chance written
+     * against this subtype's metadata applies flat, and no age condition is needed
+     * because the block consults the table only when the leaf is ripe. A subtype the
+     * table gives nothing gets no file, and the block that asks for one anyway finds
+     * an empty table, which is what a missing loot table resolves to.
+     */
+    private LootResult writeHarvestTable(BlockDef def, List<String> names, int meta, String path)
+                                         throws IOException {
+        JsonArray pools = new JsonArray();
+        int skipped = 0;
+
+        for (DropTable.Drop drop : def.fruit().drops()) {
+            Optional<String> item = resolve(drop.item());
+            if (item.isEmpty()) {
+                LOGGER.debug("Tree {} bears \"{}\", which is not registered; skipping that fruit",
+                    def.qualifiedName(), drop.item());
+                skipped++;
+                continue;
+            }
+            int chance = clampPercent(drop.chanceFor(names.isEmpty() ? 0 : meta));
+            if (chance > 0) {
+                pools.add(dropPool(drop.amount(), null, item.get(), chance));
+            }
+        }
+
+        if (pools.isEmpty()) {
+            return new LootResult(false, skipped);
+        }
+        String id = XieTreeBlock.HARVEST_PREFIX + path;
+        PackJson.write(dataRoot.resolve("loot_table").resolve(id + ".json"),
+            blockLootRoot(XiesMod.MOD_ID + ":" + id, pools));
         return new LootResult(true, skipped);
     }
 
@@ -1043,7 +1090,7 @@ public final class XieDataEmitter {
      * number, and the saplings write a metadata table — {@code "fuel": {"0-4": 100}} —
      * which was a burn time per subtype of one 1.6 id. Those subtypes are separate
      * blocks now, so each takes the entry written against its own metadata value,
-     * exactly as {@code XieRegistrar.treeConfig} narrows {@code sheds}.
+     * exactly as {@code XieRegistrar.treeConfig} narrows {@code fruit}.
      *
      * @return how many items were given a burn time
      */
