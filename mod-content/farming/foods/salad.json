@@ -1,0 +1,82 @@
+{
+  "$schema": "../../_schema/xie-content.schema.json",
+  "aliases": {
+    "protein": "porkchopCooked,beefCooked,chickenCooked,fishCooked,cookedSalmon,cookedMutton,cookedRabbit,tofu,tofuCooked",
+	"fruit": "apple,item.melon,orange,avocado,sweetBerries,glowBerries",
+	"salady": "lettuce,tomato,onion,avocado,soyBeans,carrot,beetroot"
+  },  
+  "items": {
+    "gardenSalad": {
+      "name": "Garden Salad",
+      "type": "food",
+      "hunger": 6,
+      "nourishment": 0.6,     
+      "container": "bowl",
+      "stacksize": 1,
+      "texFile": "xie_foods.png",
+      "icon": 16
+    },
+    "salad": {
+      "name": "Salad",
+      "type": "food",
+      "hunger": 9,
+      "nourishment": 0.7,     
+      "container": "bowl",
+      "stacksize": 1,
+      "texFile": "xie_foods.png",
+      "icon": 17
+    },
+    "tastyGardenSalad": {
+      "name": "Dressed Garden Salad",
+      "type": "food",
+      "hunger": 7,
+      "nourishment": 0.7,     
+      "container": "bowl",
+      "stacksize": 1,
+      "texFile": "xie_foods.png",
+      "icon": 19
+    },
+    "tastySalad": {
+      "name": "Dressed Salad",
+      "type": "food",
+      "hunger": 10,
+      "nourishment": 0.8,     
+      "container": "bowl",
+      "stacksize": 1,
+      "texFile": "xie_foods.png",
+      "icon": 20
+    },
+    "fruitSalad": {
+      "name": "Fruit Salad",
+      "type": "food",
+      "hunger": 8,
+      "nourishment": 0.6,     
+      "container": "bowl",
+      "stacksize": 1,
+      "texFile": "xie_foods.png",
+      "icon": 18
+    }
+  },
+  "recipes": {
+    "fruitSalad": {
+      "product": "fruitSalad",
+      "content": "bowl,$fruit,$fruit,$fruit"
+    },
+    "gardenSalad": {
+      "product": "gardenSalad",
+      "content": "bowl,$salady,$salady,$salady"
+    },
+    "salad": {
+      "product": "salad",
+      "content": "bowl,$salady,$salady,$protein"
+    },
+    "tastyGardenSalad": {
+      "product": "tastyGardenSalad",
+      "content": "bowl,$salady,$salady,$salady,$saucy"
+    },
+    "tastySalad": {
+      "product": "tastySalad",
+      "content": "bowl,$salady,$salady,$protein,$saucy"
+    }
+  }
+}

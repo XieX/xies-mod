@@ -1,0 +1,59 @@
+{
+  "$schema": "../../_schema/xie-content.schema.json",
+  "blocks": {
+    "saltDeposit": {
+      "name": "Salt Deposit",
+      "becomesWhenDestroyed": "sand",
+      "drops": "salt",
+      "material": "sand",
+      "stepSound": "powder",
+      "textureBase": "sand"
+    },
+    "saltBlock": {
+      "name": "Salt Block",
+      "drops": "saltBlock",
+      "material": "snow",
+      "stepSound": "powder",
+      "hardness": 0.5
+    }
+  },
+  "items": {
+    "salt": {
+      "name": "Salt",
+      "texFile": "xie_misc.png",
+      "icon": 2
+    }
+  },
+  "recipes": {
+    "saltBlock": {
+      "pattern": "XX,XX",
+      "content": "salt"
+    },
+    "salt:4": "saltBlock",
+    "saltFromKelp": {
+      "product": "saltBlock",
+      "smelt": "driedKelpBlock"
+    }
+  },
+  "spawns": {
+    "seasalt": {
+      "block": "saltDeposit",
+      "rarity": 8,
+      "spawnsin": "sand",
+      "spawnsNear": "8,9",
+      "nearDistance": 2,
+      "spawnsUnder": 0,
+      "clusterSize": 16,
+      "clump": "true"
+    },
+    "saltpan": {
+      "block": "saltDeposit",
+      "rarity": 45,
+      "spawnsin": "sand",
+      "spawnsUnder": 0,
+      "clusterSize": 36,
+      "clump": "true",
+      "biomes": "desert"
+    }
+  }
+}
