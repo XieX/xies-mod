@@ -1156,9 +1156,16 @@ public final class XieDataEmitter {
      * ingredient, since the content names no key: any of them unlocks it, and an
      * alias is tested by its tag exactly as vanilla tests {@code #minecraft:eggs} for
      * a cake.
+     *
+     * <p>It also sets the recipe's {@code group} to the product's id path, which is
+     * how vanilla folds its several red dye recipes into one book entry. Without it
+     * the alias variants of one taco would be a dozen entries, and a product shared
+     * with vanilla joins vanilla's own group.
      */
     private void writeRecipeFile(String id, JsonObject root, List<String> ingredients)
             throws IOException {
+        String product = root.getAsJsonObject("result").get("id").getAsString();
+        root.addProperty("group", product.substring(product.indexOf(':') + 1));
         PackJson.write(dataRoot.resolve("recipe").resolve(id + ".json"), root);
 
         String recipeId = XiesMod.MOD_ID + ":" + id;
