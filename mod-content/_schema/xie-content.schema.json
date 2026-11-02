@@ -262,7 +262,7 @@
           "if": { "required": ["type"], "properties": { "type": { "enum": ["plant", "bush", "crop", "sapling", "ripening"] } } },
           "then": {
             "properties": {
-              "growthRate": { "description": "Chance, in one part per N random ticks, of advancing a stage.", "$ref": "#/definitions/int" },
+              "growthRate": { "description": "Percentage of the baseline growth speed, 100 when absent; higher is faster.", "$ref": "#/definitions/int" },
               "maxGrowth": { "description": "Highest growth stage, or ripening stage.", "$ref": "#/definitions/int" }
             }
           }
@@ -313,8 +313,11 @@
           "if": { "required": ["type"], "properties": { "type": { "const": "tree" } } },
           "then": {
             "properties": {
-              "sheds": { "description": "What falls from the leaves of its own accord, written like drops.", "$ref": "#/definitions/dropTable" },
-              "shedSaturation": { "description": "How many shed items may lie under one tree before it stops shedding.", "$ref": "#/definitions/int" },
+              "fruit": { "description": "What a ripe leaf yields when picked, written like drops. A tree without it bears nothing.", "$ref": "#/definitions/dropTable" },
+              "maxGrowth": { "description": "Highest ripeness stage of a leaf; 1 when absent, so a leaf is bare or ripe.", "$ref": "#/definitions/int" },
+              "growthRate": { "description": "Percentage of the baseline ripening speed, 100 when absent.", "$ref": "#/definitions/int" },
+              "fertilisable": { "description": "Whether bone meal ripens a leaf.", "$ref": "#/definitions/boolean" },
+              "fertilizable": { "description": "Same as fertilisable.", "$ref": "#/definitions/boolean" },
               "trunk": { "description": "The log block.", "$ref": "#/definitions/itemRef" },
               "trunkMeta": { "description": "Metadata of the log block, one per subtype when the tree declares names.", "$ref": "#/definitions/intList" },
               "shape": { "description": "Silhouette: oak (the default), conifer (or pine), or tall.", "type": "string" }

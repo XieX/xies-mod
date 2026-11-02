@@ -13,7 +13,7 @@
       "name": "Fresh Cheese",
       "type": "ripening",
       "maxGrowth": 3,
-      "growthRate": 600,
+      "growthRate": 300,
       "growsInto": "cheeseBlock",
       "hardness": 0.5
     }

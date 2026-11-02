@@ -1,8 +1,8 @@
 {
   "$schema": "../../_schema/xie-content.schema.json",
   "aliases": {
-    "wildCorn": "shrub:1",
-    "wildTomato": "shrub:2"
+    "wildCorn": "shrub:1:1",
+    "wildTomato": "shrub:1:2"
   },
   "blocks": {
     "shrub": {
@@ -61,7 +61,7 @@
     "wildTomato": {
       "rarity": 30,
       "spawnson": "dirt,grass",
-      "spawnsin": 0,
+      "spawnsin": "tallgrass,leafLitter,air",
       "biomes": "forest,swamp,hills,marsh"
     },
     "melon": {

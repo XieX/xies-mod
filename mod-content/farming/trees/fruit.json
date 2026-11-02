@@ -21,36 +21,36 @@
       "type": "tree",
       "growsOn": "dirt,grass",
       "trunkMeta": "0,0,2,1",
-      "sheds": {
+      "growthRate": 25,
+      "fruit": {
         "apple": {
           "chance": {
-            "0": 20,
+            "0": 100,
             "1+": 0
           }
         },
         "orange": {
           "chance": {
-            "1": 20,
+            "1": 100,
             "0": 0,
             "2+": 0
           }
         },
         "lemon": {
           "chance": {
-            "2": 20,
+            "2": 100,
             "0-1": 0,
             "3+": 0
           }
         },
         "avocado": {
           "chance": {
-            "3": 20,
+            "3": 100,
             "0-2": 0,
             "4+": 0
           }
         }
       },
-      "shedSaturation": 8,
       "drops": {
         "apple": {
           "chance": {
@@ -158,19 +158,19 @@
       "rarity": 20,
       "spawnson": "dirt, grass",
       "spawnsin": 0,
-      "biomes": "forest,taiga,jungle,wood"
+      "biomes": "forest,wood"
     },
     "orangeTree": {
       "rarity": 25,
       "spawnson": "dirt, grass",
       "spawnsin": 0,
-      "biomes": "forest,jungle,savanna"
+      "biomes": "savanna"
     },
     "lemonTree": {
       "rarity": 25,
       "spawnson": "dirt, grass",
       "spawnsin": 0,
-      "biomes": "forest,hills,foresthills"
+      "biomes": "forest"
     },
     "avocadoTree": {
       "rarity": 23,

@@ -8,6 +8,13 @@
       "material": "sand",
       "stepSound": "powder",
       "textureBase": "sand"
+    },
+    "saltBlock": {
+      "name": "Salt Block",
+      "drops": "saltBlock",
+      "material": "snow",
+      "stepSound": "powder",
+      "hardness": 0.5
     }
   },
   "items": {
@@ -15,6 +22,17 @@
       "name": "Salt",
       "texFile": "xie_misc.png",
       "icon": 2
+    }
+  },
+  "recipes": {
+    "saltBlock": {
+      "pattern": "XX,XX",
+      "content": "salt"
+    },
+    "salt:4": "saltBlock",
+    "saltFromKelp": {
+      "product": "saltBlock",
+      "smelt": "driedKelpBlock"
     }
   },
   "spawns": {
