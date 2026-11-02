@@ -5,7 +5,7 @@ the run has to be able to happen on a working tree somebody else is using:
 
 * **content packs** — the run needs a known set, and a deferred directory is
   exercised by copying it into ``xiecontent/`` as a pack of its own, since the
-  leading ``_`` is what skips it and the content repo should not be edited to
+  leading ``_`` is what skips it and the content should not be edited to
   run a test. Anything else already in there is moved aside and moved back.
 * **``options.txt``** — ``pauseOnLostFocus`` has to be off, or the game menu
   opens the moment the driving process hands the window back and the click
@@ -25,8 +25,8 @@ from . import winput
 from .rcon import Rcon
 
 #: The four deferred packs the baseline counts are quoted against, and where
-#: each one lives inside the content repo. ``_wip/steel`` sits one level deeper
-#: than the rest. They are taken from the source repo beside this checkout, not
+#: each one lives inside ``mod-content/``. ``_wip/steel`` sits one level deeper
+#: than the rest. They are taken from the source in this checkout, not
 #: from the copy the mod installs into ``xiecontent/``: the jar bundles the live
 #: content only, so an underscored directory is never there to copy.
 DEFERRED_PACKS = {
@@ -141,9 +141,9 @@ class Session:
                 shutil.rmtree(world)
 
     def _arrange_packs(self):
-        content_repo = os.path.join(os.path.dirname(self.repo), "mod-content")
+        content_repo = os.path.join(self.repo, "mod-content")
         if not os.path.isdir(content_repo):
-            raise SessionError("no content repo at %s" % content_repo)
+            raise SessionError("no content at %s" % content_repo)
 
         # The live content itself needs no arranging: the server installs the
         # bundled copy on the first launch that finds none, and never touches one

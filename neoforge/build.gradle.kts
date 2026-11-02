@@ -94,22 +94,22 @@ val templateProperties = mapOf(
     "mod_description" to property("mod_description")
 )
 
-// The content repo beside this checkout is bundled into the jar, so one download
+// The content in mod-content/ is bundled into the jar, so one download
 // is the whole mod and a fresh install has something to play. It goes under
 // bundled/mod-content/ with an index beside it, because a jar cannot be listed
 // as a directory from the classpath; BundledContent reads the index and extracts
 // the files into <gamedir>/xiecontent/mod-content/ on the first launch that finds
-// none there. Files and directories starting with "_" are the content repo's own
+// none there. Files and directories starting with "_" are the content's own
 // work-in-progress convention and the parser would skip them anyway, so they are
 // left out of the jar rather than shipped dead.
-val contentRepo = layout.projectDirectory.dir("../../mod-content")
+val contentRepo = layout.projectDirectory.dir("../mod-content")
 val bundledRoot = "bundled"
 val bundledPack = "mod-content"
-// The content repo's files point "$schema" at its own _schema/ snapshot, which is left
-// out of the jar. Extracted, they sit under xiecontent/mod-content/, and the schema the
+// The content's files point "$schema" at the schema in common/, which is not beside
+// them in the jar. Extracted, they sit under xiecontent/mod-content/, and the schema the
 // mod installs is at the top of xiecontent/, so each reference is rewritten to climb out
 // to it.
-val schemaRef = Regex("\"[^\"]*_schema/xie-content\\.schema\\.json\"")
+val schemaRef = Regex("\"[^\"]*common/src/main/resources/xie-content\\.schema\\.json\"")
 
 tasks.named<ProcessResources>("processResources") {
     val replacements = templateProperties
@@ -124,7 +124,7 @@ tasks.named<ProcessResources>("processResources") {
             exclude("**/_*", "**/_*/**", ".git/**", ".gitignore", "**/.DS_Store", "**/Thumbs.db")
         }
     } else {
-        logger.warn("No content repo at ${contentRepo.asFile}; the jar will carry no bundled content")
+        logger.warn("No content at ${contentRepo.asFile}; the jar will carry no bundled content")
     }
 
     val version = templateProperties["mod_version"].toString()

@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * drifted from their source of truth. Drift the other way (a property the registrar
  * reads that the schema does not describe, or describes under the wrong archetype's
  * {@code allOf} branch) is caught by nothing; keep the two in step by hand when adding
- * one, and copy the result to the content repo's {@code _schema/}.
+ * one.
  */
 class ContentSchemaTest {
 

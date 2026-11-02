@@ -30,12 +30,12 @@ tasks.test {
         events("passed", "skipped", "failed")
         showStandardStreams = true
     }
-    // Lets RealContentTest find the sibling content repo. Override with
+    // Lets RealContentTest find the content. Override with
     //   ./gradlew :common:test -Dxie.content.dir=/some/other/pack
     systemProperty(
         "xie.content.dir",
         providers.systemProperty("xie.content.dir")
-            .orElse(layout.projectDirectory.dir("../../mod-content").asFile.absolutePath)
+            .orElse(layout.projectDirectory.dir("../mod-content").asFile.absolutePath)
             .get()
     )
 }

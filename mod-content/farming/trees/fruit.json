@@ -1,5 +1,5 @@
 {
-  "$schema": "../../_schema/xie-content.schema.json",
+  "$schema": "../../../common/src/main/resources/xie-content.schema.json",
   "aliases": {
     "appleTree": "fruitLeaves:1:0",
     "orangeTree": "fruitLeaves:1:1",

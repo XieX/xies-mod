@@ -25,14 +25,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Parses the real content repository.
+ * Parses the real content.
  *
  * <p>This is the test that matters: the inline fixtures prove the parser handles
  * the format as documented, this proves it handles the format as actually written
  * over several years by several people.
  *
- * <p>Skipped when the content repo is not checked out beside this one. Point it
- * elsewhere with {@code -Dxie.content.dir=...}.
+ * <p>Skipped when {@code mod-content/} is missing. Point it elsewhere with {@code -Dxie.content.dir=...}.
  */
 class RealContentTest {
 
@@ -42,9 +41,9 @@ class RealContentTest {
     @BeforeAll
     static void parseOnce() throws IOException {
         String configured = System.getProperty("xie.content.dir");
-        contentDir = configured != null ? Paths.get(configured) : Paths.get("..", "..", "mod-content");
+        contentDir = configured != null ? Paths.get(configured) : Paths.get("..", "mod-content");
         assumeTrue(Files.isDirectory(contentDir),
-            "content repo not found at " + contentDir.toAbsolutePath() + "; skipping");
+            "content not found at " + contentDir.toAbsolutePath() + "; skipping");
         result = XieParser.parsePack(contentDir);
 
         System.out.println("Parsed " + result.pack());

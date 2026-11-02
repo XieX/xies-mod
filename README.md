@@ -13,12 +13,13 @@ Layout
 |------------|------------|
 | `common/`  | The content model and parser. No Minecraft dependency at all, so it compiles and tests in seconds. |
 | `neoforge/`| The mod itself: entry point, registration, pack emission. Compiles `common/`'s sources into the jar. |
+| `mod-content/` | Xie's content packs and textures, licensed CC BY 4.0 rather than MIT. Bundled into the jar. |
 | `mod/`     | The original 1.6.2 source tree, kept for reference. Not part of the build. |
 | `acceptance/` | The acceptance run: one command that starts a server, joins a client and asserts the behaviours a datapack cannot show. |
 
-Content lives in a separate repository so that packs can be written without using
-any of this one's content. The build expects it beside this checkout at
-`../mod-content` and bundles it into the jar, so one download is the whole mod. At
+The engine knows nothing about this content, so packs can be written without using
+any of it; until November 2026 it was a repository of its own for that reason. The
+build bundles `mod-content/` into the jar, so one download is the whole mod. At
 runtime the mod reads packs from `<gamedir>/xiecontent/`, and the first launch that
 finds no `mod-content/` there extracts the bundled one. It is never overwritten
 after that: the content is opt-out, so deleting a definition file or renaming a
@@ -120,10 +121,9 @@ has properties this schema has never heard of, and a property declared outside i
 archetype's branches still validates and is left for the unread-property report to name.
 The one hard requirement is a stem's `grows`, without which the engine refuses to
 register it. The branches match the lower-case spelling, so a `"type": "Crop"`, which the
-engine accepts, gets the common properties and no more. The schema is also kept as
-`_schema/xie-content.schema.json` in the content repo, where its own files point, and the
-two copies are kept identical by hand. `_schema/` is not bundled, so the build rewrites
-each bundled file's `$schema` to climb out of `mod-content/` to the installed schema.
+engine accepts, gets the common properties and no more. The content's own files
+point `$schema` at `common/src/main/resources/`, which is not bundled beside them, so the build
+rewrites each bundled file's `$schema` to climb out of `mod-content/` to the installed schema.
 
 A drop's `amount` is not a stack size but a number of independent rolls, each yielding
 one item at `chance` percent, and a `chance` keyed by growth stage is how a plant pays
@@ -141,7 +141,7 @@ Port status
 -----------
 
 - [x] Gradle build targeting NeoForge
-- [x] Content model and parser, with tests over the real content repo
+- [x] Content model and parser, with tests over the real content
 - [x] Registrar: definitions to `DeferredRegister` (every block and item archetype the content uses)
 - [x] Emitter: generated resource pack (blockstates, models, textures, lang)
 - [x] Emitter: generated datapack (loot tables from `drops`, recipes, alias tags)
@@ -179,7 +179,7 @@ Port status
       no light, soil or bone meal involved. Fresh cheese poured from a bucket turns
       into a cheese block about a day later. New in the port rather than ported
 
-Eighteen distinct archetypes appear across the content repo, deferred packs included,
+Eighteen distinct archetypes appear across `mod-content/`, deferred packs included,
 and seventeen of them register. The one that does not is `furnace`, which is content
 this port dropped rather than an archetype it cannot build — see the table below. See
 [PORTING.md](PORTING.md) for the full breakdown and the version-specific gotchas

@@ -32,9 +32,9 @@ class StoveContentTest {
     @BeforeAll
     static void parse() throws IOException {
         String configured = System.getProperty("xie.content.dir");
-        Path contentDir = configured != null ? Paths.get(configured) : Paths.get("..", "..", "mod-content");
+        Path contentDir = configured != null ? Paths.get(configured) : Paths.get("..", "mod-content");
         assumeTrue(Files.isDirectory(contentDir),
-            "content repo not found at " + contentDir.toAbsolutePath() + "; skipping");
+            "content not found at " + contentDir.toAbsolutePath() + "; skipping");
 
         pack = XieParser.parsePack(contentDir).pack();
         assumeTrue(pack.blocks().containsKey("cookpot"),

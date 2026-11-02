@@ -1698,7 +1698,7 @@ left here is what the port itself cost time on, with the file that encodes each 
   distance `salt.json` asks for and 2197 at `Spawnable`'s default of 6. The emitter
   caps the radius, which only ever makes the test stricter.
 - **The run directory holds a copy of the content**, at
-  `neoforge/run/xiecontent/mod-content`. It does not track edits to `../mod-content`,
+  `neoforge/run/xiecontent/mod-content`. It does not track edits to `mod-content/`,
   and the bundled copy is never extracted over it — delete the directory and the next
   launch installs the bundled content fresh from the build's own copy, which is the
   re-sync.
