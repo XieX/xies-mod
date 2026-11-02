@@ -778,6 +778,49 @@ time somebody swings it — so without it they would be the only drops in the co
 that could go missing without being counted, and they would go missing hours into a
 game rather than at load.
 
+The recipe book
+---------------
+
+1.6 had no recipe book, so nothing in the 2013 engine or the content says how a
+recipe gets into one, and for the whole port none did. Vanilla's book lists only what
+a player has unlocked, and every vanilla recipe is unlocked by an advancement under
+`recipes/` — no display, parented to `minecraft:recipes/root`, satisfied by either a
+`recipe_unlocked` criterion or an `inventory_changed` on an ingredient, rewarding the
+recipe. Nothing gave ours one, so the book never showed a single `xiesmod` recipe and
+a player without JEI or EMI had no way to learn that tortillas exist. Since
+2026-11-02 `XieDataEmitter.writeRecipeFile` writes that advancement beside every
+recipe at the same id: crafting, the content's `smelt`, and all three cookers a
+`cooked` becomes. A recipe skipped for an unresolvable name never reaches it, so it
+gets no advancement either, and culling never touches our own namespace. The vanilla
+advancements for the recipes a cull removes stay where they are and grant nothing,
+because `ServerPlayer.awardRecipesByKey` drops a key with no recipe behind it.
+
+Two decisions, both derived from what the content already says rather than from a
+new property:
+
+- **Every distinct ingredient unlocks it.** Vanilla hand-picks one key ingredient per
+  recipe — the cake unlocks on an egg — and the content names no key, so the
+  advancement carries one `inventory_changed` criterion per distinct ingredient and
+  any of them is enough. An alias is tested by its tag, which is a shape vanilla uses
+  itself (`#minecraft:acacia_logs` for acacia planks), so a taco unlocks on a taco
+  shell or on anything in `#xiesmod:protein`, `#xiesmod:salady` or `#xiesmod:saucy`.
+  The cost is that one common ingredient can unlock a lot at once: any meat brings in
+  every taco, burrito and sammich. For a mod whose only discovery is this book that
+  is the right way to err; narrowing it would mean the content declaring a key.
+- **Recipes are grouped by product.** Each recipe's `group` is its result's id path,
+  which is vanilla's own rule for its several red dye recipes (`"group": "red_dye"`).
+  The book then shows snack tacos as one entry with nine alias combinations behind it
+  and full tacos as another, which is the split the content already makes by naming
+  them differently; corn chips' eight stack sizes are one entry. A product that is a
+  vanilla item joins vanilla's group of the same name, which is the point of it.
+
+Vanilla's datagen files advancements under a tab directory, `recipes/food/` and so on,
+taken from the recipe's book category. Ours carry no `category` — a crafting recipe
+defaults to `misc` and a furnace recipe to the furnace's misc tab — so they sit flat in
+`recipes/`; the directory decides nothing. Giving `cooked` food recipes
+`"category": "food"`, so popcorn sits in the furnace's food tab, is the obvious next
+step and was left out as a change to the recipes themselves.
+
 Culling vanilla recipes
 -----------------------
 
