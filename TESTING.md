@@ -13,8 +13,10 @@ The acceptance run
 
 Every *count* in this mod is verified on every run. `gradlew :neoforge:runServer`
 parses and validates the whole generated datapack at startup, and the log states how
-many blocks, items, models, loot tables, recipes, tags, worldgen features and burn
-times were emitted, plus what was skipped and why.
+many blocks, items, models, loot tables, recipes, recipe advancements, tags, worldgen
+features and burn times were emitted, plus what was skipped and why. The recipe and
+advancement counts are equal by construction, and a different pair means a recipe
+was written without its way into the recipe book.
 
 Every *behaviour* used to be verified exactly once, by hand. Somebody started a
 client, joined the dev server, drove synthetic input at the game window, built a
