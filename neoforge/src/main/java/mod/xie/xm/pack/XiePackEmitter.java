@@ -1177,23 +1177,21 @@ public final class XiePackEmitter {
     }
 
     /**
-     * The first frame of an animation strip, as a sprite of its own. A frame is as
-     * wide as the strip and as tall as it is wide, unless the {@code .mcmeta} says
-     * otherwise with {@code width} or {@code height}, as vanilla reads it.
+     * The first frame of an animation strip, as a sprite of its own. A frame is a
+     * square as wide as the strip's shorter side, unless the {@code .mcmeta} gives
+     * {@code width} or {@code height}, when the other one is the whole strip's — as
+     * vanilla's {@code AnimationMetadataSection.calculateFrameSize} reads it.
      */
     private static void writeFirstFrame(Path strip, Path animation, Path target, String fileName)
             throws IOException {
         BufferedImage image = ImageIO.read(strip.toFile());
         JsonObject meta = JsonParser.parseString(Files.readString(animation)).getAsJsonObject()
             .getAsJsonObject("animation");
-        int width = image.getWidth();
-        int height = width;
-        if (meta != null && meta.has("width")) {
-            width = meta.get("width").getAsInt();
-        }
-        if (meta != null && meta.has("height")) {
-            height = meta.get("height").getAsInt();
-        }
+        boolean hasWidth = meta != null && meta.has("width");
+        boolean hasHeight = meta != null && meta.has("height");
+        int side = Math.min(image.getWidth(), image.getHeight());
+        int width = hasWidth ? meta.get("width").getAsInt() : hasHeight ? image.getWidth() : side;
+        int height = hasHeight ? meta.get("height").getAsInt() : hasWidth ? image.getHeight() : side;
         Files.createDirectories(target);
         ImageIO.write(image.getSubimage(0, 0, Math.min(width, image.getWidth()),
             Math.min(height, image.getHeight())), "PNG", target.resolve(fileName).toFile());
