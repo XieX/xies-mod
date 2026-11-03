@@ -3,10 +3,12 @@
   "blocks": {
     "saltDeposit": {
       "name": "Salt Deposit",
-      "becomesWhenDestroyed": "sand",
       "drops": "salt",
       "material": "sand",
-      "stepSound": "powder"
+      "stepSound": "powder",
+      "walkthroughable": "true",
+      "growsOn": "sand",
+      "blockBounds": "0,0,0,1,0.125,1"
     },
     "saltBlock": {
       "name": "Salt Block",
@@ -39,18 +41,18 @@
     "seasalt": {
       "block": "saltDeposit",
       "rarity": 8,
-      "spawnsin": "sand",
+      "spawnsin": 0,
+      "spawnsOn": "sand",
       "spawnsNear": "8,9",
       "nearDistance": 2,
-      "spawnsUnder": 0,
       "clusterSize": 16,
       "clump": "true"
     },
     "saltpan": {
       "block": "saltDeposit",
       "rarity": 45,
-      "spawnsin": "sand",
-      "spawnsUnder": 0,
+      "spawnsin": 0,
+      "spawnsOn": "sand",
       "clusterSize": 36,
       "clump": "true",
       "biomes": "desert"
