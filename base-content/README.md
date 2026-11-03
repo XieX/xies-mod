@@ -188,8 +188,8 @@ meal the next bowl will get, and serves the best meal its contents allow:
 | food and seasoning, or protein alone | Soup | 6 |
 | food, protein and seasoning | Stew | 10 |
 
-Harmful foods, magical ones such as golden apples, and anything that comes in a
-bowl or bottle are refused.
+It won't take harmful foods, magical ones such as golden apples, or anything that comes in a
+bowl or bottle.
 
 Cheese
 ------
@@ -197,8 +197,7 @@ Cheese
 Smelt a milk bucket into a **bucket of cheese**, then place it like a block to
 pour out **fresh cheese** and get your bucket back. Fresh cheese ripens where it
 stands into a **cheese block** in about a day. It needs no light or soil, so a
-cellar is fine, and bone meal doesn't hurry it. Break a cheese block to pick it up,
-or craft it into nine cheese slices. Breaking fresh cheese before it ripens wastes
+cellar is fine, and bone meal doesn't hurry it. Breaking fresh cheese before it ripens wastes
 it.
 
 What happened to…
@@ -225,5 +224,5 @@ sandwiches.
 Credits
 -------
 
-Textures by Xie, and some of the best of them by Thistle. This content and its
+Better textures contributed by Thistle, the less good textures by Xie. This content and its
 textures are licensed [CC BY 4.0](LICENSE).

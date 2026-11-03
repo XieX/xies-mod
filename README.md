@@ -13,29 +13,24 @@ cookpot and cheese.
 Installing
 ----------
 
-Needs Minecraft 26.1.2 with NeoForge 26.1.2.94 or later. Put the jar in `mods/` on
+Needs Minecraft 26.1.2 with NeoForge 26.1.2.94 or later. Put the jar in `.minecraft/mods/` on
 both the client and the server, and give both the same content: blocks and items
 are registered from it, so a client and a server that disagree cannot connect.
-
-This is a beta. Growth rates, spawn rates and yields are still being tuned.
 
 **The first launch unpacks the content** into `.minecraft/xiecontent/base-content/`
 as plain JSON. Change a food value, growth rate or recipe there and restart the
 game. To leave something out, delete its file or put an underscore at the start of
 the file or folder name.
 
-**Updating never overwrites that folder**, so your edits are safe, and a newer jar
-over older content says so in the log. To take the new content, move
-`xiecontent/base-content` somewhere else and relaunch. The mod unpacks a fresh copy,
-and you can bring your edits back over.
+**Updating never overwrites that folder**, so your edits are safe. To take new content
+after an update, move `.minecraft/xiecontent/base-content` somewhere else and relaunch. The mod unpacks a fresh copy, and you can bring your edits back over.
 
 **Worldgen is a data pack of its own**, "Xie's Mod worldgen". It is on by default, in
 new worlds and in existing ones the first time they load with the mod, and only
 chunks generated afterwards are affected. To leave it out, untick it under Data
-Packs when creating a world, or run `/datapack disable "xiesmod_generated_worldgen"`
-and reopen the world. Saplings still grow either way. What is lost is what only
-worldgen supplies: wild fruit trees, wild plants and salt deposits. Every crop and
-tree can still be grown from spliced seeds, and dried kelp still smelts into salt.
+Packs when creating a world, or run `/datapack disable "xiesmod_generated_worldgen"`.
+Every crop and tree can still be grown from spliced seeds, and you can get salt by
+smelting dried kelp.
 
 Making your own content
 -----------------------
@@ -43,15 +38,18 @@ Making your own content
 Each folder in `xiecontent/` is a content pack. Put yours beside `base-content/`
 rather than inside it, and taking new base content will never touch it. A pack is
 a folder of `.json` definition files, plus a `textures/` folder and optional `.loc`
-files of display names. Files and folders starting with `_` are skipped. The
-`.xie` extension the format used in 2013 is the same JSON, and still loads.
+files of display names. Files and folders starting with `_` are skipped.
+
+Note that in 2013 the mod used `.xie` files, but they were always just JSON, and the
+schema hasn't changed. The mod will still read them, and they should work. Let me know
+if they don't, I'll be happy to help fix it.
 
 Every launch writes what the packs produce to `xiecontent/_generated/`, as a
 resource pack and a data pack side by side, so you can open it and see exactly what
 a definition became. It also writes `xie-content.schema.json` beside the packs.
 Point a definition file at it and any editor that understands JSON Schema will
 complete property names, describe them on hover, and flag a typo before the game
-does:
+does.
 
 ```json
 {
@@ -103,7 +101,7 @@ A definition's `type` picks its archetype. With no `type` it is `basic`.
 | item | what it is |
 |---|---|
 | `basic` | A plain item. |
-| `food` | Eaten or, with `action: "drink"`, drunk: `hunger`, `nourishment`, `potionEffect`, and `drops` for what is left in your hand. |
+| `food` | Eaten or, with `action: "drink"`, drunk. `hunger`, `nourishment`, `potionEffect`, and `drops` for what is left in your hand. |
 | `seeds` | Plants the block named by `growsInto`. |
 | `tool` | `material` is the tier, `blocksEffective` and `canHarvest` what it mines, and `transforms` turns one block into another on right-click. |
 | `sword` | `damage`, `uses`, `enchantability`, and `canBlock` to raise it like a shield. |
@@ -227,5 +225,4 @@ Licence
 -------
 
 The code is [MIT](LICENSE). The content in `base-content/`, textures included, is
-[CC BY 4.0](base-content/LICENSE). Textures by Xie, and some of the best of them by
-Thistle.
+[CC BY 4.0](base-content/LICENSE). The better textures were contributed by Thistle. The less good ones are by Xie.
