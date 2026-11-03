@@ -2,6 +2,7 @@ package mod.xie.xm.pack;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mojang.logging.LogUtils;
 
 import mod.xie.xm.XiesMod;
@@ -1128,6 +1129,11 @@ public final class XiePackEmitter {
      * drawn while {@code cooking} is true. It is optional: without it a cooking pot
      * draws its still sprite, and the steam alone says it is not ready. Either sprite
      * may be animated, with the {@code .png.mcmeta} beside it that vanilla expects.
+     *
+     * <p>An animated sprite stops when the fire goes out. Vanilla runs an animation
+     * for every block that draws it, so a pot cannot pause its own; instead an unlit
+     * pot draws a frozen copy of the first frame, cut here from the strip, which is
+     * what makes a cold pot look dead rather than merely quiet.
      */
     private static final PotContent[] STOVE_CONTENTS = {
         null,
@@ -1155,22 +1161,48 @@ public final class XiePackEmitter {
                 if (found.isEmpty()) {
                     continue;
                 }
-                String name = stoveModelName(stages, pot, cooking) + ".png";
-                copy(found.get(), target, name);
+                String name = stoveModelName(stages, pot, cooking, false);
+                copy(found.get(), target, name + ".png");
+                copied++;
                 Path animation = found.get().resolveSibling(found.get().getFileName() + ".mcmeta");
                 if (Files.isRegularFile(animation)) {
-                    copy(animation, target, name + ".mcmeta");
+                    copy(animation, target, name + ".png.mcmeta");
+                    writeFirstFrame(found.get(), animation, target,
+                        stoveModelName(stages, pot, cooking, true) + ".png");
+                    copied++;
                 }
-                copied++;
             }
         }
         return copied == 0 ? Sprites.NONE : new Sprites(copied, Map.of(), Map.of());
     }
 
-    /** Whether the content shipped this pot sprite, which {@link #copyStoveTextures} has copied by now. */
-    private boolean hasStoveSprite(Stages stages, int pot, boolean cooking) {
+    /**
+     * The first frame of an animation strip, as a sprite of its own. A frame is as
+     * wide as the strip and as tall as it is wide, unless the {@code .mcmeta} says
+     * otherwise with {@code width} or {@code height}, as vanilla reads it.
+     */
+    private static void writeFirstFrame(Path strip, Path animation, Path target, String fileName)
+            throws IOException {
+        BufferedImage image = ImageIO.read(strip.toFile());
+        JsonObject meta = JsonParser.parseString(Files.readString(animation)).getAsJsonObject()
+            .getAsJsonObject("animation");
+        int width = image.getWidth();
+        int height = width;
+        if (meta != null && meta.has("width")) {
+            width = meta.get("width").getAsInt();
+        }
+        if (meta != null && meta.has("height")) {
+            height = meta.get("height").getAsInt();
+        }
+        Files.createDirectories(target);
+        ImageIO.write(image.getSubimage(0, 0, Math.min(width, image.getWidth()),
+            Math.min(height, image.getHeight())), "PNG", target.resolve(fileName).toFile());
+    }
+
+    /** Whether this pot sprite exists in the pack, which {@link #copyStoveTextures} has decided by now. */
+    private boolean hasStoveSprite(Stages stages, int pot, boolean cooking, boolean frozen) {
         return Files.exists(assets().resolve("textures").resolve("block")
-            .resolve(stoveModelName(stages, pot, cooking) + ".png"));
+            .resolve(stoveModelName(stages, pot, cooking, frozen) + ".png"));
     }
 
     /**
@@ -1183,17 +1215,20 @@ public final class XiePackEmitter {
      * {@link mod.xie.xm.block.XieStoveBlock#animateTick} — but it has to be named
      * here because the block carries it. {@code cooking} changes it only where the
      * content drew a cooking sprite; an empty pot is never cooking, but is listed.
+     * {@code lit} matters only to an animated sprite, which is frozen while unlit.
      */
     private void writeStoveBlockState(Stages stages) throws IOException {
         JsonObject variants = new JsonObject();
 
         for (int pot = 0; pot < STOVE_CONTENTS.length; pot++) {
             for (boolean cooking : new boolean[] {false, true}) {
-                boolean drawn = cooking && STOVE_CONTENTS[pot] != null && hasStoveSprite(stages, pot, true);
-                String model = XiesMod.MOD_ID + ":block/" + stoveModelName(stages, pot, drawn);
+                boolean drawn = cooking && STOVE_CONTENTS[pot] != null
+                    && hasStoveSprite(stages, pot, true, false);
                 for (boolean lit : new boolean[] {false, true}) {
+                    boolean frozen = !lit && hasStoveSprite(stages, pot, drawn, true);
                     JsonObject variant = new JsonObject();
-                    variant.addProperty("model", model);
+                    variant.addProperty("model",
+                        XiesMod.MOD_ID + ":block/" + stoveModelName(stages, pot, drawn, frozen));
                     variants.add("cooking=" + cooking + ",lit=" + lit + ",pot=" + pot, variant);
                 }
             }
@@ -1205,7 +1240,8 @@ public final class XiePackEmitter {
     }
 
     /**
-     * One cauldron model per pot state, and one more per cooking sprite the content drew.
+     * One cauldron model per pot state, one more per cooking sprite the content drew,
+     * and a frozen one beside each of those that is animated.
      *
      * <p>The pot itself is vanilla's, so only the contents are ever the pack's art.
      * The empty state is vanilla's own {@code block/cauldron}; the filled ones are
@@ -1221,26 +1257,31 @@ public final class XiePackEmitter {
 
         for (int pot = 0; pot < STOVE_CONTENTS.length; pot++) {
             for (boolean cooking : new boolean[] {false, true}) {
-                if (cooking && (STOVE_CONTENTS[pot] == null || !hasStoveSprite(stages, pot, true))) {
+                if (cooking && (STOVE_CONTENTS[pot] == null || !hasStoveSprite(stages, pot, true, false))) {
                     continue;
                 }
-                writeStoveModel(stages, pot, cooking);
+                writeStoveModel(stages, pot, cooking, false);
                 written++;
+                if (STOVE_CONTENTS[pot] != null && hasStoveSprite(stages, pot, cooking, true)) {
+                    writeStoveModel(stages, pot, cooking, true);
+                    written++;
+                }
             }
         }
         return written;
     }
 
-    private void writeStoveModel(Stages stages, int pot, boolean cooking) throws IOException {
+    private void writeStoveModel(Stages stages, int pot, boolean cooking, boolean frozen)
+            throws IOException {
         JsonObject model = new JsonObject();
         JsonObject textures = new JsonObject();
 
-        String name = stoveModelName(stages, pot, cooking);
+        String name = stoveModelName(stages, pot, cooking, frozen);
         if (STOVE_CONTENTS[pot] == null) {
             model.addProperty("parent", "minecraft:block/cauldron");
         } else {
             model.addProperty("parent", "minecraft:block/template_cauldron_full");
-            textures.addProperty("content", hasStoveSprite(stages, pot, cooking)
+            textures.addProperty("content", hasStoveSprite(stages, pot, cooking, frozen)
                 ? XiesMod.MOD_ID + ":block/" + name
                 : STOVE_CONTENTS[pot].vanilla());
         }
@@ -1255,9 +1296,12 @@ public final class XiePackEmitter {
         write(assets().resolve("models").resolve("block").resolve(name + ".json"), model);
     }
 
-    /** Empty keeps the block's own name so the block item has an obvious parent. */
-    private static String stoveModelName(Stages stages, int pot, boolean cooking) {
+    /**
+     * The name a pot model and its sprite share. Empty keeps the block's own name so
+     * the block item has an obvious parent.
+     */
+    private static String stoveModelName(Stages stages, int pot, boolean cooking, boolean frozen) {
         String name = pot == 0 ? stages.modelName(0) : stages.modelName(0) + "_pot" + pot;
-        return cooking ? name + "_cooking" : name;
+        return name + (cooking ? "_cooking" : "") + (frozen ? "_unlit" : "");
     }
 }

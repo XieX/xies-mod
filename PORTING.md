@@ -506,7 +506,11 @@ is what the posting called it; the block is the cookpot because that is what it 
   the pot draws vanilla water and one mud for all three meals. Each may also have a
   `_cooking` sprite, drawn while `cooking` is true and animated if a `.png.mcmeta`
   sits beside it; none is shipped yet, so a cooking pot draws its still sprite.
-  Vanilla water would draw grey here anyway, because the cauldron's content face is
+  The four still sprites are themselves animated, and an animation stops when the
+  fire goes out, so a cold pot looks dead rather than merely quiet. Vanilla runs a
+  sprite's animation for every block that draws it, so a pot cannot pause its own;
+  the emitter cuts the first frame out as a frozen `_unlit` sprite and points every
+  unlit state at it. Vanilla water would draw grey here anyway, because the cauldron's content face is
   tinted and nothing registers a block colour for the cookpot.
 - **Everything goes in by hand, with no menu.** Water on an empty pot starts it;
   anything in the `ingredients` alias is a food, anything in `proteins` a protein
