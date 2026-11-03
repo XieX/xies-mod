@@ -17,8 +17,9 @@ on the same pot with the same click:
   ``cookTime`` plus a margin;
 * a bowl on a cooked pot yields the meal the table predicts, and the pot shows
   that meal before the bowl goes in: one food is a Weak Soup, one food and salt a
-  Soup, a food, a protein and salt a Stew. A bowl on an empty pot and on a pot
-  still cooking yields nothing and keeps the bowl;
+  Soup, a food, a protein and salt a Stew. The meal shows from the moment the
+  ingredient goes in, and ``cooking`` alone says it is not ready. A bowl on an
+  empty pot and on a pot still cooking yields nothing and keeps the bowl;
 * an item that is none of base, ingredient, flavouring or fuel is refused with
   the pot and the inventory unchanged.
 
@@ -59,7 +60,7 @@ SOUP = "xiesmod:soup"
 STEW = "xiesmod:stew"
 MEALS = (WEAK_SOUP, SOUP, STEW)
 
-#: The ``pot`` blockstate value of a cooked pot whose next bowl is each meal.
+#: The ``pot`` blockstate value of a pot whose next bowl is each meal.
 SHOWS = {WEAK_SOUP: 2, SOUP: 3, STEW: 4}
 
 #: ``cookTime`` from ``cooking/cookpot.json``, in ticks, and how long that is.
@@ -154,8 +155,9 @@ def _weak_soup(game, expect, pot):
     # No fuel, no cooking: after a whole cookTime the countdown has not moved.
     time.sleep(COOK_SECONDS + 2.0)
     unfuelled = _contents(game, pot)
-    expect.that("with no fuel the pot never finishes cooking",
-                unfuelled["CookProgress"] == COOK_TICKS and game.block_is(pot, "%s[pot=1,lit=false]" % POT),
+    expect.that("with no fuel the pot never finishes cooking, though it already shows a Weak Soup",
+                unfuelled["CookProgress"] == COOK_TICKS
+                and game.block_is(pot, "%s[pot=%d,cooking=true,lit=false]" % (POT, SHOWS[WEAK_SOUP])),
                 "after %.0fs the countdown reads %s of %d"
                 % (COOK_SECONDS + 2.0, unfuelled["CookProgress"], COOK_TICKS))
 
@@ -178,7 +180,7 @@ def _weak_soup(game, expect, pot):
     expect.that("furnace fuel lights the fire", clicks, _took(clicks))
     expect.equal("and is consumed", game.count_items(COAL), 0)
 
-    done = game.wait_until(lambda: game.block_is(pot, "%s[pot=%d]" % (POT, SHOWS[WEAK_SOUP])),
+    done = game.wait_until(lambda: game.block_is(pot, "%s[pot=%d,cooking=false]" % (POT, SHOWS[WEAK_SOUP])),
                            timeout=COOK_SECONDS + MARGIN + 5.0, interval=0.25)
     elapsed = time.monotonic() - lit_at
     expect.that("with fuel the pot finishes within cookTime plus a margin, showing a Weak Soup",
@@ -238,7 +240,7 @@ def _stew(game, expect, pot):
     same = all(after[key] == before[key]
                for key in ("Base", "Food", "Flavour", "Protein", "CookProgress"))
     expect.that("an item the pot does not list is refused, with the pot unchanged",
-                same and game.block_is(pot, "%s[pot=%d,lit=true]" % (POT, SHOWS[STEW])),
+                same and game.block_is(pot, "%s[pot=%d,cooking=false,lit=true]" % (POT, SHOWS[STEW])),
                 "pot %s" % _said(after))
     expect.that("and the inventory unchanged",
                 game.count_items(ROTTEN) == 1 and _meals(game) == 0,
@@ -281,7 +283,7 @@ def _feed(game, expect, pot, item, food=None, flavour=None, protein=None):
 
 def _cooked(game, expect, pot, what, meal):
     started = time.monotonic()
-    done = game.wait_until(lambda: game.block_is(pot, "%s[pot=%d]" % (POT, SHOWS[meal])),
+    done = game.wait_until(lambda: game.block_is(pot, "%s[pot=%d,cooking=false]" % (POT, SHOWS[meal])),
                            timeout=COOK_SECONDS + MARGIN + 5.0, interval=0.25)
     expect.that("%s cook through, showing %s" % (what, meal), done,
                 "%.1fs since the last ingredient" % (time.monotonic() - started))

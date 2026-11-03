@@ -47,9 +47,9 @@ From the 17 blocks and 53 items in the live content repo:
 |---|---|---|
 | blocks | 17 of 17 definitions, 25 objects | `fruitLeaves` alone splits into four |
 | items | 68 of 53 definitions | multi-variant `names` split into one item each, plus five sapling block items and the cookpot's |
-| recipes | 111 | 99 of the 101 in `recipes` sections, plus 12 from `cooked`; the other 2 are `cull` and remove rather than add |
-| loot tables | 25 | per-age drop chances as `block_state_property` pools |
-| alias tags | 16 | `$protein` became `#xiesmod:protein`, so one recipe replaces hundreds |
+| recipes | 109 | 97 of the 99 in `recipes` sections, plus 12 from `cooked`; the other 2 are `cull` and remove rather than add |
+| loot tables | 35 | 25 per-age drop tables as `block_state_property` pools, and a `harvest/` table per fruiting tree and per bush |
+| alias tags | 15 | `$protein` became `#xiesmod:protein`, so one recipe replaces hundreds |
 | worldgen | 9 of 10 `spawns` | the 1 left is the dropped melon |
 | tree features | 5 | a `minecraft:tree` configured feature per `tree` block |
 | burn times | 8 | `fuel`, as one entry each in NeoForge's furnace-fuel data map |
@@ -63,6 +63,19 @@ roll, `growthHeight` and bone meal. The subclasses differ in exactly one method 
   back three growth stages. This follows `SweetBerryBushBlock`, which arrived in 1.14
   with the same mechanic — matching Mojang's idiom is what makes it feel native, and
   it works identically in creative, which a break-based implementation does not.
+  The pick reads `fruit`, a tree's key, from `harvest/<path>`, and breaking reads
+  `drops`, which is vanilla's split between `harvest/sweet_berry_bush` and the bush's
+  block loot. 1.6 had one table and could: breaking a ripe bush there reset it rather
+  than removing it, so the ripe stage's seed chance was 0 and nobody missed it. Here
+  breaking removes the bush, and with one table a ripe cotton plant broken was a
+  plant lost with no seed back, while any seed chance at the ripe stage would have
+  come with every pick. So since November 2026 the six live bushes write the crop in
+  `fruit` and the seed in `drops`, their ripe-stage seed chance carried over from the
+  stage before (tomato and cotton 60% × 3, rose and dandelion 99%); soy and tea, whose
+  crop is their seed, keep `drops` as it was. A bush with no `fruit` is never picked.
+  Every bush's fruit also has a `min` of one, or a certain chance: a pick that comes
+  up empty reads as a bug however rare, and the tomato's two rolls at half did one
+  pick in four. `RealContentTest` holds the live content to it.
 - **`crop`** is annual — break it and replant from seed — and divides its growth roll
   by vanilla's farmland-adjacency bonus, so a crop in a tended field grows several
   times faster than the same crop alone on dry soil.
@@ -482,13 +495,19 @@ is what the posting called it; the block is the cookpot because that is what it 
   cauldron, shapeless. The 2013 stove was a furnace with an iron top because the
   cauldron did not exist yet, and the old iron-and-furnace recipe went with it.
   Every model is vanilla's own cauldron with the `content` sprite swapped, one per
-  `pot` state: empty, water while it cooks, and then whichever of Weak Soup, Soup or
-  Stew the next bowl will be, so a mixed pot steps down as it is ladled. The four
-  liquids are the content's `cookpot_water`, `_weakSoup`, `_soup` and `_stew` sprites,
-  Xie's own; without them the pot draws vanilla water and
-  one mud for all three meals, which says raw or done and nothing more. Vanilla
-  water would draw grey here anyway, because the cauldron's content face is tinted
-  and nothing registers a block colour for the cookpot.
+  `pot` state: empty, water, and then whichever of Weak Soup, Soup or Stew the next
+  bowl will be, so a mixed pot steps down as it is ladled. The meal shows from the
+  moment its ingredients go in; at first the pot went back to water while it
+  cooked, and Xie's playtest found that read as though the ingredients had
+  vanished. Whether it is ready is a second property, `cooking`, which the player
+  sees as steam and bubbles off a lit pot and which the client reads so a bowl is
+  not swung at a pot that will not fill it. The four liquids are the content's
+  `cookpot_water`, `_weakSoup`, `_soup` and `_stew` sprites, Xie's own; without them
+  the pot draws vanilla water and one mud for all three meals. Each may also have a
+  `_cooking` sprite, drawn while `cooking` is true and animated if a `.png.mcmeta`
+  sits beside it; none is shipped yet, so a cooking pot draws its still sprite.
+  Vanilla water would draw grey here anyway, because the cauldron's content face is
+  tinted and nothing registers a block colour for the cookpot.
 - **Everything goes in by hand, with no menu.** Water on an empty pot starts it;
   anything in the `ingredients` alias is a food, anything in `proteins` a protein
   and anything in `flavourings` a seasoning; an empty bowl ladles out the best meal

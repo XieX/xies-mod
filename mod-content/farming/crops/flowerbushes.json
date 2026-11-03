@@ -5,20 +5,14 @@
       "name": "Rose Bush",
       "type": "bush",
       "growsOn": "farmland,dirt,grass",
+      "fruit": "rose",
       "drops": {
-        "rose": {
-          "chance": {
-            "0-3": 0,
-            "4+": 100
-          }
-        },
         "roseSeeds": {
           "chance": {
             "0": 0,
             "1": 33,
             "2": 66,
-            "3": 99,
-            "4+": 0
+            "3+": 99
           }
         }
       },
@@ -33,20 +27,14 @@
       "name": "Dandelion Patch",
       "type": "bush",
       "growsOn": "farmland,dirt,grass",
+      "fruit": "flower",
       "drops": {
-        "flower": {
-          "chance": {
-            "0-3": 0,
-            "4": 100
-          }
-        },
         "dandelionSeeds": {
           "chance": {
             "0": 0,
             "1": 33,
             "2": 66,
-            "3": 99,
-            "4": 0
+            "3+": 99
           }
         }
       },

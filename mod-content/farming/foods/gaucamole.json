@@ -1,14 +1,13 @@
 {
   "$schema": "../../../common/src/main/resources/xie-content.schema.json",
   "aliases": {
-    "saucy": "guacamole",
-	"guacstuffs": "tomato,lemon,onion,salt"
+    "saucy": "guacamole"
   },
   "items": {
     "guacamole": {
       "name": "Guacamole",
       "type": "food",
-      "hunger": 8,
+      "hunger": 9,
       "nourishment": 0.6,
       "container": "bowl",
       "stacksize": 1,
@@ -17,8 +16,6 @@
     }
   },
   "recipes": {
-    "guacamole": "bowl,avocado,$guacstuffs",
-    "guacamole:2": "bowl,avocado,$guacstuffs,bowl,avocado,$guacstuffs",
-    "guacamole:3": "bowl,avocado,$guacstuffs,bowl,avocado,$guacstuffs,bowl,avocado,$guacstuffs"
+    "guacamole": "bowl,avocado,tomato,lemon,onion"
   }
 }

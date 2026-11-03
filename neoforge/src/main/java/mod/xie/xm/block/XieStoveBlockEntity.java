@@ -172,20 +172,30 @@ public class XieStoveBlockEntity extends BlockEntity {
     }
 
     /**
-     * What the pot looks like, as the {@code pot} blockstate value.
+     * What the pot looks like, as the {@code pot} blockstate value: the meal the next
+     * bowl will be, from the moment its ingredients go in.
      *
-     * <p>The cooked colour means "a bowl will fill, with this meal", not merely "the
-     * timer ran out".
-     * A pot of plain water has nothing to serve and shows raw, and so does one left
-     * holding a single stranded flavouring — in both cases the player still has
-     * something to add, and a pot that looked done would be lying about it.
+     * <p>Shown while it is still cooking too, because a pot that went back to water
+     * every time something was added read as though the ingredients had vanished.
+     * Whether the meal is ready is {@link #isCooking}. A pot of plain water, or one
+     * left holding a single stranded flavouring, has no meal and shows water.
      */
     public int appearance() {
-        Optional<StovePot.Meal> next = isCooked() ? pot.peek() : Optional.empty();
         return switch (pot.base()) {
             case NONE -> XieStoveBlock.POT_EMPTY;
-            case WATER -> next.map(XieStoveBlock::potServing).orElse(XieStoveBlock.POT_WATER_RAW);
+            case WATER -> pot.peek().map(XieStoveBlock::potServing).orElse(XieStoveBlock.POT_WATER);
         };
+    }
+
+    /**
+     * Whether the pot is still working, as the {@code cooking} blockstate value.
+     *
+     * <p>"Not cooking" means "a bowl will fill", not merely "the timer ran out": a
+     * pot with nothing to serve is still waiting on the player, and a pot that
+     * looked done would be lying about it.
+     */
+    public boolean isCooking() {
+        return pot.base() != StovePot.Base.NONE && !(isCooked() && pot.canExtract());
     }
 
     /**
@@ -196,7 +206,7 @@ public class XieStoveBlockEntity extends BlockEntity {
      */
     public static void serverTick(Level level, BlockPos pos, BlockState state, XieStoveBlockEntity stove) {
         boolean wasLit = stove.isLit();
-        int wasAppearance = stove.appearance();
+        boolean wasCooking = stove.isCooking();
 
         if (stove.burnTime > 0) {
             stove.burnTime--;
@@ -208,7 +218,7 @@ public class XieStoveBlockEntity extends BlockEntity {
 
         // Only what a player can see is worth a block update: the fire going out,
         // and the pot finishing.
-        if (wasLit != stove.isLit() || wasAppearance != stove.appearance()) {
+        if (wasLit != stove.isLit() || wasCooking != stove.isCooking()) {
             XieStoveBlock.updateAppearance(level, pos, state, stove);
         }
     }

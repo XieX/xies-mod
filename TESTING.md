@@ -40,13 +40,14 @@ needs no player — `counts` — and a failure presses `F2` and names the screen
 It needs Python 3 and a Windows desktop whose foreground it can take, because a
 `useOn` is a real right-click at a real window and there is no command for it.
 
-**The fifteen checks, in descending order of what only a running game can tell you.**
+**The sixteen checks, in descending order of what only a running game can tell you.**
 
 | check | what it asserts |
 |---|---|
 | `counts` | Every number in the emission summary, against the fixed baseline in `acceptance/checks/counts.py`. The one check that needs no world at all. |
 | `stem` | A ripe `zombiePigmelonStem` fruits into `zombiePigmelon`, the fruit lands on the stem's own soil, and the stem becomes an attached stem *facing it*. Plus the null: a stem whose neighbours have stone under them ripens forever. |
 | `fruit` | A right-click on a ripe leaf hands over its apple and leaves the leaf standing and bare, and gives nothing on a bare one; bone meal ripens a bare leaf and is refused by a `persistent` one; a leaf open to the air ripens on its own under random ticks while, over the same window, the persistent one stays bare and so does a bare leaf with a ripe one beside it. |
+| `bush` | A right-click on a ripe tomato bush and a ripe cotton plant drops each back three stages and hands over one or two of its crop — never none, which is what `min` is for — and no seed; a tomato one stage short of ripe gives nothing to the same click. Breaking, through `/loot give ... mine`, gives a ripe tomato bush's seed and not its tomato, and a ripe rose bush's seed. |
 | `sapling` | Bone meal grows a sapling into its tree, and both that tree and the same tree placed as a *feature* come up with a few leaves already ripe — every tree bears, which is the 2013 keystone's asymmetry dropped on purpose and read as a count over the canopy. |
 | `decay` | A canopy beside a `blazeLog` measures one block from it and is still there after four hundred ticks of ticking; the same canopy on stone measures seven and dies. `XieTreeBlock` *is* a `LeavesBlock`, so this is the one generated tag entry that every fruit tree in the game stands on. |
 | `spikey` | Walking into `blazeTree` costs health, and the stop position is `wall + 0.1 - 0.3` — the inset canopy — where the same walk into leaves that are not spikey stops at `wall - 0.3` and costs nothing. |
@@ -55,7 +56,7 @@ It needs Python 3 and a Windows desktop whose foreground it can take, because a
 | `fist` | Stone becomes a gold block, dirt becomes air, and the bottom face does nothing — checked against the same block clicked from above a moment later. |
 | `bows` | `redstoneBow` fires with the button still down, hands back redstone, disallows pickup and burns; the same bow with arrows instead fires nothing; `boneBow` fires nothing until release and its arrow is cold; `blazeBow` fires with an empty inventory and its arrow is creative-only. |
 | `crafter` | A crafter fed the dressed-garden-salad recipe ejects the salad **and** the mayonnaise's bowl, which is `craftRemainder` and which no predicate can see. |
-| `cookpot` | Water starts an empty pot and is refused by one with a base; a carrot in an unfuelled pot is still raw after `cookTime`, and coal cooks it in exactly that; the cooked pot shows the meal its next bowl will be, and a bowl ladles the meal the tier predicts — one food a Weak Soup, one food and salt a Soup, a food, a porkchop and salt a Stew — and on an empty or unfinished pot serves nothing and is kept; rotten flesh, a food the pot leaves out on purpose and no fuel, moves nothing. |
+| `cookpot` | Water starts an empty pot and is refused by one with a base; a carrot in an unfuelled pot is still raw after `cookTime`, and coal cooks it in exactly that; the pot shows the meal its next bowl will be from the moment the carrot goes in, with `cooking` saying whether it is ready, and a bowl ladles the meal the tier predicts — one food a Weak Soup, one food and salt a Soup, a food, a porkchop and salt a Stew — and on an empty or unfinished pot serves nothing and is kept; rotten flesh, a food the pot leaves out on purpose and no fuel, moves nothing. |
 | `ripen` | Six fresh cheese blocks, in the dark and on stone, all ripen into cheese blocks — which a plant's light rule would stall for ever. Bone meal from a dispenser does nothing to one and is kept, beside a vanilla sapling that takes it; broken before it ripens it yields nothing, beside a cheese block that drops itself. |
 | `blocks` | A salt deposit broken by hand becomes sand; a shrub comes away with its soil and a salt deposit does not. |
 | `cull` | The poppy and dandelion dye recipes are gone from the recipe registry, and a vanilla recipe nothing culls and this mod's own red dye are still in it. |

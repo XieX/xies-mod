@@ -9,9 +9,9 @@ import java.util.Set;
  * Growing blocks that give back at least the seed that planted them the moment they
  * are planted.
  *
- * <p>A drop's {@code amount} is independent rolls at {@code chance} percent each, so
- * what breaking a block at age 0 yields of an item, on average, is the age-0 chance
- * times the amount. When that item is also the seed whose {@code growsInto} names the
+ * <p>A drop's {@code amount} is independent rolls at {@code chance} percent each, less
+ * the {@code min} that need no roll, so what breaking a block at age 0 yields of an
+ * item, on average, is {@link DropTable.Drop#average} at the age-0 chance. When that item is also the seed whose {@code growsInto} names the
  * block, one or more means planting and breaking costs nothing, and more than one
  * makes seed from no growing at all. A chance map is easy to get wrong without
  * anything failing to load, so this is the load saying so.
@@ -37,13 +37,14 @@ public final class SeedReturns {
      * @param block  the growing block
      * @param seed   the item that plants it and that it drops
      * @param chance the age-0 chance, in percent, capped at 100
-     * @param amount how many times that chance is rolled
+     * @param amount how many it drops at most
+     * @param min    how many of those drop without rolling
      */
-    public record Finding(BlockDef block, ItemDef seed, int chance, int amount) {
+    public record Finding(BlockDef block, ItemDef seed, int chance, int amount, int min) {
 
         /** How many seeds an age-0 break yields on average. */
         public double perBreak() {
-            return chance * amount / 100.0;
+            return chance <= 0 ? 0 : min + (amount - min) * chance / 100.0;
         }
     }
 
@@ -66,8 +67,8 @@ public final class SeedReturns {
                     continue;
                 }
                 int chance = Math.min(100, drop.chanceFor(0));
-                if (chance * drop.amount() >= 100) {
-                    findings.add(new Finding(block, seed, chance, drop.amount()));
+                if (drop.average(chance) >= 1) {
+                    findings.add(new Finding(block, seed, chance, drop.amount(), drop.min()));
                 }
             }
         }

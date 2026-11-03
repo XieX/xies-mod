@@ -98,8 +98,9 @@ public class XieStickItem extends Item {
      * @param item   namespaced id of what drops
      * @param chance percentage, rolled once per roll rather than once per use
      * @param rolls  {@code amount}: independent rolls, not a stack size
+     * @param min    how many of those rolls always pay, while the chance is above zero
      */
-    public record Drop(String item, int chance, int rolls) { }
+    public record Drop(String item, int chance, int rolls, int min) { }
 
     /**
      * @param harvests      the declared blocks in declaration order — the order they
@@ -130,7 +131,7 @@ public class XieStickItem extends Item {
 
     private record Resolved(Block block, List<ResolvedDrop> drops) { }
 
-    private record ResolvedDrop(Item item, int chance, int rolls) { }
+    private record ResolvedDrop(Item item, int chance, int rolls, int min) { }
 
     public XieStickItem(Item.Properties properties, Config config) {
         super(properties);
@@ -227,7 +228,7 @@ public class XieStickItem extends Item {
         RandomSource random = level.getRandom();
         for (ResolvedDrop drop : harvest.drops()) {
             for (int roll = 0; roll < drop.rolls(); roll++) {
-                if (random.nextInt(100) < drop.chance()) {
+                if (drop.chance() > 0 && (roll < drop.min() || random.nextInt(100) < drop.chance())) {
                     // Block.popResource is Xie.spawnItem: a small random offset from
                     // the block's centre and a pickup delay, which is what its own
                     // "delayBeforeCanPickup = 10" was for.
@@ -269,7 +270,7 @@ public class XieStickItem extends Item {
                     BuiltInRegistries.ITEM.getKey(this), drop.item(), harvest.block());
                 continue;
             }
-            drops.add(new ResolvedDrop(item.get(), drop.chance(), drop.rolls()));
+            drops.add(new ResolvedDrop(item.get(), drop.chance(), drop.rolls(), drop.min()));
         }
         return drops;
     }

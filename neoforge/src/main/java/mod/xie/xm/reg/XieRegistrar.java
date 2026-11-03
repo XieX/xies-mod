@@ -332,10 +332,14 @@ public final class XieRegistrar {
             Optional<TreeGrower> grower = def.archetype().equals(SAPLING)
                 ? treeGrower(def, names, meta, path)
                 : Optional.empty();
+            // Read where it is picked, at the last stage, which is where the emitter
+            // reads it too when it writes the harvest table.
+            boolean bears = def.archetype().equals("bush") && def.fruit().drops().stream()
+                .anyMatch(drop -> drop.chanceFor(config.maxAge()) > 0);
             holder = blocks.registerBlock(
                 path,
                 properties -> switch (def.archetype()) {
-                    case "bush" -> new XieBushBlock(properties, config);
+                    case "bush" -> new XieBushBlock(properties, config, bears);
                     case "crop" -> new XieCropBlock(properties, config);
                     case SAPLING -> new XieSaplingBlock(properties, config, grower);
                     default -> new XiePlantBlock(properties, config);
@@ -1144,7 +1148,7 @@ public final class XieRegistrar {
                 // Chance at metadata zero: Droppables.getDrops passed -1, and
                 // Drop.getDropForMeta fell straight through to metaChance[0] for it.
                 drops.add(new XieStickItem.Drop(resolveItemId(pack, drop.item()),
-                    Math.clamp(drop.chanceFor(0), 0, 100), drop.amount()));
+                    Math.clamp(drop.chanceFor(0), 0, 100), drop.amount(), drop.min()));
             }
             harvests.add(new XieStickItem.Harvest(
                 resolveBlockId(pack, entry.block().qualifiedName()), drops));

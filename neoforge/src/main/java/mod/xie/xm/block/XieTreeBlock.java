@@ -106,7 +106,8 @@ public class XieTreeBlock extends LeavesBlock implements BonemealableBlock {
      * Where a tree's harvest loot table lives, under the mod's namespace and ahead of
      * the block's own path: {@code xiesmod:harvest/apple_leaves}. Vanilla keeps its
      * picked things at the same kind of address, {@code minecraft:harvest/cave_vine},
-     * and {@code XieDataEmitter} writes one per fruiting subtype.
+     * and {@code XieDataEmitter} writes one per fruiting subtype. {@link XieBushBlock}
+     * keeps its fruit here too.
      */
     public static final String HARVEST_PREFIX = "harvest/";
 

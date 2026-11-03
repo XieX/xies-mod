@@ -5,6 +5,13 @@
       "name": "Tea Bush",
       "type": "bush",
       "growsOn": "farmland",
+      "fruit": {
+        "teaLeaves": {
+          "chance": 60,
+          "amount": 4,
+          "min": 1
+        }
+      },
       "drops": {
         "teaLeaves": {
           "chance": {

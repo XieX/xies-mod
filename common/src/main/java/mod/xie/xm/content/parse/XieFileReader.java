@@ -277,7 +277,7 @@ public final class XieFileReader {
      *
      * <p>Reading a key here proves the parser understood it and nothing more. Half of
      * {@link #BLOCK_STRUCTURAL} produces a value that some archetypes want and others
-     * never ask for — {@code fruit} is a {@code tree}'s alone, and a {@code stem} takes
+     * never ask for — {@code fruit} is a {@code tree}'s and a {@code bush}'s alone, and a {@code stem} takes
      * neither a {@code blockBounds} nor a sprite — so marking them consumed at parse
      * time hid exactly the gap {@code blazeTree}'s {@code blockBounds} was: parsed,
      * correct, and asked for by nobody. See {@link PropertyMap#markStructural}.
@@ -309,7 +309,7 @@ public final class XieFileReader {
         DropTable drops = readDrops(origin, props.raw("drops").orElse(null));
         // "fruit" is written exactly like "drops" — the original built its "sheds"
         // with the same expandDropsNode — but means something else: what picking a
-        // ripe leaf yields rather than what breaking it does.
+        // ripe leaf or bush yields rather than what breaking it does.
         DropTable fruit = readDrops(origin, props.raw("fruit").orElse(null));
         TexDef tex = readTex(origin, object, "block");
         Optional<MetaMap<Bounds>> bounds = readBounds(origin, props);
@@ -467,7 +467,7 @@ public final class XieFileReader {
                 int amount = body.isJsonPrimitive()
                     ? PropertyMap.asInt(body).orElse(1)
                     : 1;
-                drops.add(new DropTable.Drop(item, Optional.empty(), amount, PropertyMap.empty()));
+                drops.add(new DropTable.Drop(item, Optional.empty(), amount, 0, PropertyMap.empty()));
                 continue;
             }
 
@@ -479,9 +479,10 @@ public final class XieFileReader {
             Optional<MetaMap<Integer>> chance = dropProps.getMetaMap("chance",
                 value -> PropertyMap.asInt(value).orElse(null));
             int amount = dropProps.getInt("amount", 1);
-            dropProps.markUsed("chance", "amount");
+            int min = dropProps.getInt("min", 0);
+            dropProps.markUsed("chance", "amount", "min");
 
-            drops.add(new DropTable.Drop(item, chance, amount, dropProps));
+            drops.add(new DropTable.Drop(item, chance, amount, min, dropProps));
         }
         return new DropTable(drops);
     }

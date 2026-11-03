@@ -117,7 +117,7 @@
       ]
     },
     "drop": {
-      "description": "One entry of a drop table. A bare number is the amount; an object gives a percentage chance, optionally per metadata range, and an amount.",
+      "description": "One entry of a drop table. A bare number is the amount; an object gives a percentage chance, optionally per metadata range, an amount, and how many of that amount are guaranteed.",
       "oneOf": [
         { "$ref": "#/definitions/int" },
         {
@@ -128,7 +128,11 @@
               "$ref": "#/definitions/metaInt"
             },
             "amount": {
-              "description": "How many. Default 1.",
+              "description": "How many at most: independent rolls at chance, not a stack size. Default 1.",
+              "$ref": "#/definitions/int"
+            },
+            "min": {
+              "description": "How many of amount drop without a roll, wherever chance is above zero; the rest are rolled. Default 0.",
               "$ref": "#/definitions/int"
             }
           },
@@ -259,6 +263,14 @@
             "properties": {
               "growthRate": { "description": "Percentage of the baseline growth speed, 100 when absent; higher is faster.", "$ref": "#/definitions/int" },
               "maxGrowth": { "description": "Highest growth stage, or ripening stage.", "$ref": "#/definitions/int" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "bush" } } },
+          "then": {
+            "properties": {
+              "fruit": { "description": "What a ripe bush yields when picked, written like drops and read at its last growth stage; drops is then what breaking it leaves. A bush without it is never picked.", "$ref": "#/definitions/dropTable" }
             }
           }
         },

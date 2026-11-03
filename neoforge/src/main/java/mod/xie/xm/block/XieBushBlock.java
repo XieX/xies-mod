@@ -3,6 +3,10 @@ package mod.xie.xm.block;
 import com.mojang.serialization.MapCodec;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -13,6 +17,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.phys.BlockHitResult;
 
 /**
@@ -28,8 +33,9 @@ import net.minecraft.world.phys.BlockHitResult;
  *   }
  * </pre>
  *
- * <p>Break a ripe bush and it is not removed — it drops its fruit and drops back
- * three growth stages. A crop, by contrast, is annual: harvesting destroys it and
+ * <p>In 1.6, break a ripe bush and it was not removed — it dropped its fruit and fell
+ * back three growth stages. Here that harvest is a right-click; see
+ * {@link #useWithoutItem}. A crop, by contrast, is annual: harvesting destroys it and
  * you replant from seed. Bushes also accept natural ground ({@code growsOn} is
  * typically {@code farmland,dirt,grass}) where crops want farmland.
  *
@@ -46,10 +52,15 @@ public class XieBushBlock extends XiePlantBlock {
     public static final int REGROW_SETBACK = 3;
 
     public static final MapCodec<XieBushBlock> CODEC =
-        simpleCodec(properties -> new XieBushBlock(properties, Config.PLACEHOLDER));
+        simpleCodec(properties -> new XieBushBlock(properties, Config.PLACEHOLDER, false));
 
-    public XieBushBlock(BlockBehaviour.Properties properties, Config config) {
+    private final boolean bears;
+    private ResourceKey<LootTable> harvestTable;
+
+    /** @param bears whether the content gave it a {@code fruit}; a bush without one is never picked */
+    public XieBushBlock(BlockBehaviour.Properties properties, Config config, boolean bears) {
         super(properties, config);
+        this.bears = bears;
     }
 
     @Override
@@ -73,20 +84,24 @@ public class XieBushBlock extends XiePlantBlock {
      * idiom is what makes the block feel native. It also behaves consistently in
      * creative, where block-break never reaches {@code playerDestroy} at all.
      *
-     * <p>Breaking still works and still drops, it just removes the bush like any
-     * other plant. Harvest is the non-destructive option, not the only one.
+     * <p>The fruit comes out of the loot table at {@link XieTreeBlock#HARVEST_PREFIX},
+     * which {@code XieDataEmitter} writes from {@code fruit}: the same split vanilla
+     * makes between {@code harvest/sweet_berry_bush} and the berry bush's block loot.
+     * The original had one table for both, which it could afford because breaking a
+     * ripe bush never removed it. Breaking one here removes it like any other plant,
+     * so {@code drops} is what it leaves to replant from and {@code fruit} is the crop.
      */
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                Player player, BlockHitResult hitResult) {
-        if (!isRipe(state)) {
+        if (!bears || !isRipe(state)) {
             return super.useWithoutItem(state, level, pos, player, hitResult);
         }
 
         if (level instanceof ServerLevel serverLevel) {
-            // Drops resolve against the ripe state, so the block's own loot table
-            // yields exactly what breaking it at this age would have.
-            Block.dropResources(state, serverLevel, pos, null, player, player.getMainHandItem());
+            // A bush is hollow, so the fruit drops where it hangs, as berries do.
+            Block.dropFromBlockInteractLootTable(serverLevel, harvestTable(), state, null, null,
+                player, (where, stack) -> Block.popResource(where, pos, stack));
 
             serverLevel.playSound(null, pos, SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES,
                 SoundSource.BLOCKS, 1.0F, 0.8F + serverLevel.getRandom().nextFloat() * 0.4F);
@@ -96,5 +111,15 @@ public class XieBushBlock extends XiePlantBlock {
             serverLevel.gameEvent(GameEvent.BLOCK_CHANGE, pos, GameEvent.Context.of(player, picked));
         }
         return InteractionResult.SUCCESS;
+    }
+
+    private ResourceKey<LootTable> harvestTable() {
+        ResourceKey<LootTable> key = harvestTable;
+        if (key == null) {
+            Identifier id = BuiltInRegistries.BLOCK.getKey(this);
+            harvestTable = key = ResourceKey.create(Registries.LOOT_TABLE, Identifier.fromNamespaceAndPath(
+                id.getNamespace(), XieTreeBlock.HARVEST_PREFIX + id.getPath()));
+        }
+        return key;
     }
 }

@@ -95,6 +95,32 @@ class XieFileReaderTest {
         assertEquals(4, bush.impliedMaxMeta());
     }
 
+    /** {@code min} of the {@code amount} need no roll; it can raise the amount, never lower it. */
+    @Test
+    void readsAGuaranteedMinimum() {
+        XieFileReader.Result result = read("""
+            {
+              "blocks": {
+                "beanBush": {
+                  "type": "bush",
+                  "fruit": {
+                    "beans": { "chance": 50, "amount": 2, "min": 1 },
+                    "pods": { "amount": 1, "min": 3 }
+                  }
+                }
+              }
+            }
+            """);
+        assertTrue(diagnostics.errors().isEmpty(), diagnostics::toString);
+
+        List<DropTable.Drop> fruit = result.blocks().get("beanBush").fruit().drops();
+        assertEquals(1, fruit.get(0).min());
+        assertEquals(2, fruit.get(0).amount());
+        assertEquals(1.5, fruit.get(0).average(50), 1e-9);
+        assertEquals(0, fruit.get(0).average(0), 1e-9, "nothing where the chance is zero");
+        assertEquals(3, fruit.get(1).amount(), "a min past the amount raises it");
+    }
+
     @Test
     void readsItemsWithSpritesheetIcons() {
         XieFileReader.Result result = read(TOMATO);

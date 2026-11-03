@@ -104,6 +104,26 @@ class RealContentTest {
             "a sapling bears nothing");
     }
 
+    /**
+     * A ripe bush always hands over something when picked. A pick that comes up empty
+     * reads as a bug however rare it is, so every bush's fruit has to promise at least
+     * one at the stage it is picked at, by a {@code min} or a certain chance.
+     */
+    @Test
+    void everyBushPaysOutWhenPicked() {
+        List<String> stingy = result.pack().blocks().values().stream()
+            .filter(block -> block.archetype().equals("bush"))
+            .filter(block -> {
+                int ripe = block.props().peekString("maxGrowth").map(String::trim)
+                    .map(Integer::parseInt).orElse(block.impliedMaxMeta());
+                return block.fruit().drops().stream().noneMatch(drop -> drop.chanceFor(ripe) > 0
+                    && (drop.min() >= 1 || drop.chanceFor(ripe) >= 100));
+            })
+            .map(BlockDef::qualifiedName)
+            .toList();
+        assertTrue(stingy.isEmpty(), () -> "can be picked for nothing: " + stingy);
+    }
+
     /** What the emitter warns about, held at none: no crop pays for its seed unripe. */
     @Test
     void noCropGivesBackItsSeedTheMomentItIsPlanted() {

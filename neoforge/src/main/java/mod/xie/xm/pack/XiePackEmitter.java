@@ -1122,8 +1122,12 @@ public final class XiePackEmitter {
      *
      * <p>Index is the {@code pot} value. Index 0 is empty and has no content layer at
      * all, which is why it is null. A pack without the sprites still draws every
-     * state, as vanilla water and one mud for all three meals, which tells raw from
-     * done and nothing more.
+     * state, as vanilla water and one mud for all three meals.
+     *
+     * <p>Each state may also have a {@code _cooking} sprite, {@code cookpot_stew_cooking.png},
+     * drawn while {@code cooking} is true. It is optional: without it a cooking pot
+     * draws its still sprite, and the steam alone says it is not ready. Either sprite
+     * may be animated, with the {@code .png.mcmeta} beside it that vanilla expects.
      */
     private static final PotContent[] STOVE_CONTENTS = {
         null,
@@ -1134,8 +1138,9 @@ public final class XiePackEmitter {
     };
 
     /**
-     * Copies whichever pot sprites the content ships, each under its model's name.
-     * The rest are left to {@link #writeStoveModels}, which draws vanilla's instead.
+     * Copies whichever pot sprites the content ships, each under its model's name,
+     * with its animation if it has one. The rest are left to {@link #writeStoveModels},
+     * which draws vanilla's instead.
      */
     private Sprites copyStoveTextures(Path source, Path target, BlockDef def, Stages stages)
             throws IOException {
@@ -1144,32 +1149,53 @@ public final class XiePackEmitter {
             if (STOVE_CONTENTS[pot] == null) {
                 continue;
             }
-            Optional<Path> found = findTexture(source, def.name() + "_" + STOVE_CONTENTS[pot].sprite());
-            if (found.isPresent()) {
-                copy(found.get(), target, stoveModelName(stages, pot) + ".png");
+            for (boolean cooking : new boolean[] {false, true}) {
+                String sprite = def.name() + "_" + STOVE_CONTENTS[pot].sprite() + (cooking ? "_cooking" : "");
+                Optional<Path> found = findTexture(source, sprite);
+                if (found.isEmpty()) {
+                    continue;
+                }
+                String name = stoveModelName(stages, pot, cooking) + ".png";
+                copy(found.get(), target, name);
+                Path animation = found.get().resolveSibling(found.get().getFileName() + ".mcmeta");
+                if (Files.isRegularFile(animation)) {
+                    copy(animation, target, name + ".mcmeta");
+                }
                 copied++;
             }
         }
         return copied == 0 ? Sprites.NONE : new Sprites(copied, Map.of(), Map.of());
     }
 
+    /** Whether the content shipped this pot sprite, which {@link #copyStoveTextures} has copied by now. */
+    private boolean hasStoveSprite(Stages stages, int pot, boolean cooking) {
+        return Files.exists(assets().resolve("textures").resolve("block")
+            .resolve(stoveModelName(stages, pot, cooking) + ".png"));
+    }
+
     /**
-     * The stove's blockstate: every {@code pot} value against both {@code lit} values.
+     * The stove's blockstate: every {@code pot} value against both {@code lit} and
+     * both {@code cooking} values.
      *
-     * <p>Ten entries, because a missing variant is a hard load error rather than a
-     * fallback. {@code lit} does not change the model — a cauldron has no furnace
+     * <p>Twenty entries, because a missing variant is a hard load error rather than
+     * a fallback. {@code lit} does not change the model — a cauldron has no furnace
      * front to light up, and the fire is particles from
      * {@link mod.xie.xm.block.XieStoveBlock#animateTick} — but it has to be named
-     * here because the block carries it.
+     * here because the block carries it. {@code cooking} changes it only where the
+     * content drew a cooking sprite; an empty pot is never cooking, but is listed.
      */
     private void writeStoveBlockState(Stages stages) throws IOException {
         JsonObject variants = new JsonObject();
 
         for (int pot = 0; pot < STOVE_CONTENTS.length; pot++) {
-            for (boolean lit : new boolean[] {false, true}) {
-                JsonObject variant = new JsonObject();
-                variant.addProperty("model", XiesMod.MOD_ID + ":block/" + stoveModelName(stages, pot));
-                variants.add("lit=" + lit + ",pot=" + pot, variant);
+            for (boolean cooking : new boolean[] {false, true}) {
+                boolean drawn = cooking && STOVE_CONTENTS[pot] != null && hasStoveSprite(stages, pot, true);
+                String model = XiesMod.MOD_ID + ":block/" + stoveModelName(stages, pot, drawn);
+                for (boolean lit : new boolean[] {false, true}) {
+                    JsonObject variant = new JsonObject();
+                    variant.addProperty("model", model);
+                    variants.add("cooking=" + cooking + ",lit=" + lit + ",pot=" + pot, variant);
+                }
             }
         }
 
@@ -1179,7 +1205,7 @@ public final class XiePackEmitter {
     }
 
     /**
-     * One cauldron model per pot state.
+     * One cauldron model per pot state, and one more per cooking sprite the content drew.
      *
      * <p>The pot itself is vanilla's, so only the contents are ever the pack's art.
      * The empty state is vanilla's own {@code block/cauldron}; the filled ones are
@@ -1194,37 +1220,44 @@ public final class XiePackEmitter {
         int written = 0;
 
         for (int pot = 0; pot < STOVE_CONTENTS.length; pot++) {
-            JsonObject model = new JsonObject();
-            JsonObject textures = new JsonObject();
-
-            String name = stoveModelName(stages, pot);
-            if (STOVE_CONTENTS[pot] == null) {
-                model.addProperty("parent", "minecraft:block/cauldron");
-            } else {
-                boolean drawn = Files.exists(assets().resolve("textures").resolve("block")
-                    .resolve(name + ".png"));
-                model.addProperty("parent", "minecraft:block/template_cauldron_full");
-                textures.addProperty("content", drawn
-                    ? XiesMod.MOD_ID + ":block/" + name
-                    : STOVE_CONTENTS[pot].vanilla());
+            for (boolean cooking : new boolean[] {false, true}) {
+                if (cooking && (STOVE_CONTENTS[pot] == null || !hasStoveSprite(stages, pot, true))) {
+                    continue;
+                }
+                writeStoveModel(stages, pot, cooking);
+                written++;
             }
-
-            textures.addProperty("particle", "minecraft:block/cauldron_side");
-            textures.addProperty("top", "minecraft:block/cauldron_top");
-            textures.addProperty("bottom", "minecraft:block/cauldron_bottom");
-            textures.addProperty("side", "minecraft:block/cauldron_side");
-            textures.addProperty("inside", "minecraft:block/cauldron_inner");
-            model.add("textures", textures);
-
-            write(assets().resolve("models").resolve("block")
-                .resolve(name + ".json"), model);
-            written++;
         }
         return written;
     }
 
+    private void writeStoveModel(Stages stages, int pot, boolean cooking) throws IOException {
+        JsonObject model = new JsonObject();
+        JsonObject textures = new JsonObject();
+
+        String name = stoveModelName(stages, pot, cooking);
+        if (STOVE_CONTENTS[pot] == null) {
+            model.addProperty("parent", "minecraft:block/cauldron");
+        } else {
+            model.addProperty("parent", "minecraft:block/template_cauldron_full");
+            textures.addProperty("content", hasStoveSprite(stages, pot, cooking)
+                ? XiesMod.MOD_ID + ":block/" + name
+                : STOVE_CONTENTS[pot].vanilla());
+        }
+
+        textures.addProperty("particle", "minecraft:block/cauldron_side");
+        textures.addProperty("top", "minecraft:block/cauldron_top");
+        textures.addProperty("bottom", "minecraft:block/cauldron_bottom");
+        textures.addProperty("side", "minecraft:block/cauldron_side");
+        textures.addProperty("inside", "minecraft:block/cauldron_inner");
+        model.add("textures", textures);
+
+        write(assets().resolve("models").resolve("block").resolve(name + ".json"), model);
+    }
+
     /** Empty keeps the block's own name so the block item has an obvious parent. */
-    private static String stoveModelName(Stages stages, int pot) {
-        return pot == 0 ? stages.modelName(0) : stages.modelName(0) + "_pot" + pot;
+    private static String stoveModelName(Stages stages, int pot, boolean cooking) {
+        String name = pot == 0 ? stages.modelName(0) : stages.modelName(0) + "_pot" + pot;
+        return cooking ? name + "_cooking" : name;
     }
 }

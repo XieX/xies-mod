@@ -5,20 +5,19 @@
       "name": "Cotton Plant",
       "type": "bush",
       "growsOn": "farmland",
-      "drops": {
+      "fruit": {
         "cotton": {
-          "chance": {
-            "0-3": 0,
-            "4+": 66
-          },
-          "amount": 2
-        },
+          "chance": 66,
+          "amount": 2,
+          "min": 1
+        }
+      },
+      "drops": {
         "cottonSeeds": {
           "chance": {
             "0-1": 0,
             "2": 30,
-            "3": 60,
-            "4+": 0
+            "3+": 60
           },
           "amount": 3
         }

@@ -68,6 +68,25 @@ class SeedReturnsTest {
         assertEquals(100, findings(beanBush("{ \"0\": 150 }", 1)).get(0).chance());
     }
 
+    /** A guaranteed seed pays back by itself, however low the chance on the rest. */
+    @Test
+    void countsAMinimumAsCertain() {
+        XieFileReader.Result result = read("""
+            {
+              "blocks": {
+                "beanBush": {
+                  "type": "bush",
+                  "drops": { "beans": { "chance": 10, "amount": 3, "min": 1 } }
+                }
+              },
+              "items": { "beans": { "type": "seeds", "growsInto": "beanBush" } }
+            }
+            """);
+        List<SeedReturns.Finding> found = findings(result);
+        assertEquals(1, found.size());
+        assertEquals(1.2, found.get(0).perBreak(), 1e-9);
+    }
+
     /** No chance map at all is a hundred percent, every age. */
     @Test
     void readsAnUnconditionalDropAsCertain() {

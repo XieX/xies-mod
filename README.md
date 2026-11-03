@@ -97,8 +97,11 @@ the game does:
       "name": "Tomato Bush",
       "type": "bush",
       "growsOn": "farmland,dirt,grass",
+      "fruit": {
+        "tomato": { "chance": 50, "amount": 2, "min": 1 }
+      },
       "drops": {
-        "tomato": { "chance": { "0-3": 0, "4+": 50 }, "amount": 2 }
+        "tomatoSeeds": { "chance": { "0": 0, "1": 20, "2": 40, "3+": 60 }, "amount": 3 }
       }
     }
   },
@@ -127,9 +130,12 @@ rewrites each bundled file's `$schema` to climb out of `mod-content/` to the ins
 
 A drop's `amount` is not a stack size but a number of independent rolls, each yielding
 one item at `chance` percent, and a `chance` keyed by growth stage is how a plant pays
-more as it ripens: the tomato above drops nothing until stage 4 and then two rolls at
-half, one tomato on average. That is the 1.6 semantics exactly, emitted as a loot pool
-per run of stages. When the drop is the plant's own seed, keep chance times amount
+more as it ripens: the tomato's seeds above come at 20% a roll from stage 1 and 60%
+from stage 3. That is the 1.6 semantics exactly, emitted as a loot pool per run of
+stages. `min` is new: that many of the `amount` drop without a roll wherever the chance
+is above zero, so the tomato's picks give one for certain and a second half the time.
+A bush's `fruit`, written the same way and read at its ripe stage, is what a right-click
+picks; its `drops` are what breaking it leaves, which is the seed to replant. When the drop is the plant's own seed, keep chance times amount
 under one at the unripe stages, so breaking what you just planted gives back less than
 you put in. `soy.json` is the example: three rolls at 25% through stage 2, 50% at
 stage 3 and 90% when ripe.

@@ -39,16 +39,25 @@ public record DropTable(List<Drop> drops) {
      * @param item    what drops
      * @param chance  percentage chance per metadata value; absent means always
      * @param amount  maximum number dropped, 1 unless the source said otherwise
+     * @param min     how many of {@code amount} drop without rolling, wherever the
+     *                chance is above zero; 0 unless the source said otherwise
      * @param extra   any further keys the archetype understands
      */
-    public record Drop(ItemRef item, Optional<MetaMap<Integer>> chance, int amount, PropertyMap extra) {
+    public record Drop(ItemRef item, Optional<MetaMap<Integer>> chance, int amount, int min,
+                       PropertyMap extra) {
 
         public Drop {
-            amount = Math.max(1, amount);
+            amount = Math.max(1, Math.max(amount, min));
+            min = Math.max(0, min);
         }
 
         public static Drop always(ItemRef item) {
-            return new Drop(item, Optional.empty(), 1, PropertyMap.empty());
+            return new Drop(item, Optional.empty(), 1, 0, PropertyMap.empty());
+        }
+
+        /** What one drop yields on average where its chance is {@code percent}. */
+        public double average(int percent) {
+            return percent <= 0 ? 0 : min + (amount - min) * percent / 100.0;
         }
 
         /** Percentage chance for a metadata value; 100 when unconditional. */

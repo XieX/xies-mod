@@ -5,21 +5,20 @@
       "name": "Tomato Bush",
       "type": "bush",
       "growsOn": "farmland,dirt,grass",
-      "drops": {
+      "fruit": {
         "tomato": {
-          "chance": {
-            "0-3": 0,
-            "4+": 50
-          },
-          "amount": 2
-        },
+          "chance": 50,
+          "amount": 2,
+          "min": 1
+        }
+      },
+      "drops": {
         "tomatoSeeds": {
           "chance": {
             "0": 0,
             "1": 20,
             "2": 40,
-            "3": 60,
-            "4": 0
+            "3+": 60
           },
           "amount": 3
         }

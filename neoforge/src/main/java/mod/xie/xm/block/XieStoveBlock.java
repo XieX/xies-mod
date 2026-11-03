@@ -83,19 +83,20 @@ public class XieStoveBlock extends Block implements EntityBlock {
      *
      * <p>This is the mod posting's "wait until the pot changes colour". Each value is
      * one cauldron model with a different {@code content} texture, so the pot really
-     * does change colour as it cooks: clear water darkens to whichever meal the next
-     * bowl will be, and a mixed pot steps down as it is ladled, best bowl first. See
-     * {@code XiePackEmitter.STOVE_CONTENTS} for the textures.
+     * does change colour: clear water darkens to whichever meal the next bowl will be
+     * as soon as the ingredients go in, and a mixed pot steps down as it is ladled,
+     * best bowl first. See {@code XiePackEmitter.STOVE_CONTENTS} for the textures.
+     * Whether that meal is ready yet is {@link #COOKING}, not this.
      *
-     * <p>Base, doneness and meal share one property rather than taking three, because
-     * every combination of them is exactly one model. With the oil base cut there is
-     * only one liquid; the property is still the pot's appearance rather than its
+     * <p>Base and meal share one property rather than taking two, because every
+     * combination of them is exactly one model. With the oil base cut there is only
+     * one liquid; the property is still the pot's appearance rather than its
      * contents, and a second base would widen it here.
      */
     public static final IntegerProperty POT = IntegerProperty.create("pot", 0, 4);
 
     public static final int POT_EMPTY = 0;
-    public static final int POT_WATER_RAW = 1;
+    public static final int POT_WATER = 1;
     public static final int POT_WEAK_SOUP = 2;
     public static final int POT_SOUP = 3;
     public static final int POT_STEW = 4;
@@ -109,9 +110,20 @@ public class XieStoveBlock extends Block implements EntityBlock {
         };
     }
 
-    /** Whether a bowl on a pot showing this value will fill. */
-    public static boolean isServing(int pot) {
-        return pot >= POT_WEAK_SOUP;
+    /**
+     * Whether the pot is still working: it has a base, and a bowl would not fill yet.
+     *
+     * <p>A pot of plain water counts, and so does one left holding a single stranded
+     * flavouring, because in both the player still has something to add. A pot shows
+     * its meal while it cooks, so this is the only thing that tells cooking from
+     * ready: steam and bubbles, from {@link #animateTick}, or the content's animated
+     * cooking sprite if it ships one.
+     */
+    public static final BooleanProperty COOKING = BooleanProperty.create("cooking");
+
+    /** Whether a bowl on a pot in this state will fill. */
+    public static boolean isServing(BlockState state) {
+        return state.getValue(POT) >= POT_WEAK_SOUP && !state.getValue(COOKING);
     }
 
     /**
@@ -149,7 +161,8 @@ public class XieStoveBlock extends Block implements EntityBlock {
         this.config = config;
         registerDefaultState(getStateDefinition().any()
             .setValue(LIT, false)
-            .setValue(POT, POT_EMPTY));
+            .setValue(POT, POT_EMPTY)
+            .setValue(COOKING, false));
     }
 
     public Config config() {
@@ -168,7 +181,7 @@ public class XieStoveBlock extends Block implements EntityBlock {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(LIT, POT);
+        builder.add(LIT, POT, COOKING);
     }
 
     /**
@@ -200,11 +213,11 @@ public class XieStoveBlock extends Block implements EntityBlock {
     }
 
     /**
-     * Fire under a lit stove, and steam off a pot that is still cooking.
+     * Fire under a lit stove, and steam and bubbles off a pot that is still cooking.
      *
      * <p>A cauldron has no furnace front to glow, so the fire is particles between
      * its legs. The steam is the other half of telling a player where the pot is up
-     * to: the colour says what is in it, the steam says it is still working.
+     * to: the colour says what the next bowl will be, the steam says it is not ready.
      */
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
@@ -227,10 +240,19 @@ public class XieStoveBlock extends Block implements EntityBlock {
                 z + (random.nextDouble() - 0.5) * 0.6, 0.0, 0.0, 0.0);
         }
 
-        if (state.getValue(POT) == POT_WATER_RAW) {
-            level.addParticle(ParticleTypes.CLOUD,
-                x + (random.nextDouble() - 0.5) * 0.4, y + 0.95,
-                z + (random.nextDouble() - 0.5) * 0.4, 0.0, 0.02, 0.0);
+        if (state.getValue(COOKING)) {
+            // Steam starts clear of the surface, which is at 15/16, so the cloud does
+            // not sink into the liquid; the bubbles pop on it.
+            for (int i = 0; i < 3; i++) {
+                level.addParticle(ParticleTypes.CLOUD,
+                    x + (random.nextDouble() - 0.5) * 0.5, y + 1.1 + random.nextDouble() * 0.1,
+                    z + (random.nextDouble() - 0.5) * 0.5, 0.0, 0.03, 0.0);
+            }
+            for (int i = 0; i < 2; i++) {
+                level.addParticle(ParticleTypes.BUBBLE_POP,
+                    x + (random.nextDouble() - 0.5) * 0.6, y + 0.94,
+                    z + (random.nextDouble() - 0.5) * 0.6, 0.0, 0.0, 0.0);
+            }
         }
     }
 
@@ -306,7 +328,7 @@ public class XieStoveBlock extends Block implements EntityBlock {
             return true;
         }
         if (isBowl(stack)) {
-            return isServing(pot);
+            return isServing(state);
         }
         if (ingredientOf(stack).isPresent() && pot != POT_EMPTY) {
             return true;
@@ -449,7 +471,8 @@ public class XieStoveBlock extends Block implements EntityBlock {
         }
         BlockState updated = state
             .setValue(LIT, stove.isLit())
-            .setValue(POT, stove.appearance());
+            .setValue(POT, stove.appearance())
+            .setValue(COOKING, stove.isCooking());
         if (updated != state) {
             level.setBlock(pos, updated, Block.UPDATE_ALL);
         }

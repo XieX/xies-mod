@@ -294,8 +294,13 @@ public final class XieDataEmitter {
                 List<String> names = Variants.namesIn(def.props());
                 for (int meta = 0; meta < paths.size(); meta++) {
                     String path = paths.get(meta);
-                    if (def.archetype().equals("tree")) {
-                        LootResult harvest = writeHarvestTable(def, names, meta, path);
+                    if (def.archetype().equals("tree") || def.archetype().equals("bush")) {
+                        // A tree reads its fruit per subtype; a bush is picked only
+                        // ripe, so reads it at its last stage.
+                        int chanceAt = def.archetype().equals("bush")
+                            ? registered.maxAges().getOrDefault(path, 0)
+                            : names.isEmpty() ? 0 : meta;
+                        LootResult harvest = writeHarvestTable(def, chanceAt, path);
                         lootTables += harvest.written() ? 1 : 0;
                         skippedDrops += harvest.skippedDrops();
                     }
@@ -405,10 +410,7 @@ public final class XieDataEmitter {
                 continue;
             }
             if (split) {
-                int chance = clampPercent(drop.chanceFor(meta));
-                if (chance > 0) {
-                    pools.add(dropPool(drop.amount(), null, item.get(), chance));
-                }
+                addPools(pools, drop, null, item.get(), clampPercent(drop.chanceFor(meta)));
             } else {
                 addDropPools(pools, blockId, item.get(), drop, maxAge);
             }
@@ -424,19 +426,21 @@ public final class XieDataEmitter {
     }
 
     /**
-     * What picking a ripe leaf yields, at {@code xiesmod:harvest/<path>}: the id
-     * {@code XieTreeBlock} asks for, and the same kind of address vanilla keeps its own
-     * picked things at, {@code minecraft:harvest/sweet_berry_bush} and
-     * {@code harvest/cave_vine}.
+     * What picking a ripe leaf or bush yields, at {@code xiesmod:harvest/<path>}: the
+     * id {@code XieTreeBlock} and {@code XieBushBlock} ask for, and the same kind of
+     * address vanilla keeps its own picked things at,
+     * {@code minecraft:harvest/sweet_berry_bush} and {@code harvest/cave_vine}.
      *
      * <p>{@code fruit} is read as a split block's {@code drops} are: the chance written
-     * against this subtype's metadata applies flat, and no age condition is needed
-     * because the block consults the table only when the leaf is ripe. A subtype the
-     * table gives nothing gets no file, and the block that asks for one anyway finds
-     * an empty table, which is what a missing loot table resolves to.
+     * against {@code chanceAt} applies flat, and no age condition is needed because
+     * the block consults the table only when it is ripe. A block the table gives
+     * nothing gets no file, and one that asks for it anyway finds an empty table,
+     * which is what a missing loot table resolves to.
+     *
+     * @param chanceAt the metadata the fruit's chance is read at: a tree's subtype, or
+     *                 a bush's last growth stage
      */
-    private LootResult writeHarvestTable(BlockDef def, List<String> names, int meta, String path)
-                                         throws IOException {
+    private LootResult writeHarvestTable(BlockDef def, int chanceAt, String path) throws IOException {
         JsonArray pools = new JsonArray();
         int skipped = 0;
 
@@ -448,10 +452,7 @@ public final class XieDataEmitter {
                 skipped++;
                 continue;
             }
-            int chance = clampPercent(drop.chanceFor(names.isEmpty() ? 0 : meta));
-            if (chance > 0) {
-                pools.add(dropPool(drop.amount(), null, item.get(), chance));
-            }
+            addPools(pools, drop, null, item.get(), clampPercent(drop.chanceFor(chanceAt)));
         }
 
         if (pools.isEmpty()) {
@@ -650,7 +651,7 @@ public final class XieDataEmitter {
     private void addDropPools(JsonArray pools, String blockId, String itemId,
                               DropTable.Drop drop, int maxAge) {
         if (drop.isUnconditional()) {
-            pools.add(dropPool(drop.amount(), null, itemId, 100));
+            addPools(pools, drop, null, itemId, 100);
             return;
         }
 
@@ -661,10 +662,28 @@ public final class XieDataEmitter {
             while (last < maxAge && clampPercent(drop.chanceFor(last + 1)) == chance) {
                 last++;
             }
-            if (chance > 0) {
-                pools.add(dropPool(drop.amount(), ageCondition(blockId, age, last, maxAge), itemId, chance));
-            }
+            addPools(pools, drop, ageCondition(blockId, age, last, maxAge), itemId, chance);
             age = last + 1;
+        }
+    }
+
+    /**
+     * One drop where its chance is {@code chance}: its {@code min} in a pool that always
+     * pays, and the rest of its {@code amount} rolled at the chance. Nothing at all
+     * where the chance is zero, {@code min} included, which is how a drop keyed by
+     * growth stage stays out of the stages it was not written for.
+     */
+    private void addPools(JsonArray pools, DropTable.Drop drop, JsonObject ageCondition,
+                          String itemId, int chance) {
+        if (chance <= 0) {
+            return;
+        }
+        int rolled = drop.amount() - drop.min();
+        if (drop.min() > 0) {
+            pools.add(dropPool(drop.min(), ageCondition, itemId, 100));
+        }
+        if (rolled > 0) {
+            pools.add(dropPool(rolled, ageCondition, itemId, chance));
         }
     }
 

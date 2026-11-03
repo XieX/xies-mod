@@ -6,6 +6,13 @@
       "type": "bush",
       "growsOn": "farmland",
       "growthRate": 20,
+      "fruit": {
+        "soyBeans": {
+          "chance": 90,
+          "amount": 3,
+          "min": 1
+        }
+      },
       "drops": {
         "soyBeans": {
           "chance": {

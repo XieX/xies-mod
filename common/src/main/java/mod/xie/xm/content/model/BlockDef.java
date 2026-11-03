@@ -22,7 +22,7 @@ import java.util.Optional;
  * @param archetype   the {@code type} property; {@code basic} when unset
  * @param override    the vanilla object this replaces, from {@code override}
  * @param drops       what it yields when broken
- * @param fruit       what a ripe leaf yields when picked; {@code tree} only
+ * @param fruit       what a ripe leaf or bush yields when picked; {@code tree} and {@code bush} only
  * @param tex         spritesheet assignment
  * @param bounds      collision/selection box, possibly varying by metadata
  * @param props       every remaining property
