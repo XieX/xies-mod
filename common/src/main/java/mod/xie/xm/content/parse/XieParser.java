@@ -28,8 +28,8 @@ import java.util.stream.Stream;
 /**
  * Loads a content pack directory into a {@link ContentPack}.
  *
- * <p>A pack root contains definition files at any depth, optional {@code .xid} and
- * {@code .loc} files, and a {@code textures/} tree. A definition file is JSON and
+ * <p>A pack root contains definition files at any depth, optional {@code .loc}
+ * files, and a {@code textures/} tree. A definition file is JSON and
  * is named {@code .json}; the older {@code .xie} extension is the same format under
  * a different name and is still read, so existing packs keep working unchanged. Files and
  * directories whose name starts with {@code _} are skipped — that is the
@@ -45,7 +45,6 @@ public final class XieParser {
     public static final String JSON_EXTENSION = ".json";
     /** The definition file extension before the format admitted it was JSON. */
     public static final String XIE_EXTENSION = ".xie";
-    public static final String XID_EXTENSION = ".xid";
     public static final String LOC_EXTENSION = ".loc";
 
     /** Directory under the game directory that user content packs live in. */
@@ -125,13 +124,11 @@ public final class XieParser {
         List<RecipeDef> recipes = new ArrayList<>();
         List<SpawnDef> spawns = new ArrayList<>();
         Map<String, AliasDef> aliases = new LinkedHashMap<>();
-        Map<String, Integer> legacyIds = new LinkedHashMap<>();
         Map<String, String> displayNames = new LinkedHashMap<>();
         Map<String, String> texturePaths = new LinkedHashMap<>();
         int rejected = 0;
 
         XieFileReader xieReader = new XieFileReader(diagnostics);
-        XidReader xidReader = new XidReader(diagnostics);
         LocReader locReader = new LocReader(diagnostics);
 
         for (Path file : collectFiles(root)) {
@@ -144,16 +141,14 @@ public final class XieParser {
                 XieFileReader.Result result = xieReader.read(relative, basename, new StringReader(text));
                 rejected += result.rejected();
                 mergeFile(result, relative, diagnostics,
-                    blocks, items, recipes, spawns, aliases, legacyIds, texturePaths);
-            } else if (lower.endsWith(XID_EXTENSION)) {
-                legacyIds.putAll(xidReader.read(relative, new StringReader(text)));
+                    blocks, items, recipes, spawns, aliases, texturePaths);
             } else if (lower.endsWith(LOC_EXTENSION)) {
                 displayNames.putAll(locReader.read(relative, new StringReader(text)));
             }
         }
 
         ContentPack pack = new ContentPack(packName, blocks, items, recipes, spawns,
-            aliases, legacyIds, displayNames, texturePaths);
+            aliases, displayNames, texturePaths);
         return new ParseResult(pack, diagnostics, rejected);
     }
 
@@ -166,7 +161,6 @@ public final class XieParser {
         List<RecipeDef> recipes,
         List<SpawnDef> spawns,
         Map<String, AliasDef> aliases,
-        Map<String, Integer> legacyIds,
         Map<String, String> texturePaths
     ) {
         result.blocks().forEach((name, block) -> {
@@ -189,7 +183,6 @@ public final class XieParser {
         for (AliasDef alias : result.aliases()) {
             aliases.merge(alias.name(), alias, AliasDef::merge);
         }
-        legacyIds.putAll(result.ids());
         texturePaths.putAll(result.texturePaths());
     }
 
@@ -239,9 +232,7 @@ public final class XieParser {
 
     private static boolean isContentFile(Path path) {
         String name = path.getFileName().toString().toLowerCase(Locale.ROOT);
-        return isDefinitionFile(name)
-            || name.endsWith(XID_EXTENSION)
-            || name.endsWith(LOC_EXTENSION);
+        return isDefinitionFile(name) || name.endsWith(LOC_EXTENSION);
     }
 
     /** @param lowerName a file name already lower-cased */

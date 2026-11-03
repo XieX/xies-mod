@@ -61,6 +61,8 @@ public final class BiomeNames {
         map("woods", "#c:is_forest");
         map("woodland", "#c:is_forest");
         map("foresthills", "minecraft:windswept_forest");
+        map("birch", "#c:is_birch_forest");
+        map("birchforest", "#c:is_birch_forest");
         map("jungle", "#c:is_jungle");
         map("junglehills", "#c:is_jungle");
         map("swamp", "#c:is_swamp");

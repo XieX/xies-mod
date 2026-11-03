@@ -97,13 +97,12 @@ public final class XieFileReader {
         List<RecipeDef> recipes,
         List<SpawnDef> spawns,
         List<AliasDef> aliases,
-        Map<String, Integer> ids,
         Map<String, String> texturePaths,
         int rejected
     ) {
         public static Result empty() {
             return new Result(Map.of(), Map.of(), List.of(), List.of(), List.of(),
-                Map.of(), Map.of(), 0);
+                Map.of(), 0);
         }
     }
 
@@ -197,7 +196,6 @@ public final class XieFileReader {
         List<RecipeDef> recipes = new ArrayList<>();
         List<SpawnDef> spawns = new ArrayList<>();
         List<AliasDef> aliases = new ArrayList<>();
-        Map<String, Integer> ids = new LinkedHashMap<>();
         Map<String, String> texturePaths = new LinkedHashMap<>();
         int rejected = 0;
 
@@ -216,10 +214,6 @@ public final class XieFileReader {
                 continue;
             }
             if (key.equals("version")) {
-                continue;
-            }
-            if (key.equals("ids")) {
-                readIds(path, value, ids);
                 continue;
             }
             if (key.equals("texturepaths")) {
@@ -262,7 +256,7 @@ public final class XieFileReader {
             }
         }
 
-        return new Result(blocks, items, recipes, spawns, aliases, ids, texturePaths, rejected);
+        return new Result(blocks, items, recipes, spawns, aliases, texturePaths, rejected);
     }
 
     /** Keeps what a reader produced, answering whether there was anything to keep. */
@@ -669,19 +663,6 @@ public final class XieFileReader {
     }
 
     // ------------------------------------------------------------ file-level
-
-    private void readIds(String path, JsonElement element, Map<String, Integer> target) {
-        if (!element.isJsonObject()) {
-            diagnostics.warning(path, "\"ids\" must be an object");
-            return;
-        }
-        for (Map.Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
-            PropertyMap.asInt(entry.getValue()).ifPresentOrElse(
-                id -> target.put(entry.getKey().trim(), id),
-                () -> diagnostics.warning(path,
-                    "id for \"" + entry.getKey() + "\" is not an integer"));
-        }
-    }
 
     private void readTexturePaths(String path, JsonElement element, Map<String, String> target) {
         if (!element.isJsonObject()) {

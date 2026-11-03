@@ -20,11 +20,6 @@
     "spawn": { "$ref": "#/definitions/spawnSection" },
     "aliases": { "$ref": "#/definitions/aliasSection" },
     "alias": { "$ref": "#/definitions/aliasSection" },
-    "ids": {
-      "description": "Legacy numeric block and item ids. Parsed for the record and otherwise ignored; Minecraft dropped numeric ids in 1.7.",
-      "type": "object",
-      "additionalProperties": { "$ref": "#/definitions/int" }
-    },
     "texturePaths": {
       "description": "Where a spritesheet named in a texFile lives, relative to the pack's textures/ directory.",
       "type": "object",
@@ -553,7 +548,7 @@
         "rarity": { "description": "Attempts per chunk.", "$ref": "#/definitions/int" },
         "clusterSize": { "description": "Blocks per attempt.", "$ref": "#/definitions/int" },
         "clump": { "description": "Place the cluster together rather than scattered.", "$ref": "#/definitions/boolean" },
-        "biomes": { "description": "Biome names, comma-separated. Empty means everywhere.", "$ref": "#/definitions/stringList" }
+        "biomes": { "description": "Biome names, comma-separated. Empty means everywhere. A name prefixed with ! is left out, as in \"forest,!birchforest\".", "$ref": "#/definitions/stringList" }
       },
       "additionalProperties": true
     },

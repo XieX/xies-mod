@@ -52,8 +52,7 @@ import java.util.Set;
  * <ul>
  *   <li><strong>{@code id}</strong>, the 1.6 numeric block or item id. Every
  *       definition in some packs carries one, numeric ids are gone from Minecraft
- *       entirely, and the {@code .xid} files that assign them in bulk are read for
- *       diagnostics alone. It is the one property whose absence from the port is the
+ *       entirely. It is the one property whose absence from the port is the
  *       whole design rather than a gap in it.</li>
  *   <li><strong>Anything beginning with an underscore</strong>, which is the format's
  *       comment convention — {@code steel.json} annotates each ingot with

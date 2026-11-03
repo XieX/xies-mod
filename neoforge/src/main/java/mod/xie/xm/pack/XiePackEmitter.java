@@ -605,8 +605,8 @@ public final class XiePackEmitter {
      *
      * <p>{@code textureBase} is the interesting part: it names a block whose texture
      * fills in every face this definition does not draw itself, which is how
-     * {@code saltDeposit} ships one PNG and still looks like salt scattered over
-     * sand. In 1.6 that was {@code XieTex.setTextureBase}, a fallback consulted
+     * {@code saltBlock} ships no PNG at all and draws with {@code saltDeposit}'s.
+     * In 1.6 that was {@code XieTex.setTextureBase}, a fallback consulted
      * whenever a sprite lookup came up empty; here it is the same idea resolved once,
      * at emit time, into the face entries of a model.
      */
@@ -654,9 +654,9 @@ public final class XiePackEmitter {
      *       six ages was always meant to look;</li>
      *   <li>a split block has one sprite, the one for its own subtype, repeated
      *       across whatever stages it has;</li>
-     *   <li>anything else takes a bare sprite and any face-suffixed ones, so
-     *       {@code saltDeposit_top} becomes the top face and the rest of the cube
-     *       falls through to {@code textureBase}.</li>
+     *   <li>anything else takes a bare sprite and any face-suffixed ones, so a
+     *       {@code saltDeposit_top} would become the top face and the rest of the
+     *       cube fall through to {@code textureBase}.</li>
      * </ul>
      *
      * <p>A pack that never migrated has none of those files and addresses a

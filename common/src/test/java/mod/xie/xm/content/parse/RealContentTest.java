@@ -216,12 +216,6 @@ class RealContentTest {
     }
 
     @Test
-    void readsLegacyIdFile() {
-        assertEquals(213, result.pack().legacyIds().get("tomatoBush"),
-            "expected the id assignment from farming/ids.xid");
-    }
-
-    @Test
     void omitsContentVanillaHasSince() {
         ContentPack pack = result.pack();
         // Each of these was removed because Minecraft gained an equivalent after

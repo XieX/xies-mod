@@ -44,7 +44,7 @@ BASELINES = [
         ("block models", "item models", "textures", "loot tables", "recipes",
          "recipe advancements", "alias tags", "block tags", "worldgen features", "trees",
          "burn times", "vanilla overrides"),
-        (108, 93, 176, 32, 129, 129, 15, 2, 9, 5, 7, 0),
+        (108, 93, 175, 32, 129, 129, 15, 2, 9, 5, 7, 0),
     ),
     (
         # The flame tree, and nothing else: `blazeTree` addresses vanilla's terrain.png

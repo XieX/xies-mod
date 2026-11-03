@@ -158,7 +158,7 @@
       "rarity": 20,
       "spawnson": "dirt, grass",
       "spawnsin": 0,
-      "biomes": "forest,wood"
+      "biomes": "forest,wood,!birchforest"
     },
     "orangeTree": {
       "rarity": 25,
@@ -170,7 +170,7 @@
       "rarity": 25,
       "spawnson": "dirt, grass",
       "spawnsin": 0,
-      "biomes": "forest"
+      "biomes": "birchforest"
     },
     "avocadoTree": {
       "rarity": 23,

@@ -6,15 +6,15 @@
       "becomesWhenDestroyed": "sand",
       "drops": "salt",
       "material": "sand",
-      "stepSound": "powder",
-      "textureBase": "sand"
+      "stepSound": "powder"
     },
     "saltBlock": {
       "name": "Salt Block",
       "drops": "saltBlock",
       "material": "snow",
       "stepSound": "powder",
-      "hardness": 0.5
+      "hardness": 0.5,
+      "textureBase": "saltDeposit"
     }
   },
   "items": {

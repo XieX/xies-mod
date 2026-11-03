@@ -20,6 +20,13 @@ class BiomeNamesTest {
     }
 
     @Test
+    void mapsBirchForestsWhichOnlyModernContentNames() {
+        assertEquals(List.of("#c:is_birch_forest"), BiomeNames.modern("birchforest"));
+        assertEquals(List.of("#c:is_birch_forest"), BiomeNames.modern("Birch Forest"));
+        assertTrue(BiomeNames.excluded("birchforest").isEmpty());
+    }
+
+    @Test
     void usesConcreteIdsWhereNoTagFits() {
         assertEquals(List.of("minecraft:meadow"), BiomeNames.modern("meadow"));
     }

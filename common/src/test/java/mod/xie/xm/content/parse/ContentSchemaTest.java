@@ -78,7 +78,6 @@ class ContentSchemaTest {
         for (String section : XieFileReader.SECTION_NAMES) {
             assertTrue(top.contains(section), "schema does not list section " + section);
         }
-        assertTrue(top.contains("ids"));
         assertTrue(top.contains("texturePaths"));
         assertTrue(top.contains("version"));
         assertTrue(top.contains("$schema"));

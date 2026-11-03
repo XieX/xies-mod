@@ -94,6 +94,13 @@ public final class XieWorldgenEmitter {
     /** The block tag rather than the block: cave air and void air are air too. */
     private static final String AIR = "minecraft:air";
 
+    /**
+     * Marks a biome word an entry leaves out rather than adds, as in
+     * {@code "forest,!birchforest"}: the {@code !} of a selector's {@code type=!cow}.
+     * It applies to the whole entry. 1.6 had no such thing.
+     */
+    private static final String NOT = "!";
+
     /** What a tree may grow over as though it were air: {@code TreeFeature.validTreePos}. */
     private static final String TREE_ROOM = "#minecraft:replaceable_by_trees";
 
@@ -205,6 +212,14 @@ public final class XieWorldgenEmitter {
         if (biomes.isEmpty()) {
             return Optional.of("none of its biomes (" + String.join(", ", spawn.biomes())
                 + ") has a modern equivalent");
+        }
+        // Ignoring a biome it leaves out would widen where it generates, not narrow it.
+        List<String> unknownOut = spawn.biomes().stream()
+            .filter(word -> negated(word) && BiomeNames.modern(unnegated(word)).isEmpty())
+            .toList();
+        if (!unknownOut.isEmpty()) {
+            return Optional.of("it leaves out " + String.join(", ", unknownOut)
+                + ", which has no modern equivalent");
         }
 
         // Each declared rule has to resolve to something. Dropping one entirely would
@@ -380,42 +395,35 @@ public final class XieWorldgenEmitter {
 
     /**
      * The {@code biomes} field of the modifier, including any biomes a word
-     * {@linkplain BiomeNames#excluded leaves out}.
+     * {@linkplain BiomeNames#excluded leaves out} and any the entry
+     * {@linkplain #NOT leaves out} itself.
      *
      * <p>A tag only ever adds, so an excluding word cannot join the others in
      * {@link #biomeSet}'s tag. It becomes NeoForge's composite holder set instead —
      * its tag {@code and} {@code not} each exclusion — joined to the rest with
-     * {@code or}.
+     * {@code or}, and the whole of that is then {@code and}ed with {@code not} each
+     * word the entry negates.
      */
     private JsonElement biomeHolder(String id, SpawnDef spawn) throws IOException {
         Set<String> plain = new LinkedHashSet<>();
         Set<JsonElement> narrowed = new LinkedHashSet<>();
-        if (spawn.biomes().isEmpty()) {
-            plain.add(BiomeNames.ANY_OVERWORLD);
-        }
+        List<String> leftOut = new ArrayList<>();
         for (String declared : spawn.biomes()) {
+            if (negated(declared)) {
+                leftOut.addAll(BiomeNames.modern(unnegated(declared)));
+                continue;
+            }
             List<String> excluded = BiomeNames.excluded(declared);
             if (excluded.isEmpty()) {
                 plain.addAll(BiomeNames.modern(declared));
                 continue;
             }
-            JsonArray values = new JsonArray();
-            BiomeNames.modern(declared).forEach(values::add);
-            for (String out : excluded) {
-                JsonObject not = typed("neoforge:not");
-                // A single id is wrapped, because only a tag may stand alone everywhere.
-                if (out.startsWith("#")) {
-                    not.addProperty("value", out);
-                } else {
-                    JsonArray ids = new JsonArray();
-                    ids.add(out);
-                    not.add("value", ids);
-                }
-                values.add(not);
-            }
-            JsonObject and = typed("neoforge:and");
-            and.add("values", values);
-            narrowed.add(and);
+            List<JsonElement> modern = new ArrayList<>();
+            BiomeNames.modern(declared).forEach(ref -> modern.add(new JsonPrimitive(ref)));
+            narrowed.add(excluding(modern, excluded));
+        }
+        if (plain.isEmpty() && narrowed.isEmpty()) {
+            plain.add(BiomeNames.ANY_OVERWORLD);
         }
 
         List<JsonElement> parts = new ArrayList<>();
@@ -423,23 +431,56 @@ public final class XieWorldgenEmitter {
             parts.add(new JsonPrimitive(biomeSet(id, List.copyOf(plain))));
         }
         parts.addAll(narrowed);
+        JsonElement holder;
         if (parts.size() == 1) {
-            return parts.get(0);
+            holder = parts.get(0);
+        } else {
+            JsonArray values = new JsonArray();
+            parts.forEach(values::add);
+            JsonObject or = typed("neoforge:or");
+            or.add("values", values);
+            holder = or;
         }
+        return leftOut.isEmpty() ? holder : excluding(List.of(holder), leftOut);
+    }
+
+    /** {@code neoforge:and} of every holder set in {@code base} and not each of {@code out}. */
+    private static JsonObject excluding(List<JsonElement> base, List<String> out) {
         JsonArray values = new JsonArray();
-        parts.forEach(values::add);
-        JsonObject or = typed("neoforge:or");
-        or.add("values", values);
-        return or;
+        base.forEach(values::add);
+        for (String ref : out) {
+            JsonObject not = typed("neoforge:not");
+            // A single id is wrapped, because only a tag may stand alone everywhere.
+            if (ref.startsWith("#")) {
+                not.addProperty("value", ref);
+            } else {
+                JsonArray ids = new JsonArray();
+                ids.add(ref);
+                not.add("value", ids);
+            }
+            values.add(not);
+        }
+        JsonObject and = typed("neoforge:and");
+        and.add("values", values);
+        return and;
+    }
+
+    private static boolean negated(String word) {
+        return word.trim().startsWith(NOT);
+    }
+
+    private static String unnegated(String word) {
+        return word.trim().substring(NOT.length());
     }
 
     /** The modern biome references this entry allows, or everything when it says nothing. */
     private List<String> biomes(SpawnDef spawn) {
-        if (spawn.biomes().isEmpty()) {
+        List<String> positive = spawn.biomes().stream().filter(word -> !negated(word)).toList();
+        if (positive.isEmpty()) {
             return List.of(BiomeNames.ANY_OVERWORLD);
         }
         Set<String> allowed = new LinkedHashSet<>();
-        for (String declared : spawn.biomes()) {
+        for (String declared : positive) {
             List<String> modern = BiomeNames.modern(declared);
             if (modern.isEmpty()) {
                 LOGGER.debug("Spawn {} names the biome \"{}\", which has no modern equivalent",

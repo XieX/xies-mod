@@ -265,14 +265,12 @@ class XieFileReaderTest {
     // -- file-level and error handling ---------------------------------------
 
     @Test
-    void readsLegacyIdsAndTexturePaths() {
+    void readsTexturePaths() {
         XieFileReader.Result result = read("""
             {
-              "ids": { "tomatoBush": 213 },
               "texturePaths": { "xie_crops.png": "textures/blocks/xie_crops.png" }
             }
             """);
-        assertEquals(213, result.ids().get("tomatoBush"));
         assertEquals("textures/blocks/xie_crops.png", result.texturePaths().get("xie_crops.png"));
     }
 

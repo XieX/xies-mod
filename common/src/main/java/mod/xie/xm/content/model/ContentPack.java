@@ -8,8 +8,7 @@ import java.util.Optional;
  * Everything one content pack declares, fully parsed and ready to register.
  *
  * <p>A pack is a directory (or zip) containing {@code .json} definition files,
- * optional {@code .xid} id assignments, optional {@code .loc} display names, and a
- * {@code textures/} tree. The engine ships one of these; users drop more into
+ * optional {@code .loc} display names, and a {@code textures/} tree. The engine ships one of these; users drop more into
  * {@code <gamedir>/xiecontent/}.
  *
  * @param name          the pack directory name
@@ -18,7 +17,6 @@ import java.util.Optional;
  * @param recipes       every recipe, in declaration order
  * @param spawns        world generation entries
  * @param aliases       named item sets, merged across files
- * @param legacyIds     {@code .xid} assignments; retained for diagnostics only
  * @param displayNames  {@code .loc} entries, overriding a definition's own name
  * @param texturePaths  {@code texturePaths} declarations, sheet alias to path
  */
@@ -29,7 +27,6 @@ public record ContentPack(
     List<RecipeDef> recipes,
     List<SpawnDef> spawns,
     Map<String, AliasDef> aliases,
-    Map<String, Integer> legacyIds,
     Map<String, String> displayNames,
     Map<String, String> texturePaths
 ) {
@@ -40,14 +37,13 @@ public record ContentPack(
         recipes = List.copyOf(recipes);
         spawns = List.copyOf(spawns);
         aliases = Map.copyOf(aliases);
-        legacyIds = Map.copyOf(legacyIds);
         displayNames = Map.copyOf(displayNames);
         texturePaths = Map.copyOf(texturePaths);
     }
 
     public static ContentPack empty(String name) {
         return new ContentPack(name, Map.of(), Map.of(), List.of(), List.of(),
-            Map.of(), Map.of(), Map.of(), Map.of());
+            Map.of(), Map.of(), Map.of());
     }
 
     public int definitionCount() {

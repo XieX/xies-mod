@@ -411,12 +411,21 @@ alone, since `#c:is_spooky` includes the dark forest too. A tag can only add, so
 a word is written as NeoForge's `neoforge:and` of the tag with a `neoforge:not` for each
 exclusion, joined to the entry's other words with `neoforge:or`.
 
+Content can leave biomes out too, which 1.6 could not: a word prefixed with `!`, as in
+`"forest,wood,!birchforest"`, borrows the `!` of a selector's `type=!cow` and removes
+that word's biomes from the whole entry, as one more `neoforge:and`. A negated word that
+maps to nothing skips the entry, with the reason logged, like any other rule that
+resolves to nothing, because ignoring it would widen where the entry generates.
+
 The fruit trees were also narrowed in content, so that each biome has its own fruit.
-Apple lost `taiga` and `jungle`, orange lost `forest` and `jungle`, and lemon lost
-`hills` and `foresthills`. That leaves apple and lemon in forests, orange in
-savannas, which it had dominated anyway as the only tree there, and avocado in
-jungles and swamps. In 1.6, `savanna`, `meadow`, `marsh` and `shrubland` matched only
-Biomes O' Plenty biomes, because vanilla had none of them until 1.7.
+Apple lost `taiga` and `jungle`, and orange lost `forest` and `jungle`. Lemon, whose
+trunk is birch, moved from `forest,hills,foresthills` to `birchforest`, a word 1.6
+never had, which maps to `#c:is_birch_forest`, and apple gained `!birchforest`, so
+that birch forests are the lemon's own. That leaves apple in the other forests,
+lemon in the birch ones, orange in savannas, which it had dominated anyway as the
+only tree there, and avocado in jungles and swamps. In 1.6, `savanna`, `meadow`,
+`marsh` and `shrubland` matched only Biomes O' Plenty biomes, because vanilla had
+none of them until 1.7.
 
 Eating, cooking and burning
 ---------------------------
@@ -1226,7 +1235,8 @@ Four rows disagree, and each is a real gap that no content in this repo reaches:
   it costs nothing.
 - **`textureBase` on a cross or a crop** — 1.6's was a fallback for any sprite lookup
   that came up empty; here it reaches the face entries of a cube model and nothing else.
-  `saltDeposit` is the only content that declares one and it is a cube.
+  `saltBlock` is the only content that declares one — it borrows `saltDeposit`'s
+  sprite rather than shipping a copy — and it is a cube.
 - **An item's `drops` on `basic` or `seeds`** — `XieItem.onItemRightClick` turned a
   plain item into its drops and `XieItemSeeds.onItemUse` handed them over for planting,
   and only `food` carries them here, as the use remainder. Every `drops` on an item in

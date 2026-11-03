@@ -134,8 +134,8 @@ under one at the unripe stages, so breaking what you just planted gives back les
 you put in. `soy.json` is the example: three rolls at 25% through stage 2, 50% at
 stage 3 and 90% when ripe.
 
-`.xid` files assigning numeric block and item ids are still parsed, but the ids are
-ignored — Minecraft dropped numeric ids in 1.7.
+`.xid` files assigning numeric block and item ids are skipped — Minecraft dropped
+numeric ids in 1.7.
 
 Port status
 -----------
