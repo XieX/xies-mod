@@ -13,19 +13,21 @@ Layout
 |------------|------------|
 | `common/`  | The content model and parser. No Minecraft dependency at all, so it compiles and tests in seconds. |
 | `neoforge/`| The mod itself: entry point, registration, pack emission. Compiles `common/`'s sources into the jar. |
-| `mod-content/` | Xie's content packs and textures, licensed CC BY 4.0 rather than MIT. Bundled into the jar. |
+| `base-content/` | Xie's content packs and textures, licensed CC BY 4.0 rather than MIT. Bundled into the jar. |
 | `mod/`     | The original 1.6.2 source tree, kept for reference. Not part of the build. |
 | `acceptance/` | The acceptance run: one command that starts a server, joins a client and asserts the behaviours a datapack cannot show. |
 
 The engine knows nothing about this content, so packs can be written without using
 any of it; until November 2026 it was a repository of its own for that reason. The
-build bundles `mod-content/` into the jar, so one download is the whole mod. At
+build bundles `base-content/` into the jar, so one download is the whole mod. At
 runtime the mod reads packs from `<gamedir>/xiecontent/`, and the first launch that
-finds no `mod-content/` there extracts the bundled one. It is never overwritten
+finds no `base-content/` there extracts the bundled one. It is never overwritten
 after that: the content is opt-out, so deleting a definition file or renaming a
 directory with a leading underscore leaves that content out for good, and a newer
 jar over an older install says so in the log rather than putting anything back.
-Move the directory away and relaunch to take the new content.
+Move the directory away and relaunch to take the new content. Every other directory
+in `xiecontent/` is a pack of its own and loads beside it, so your own content goes
+in a sibling directory, where taking new base content never touches it.
 
 Building
 --------
@@ -126,7 +128,7 @@ The one hard requirement is a stem's `grows`, without which the engine refuses t
 register it. The branches match the lower-case spelling, so a `"type": "Crop"`, which the
 engine accepts, gets the common properties and no more. The content's own files
 point `$schema` at `common/src/main/resources/`, which is not bundled beside them, so the build
-rewrites each bundled file's `$schema` to climb out of `mod-content/` to the installed schema.
+rewrites each bundled file's `$schema` to climb out of `base-content/` to the installed schema.
 
 A drop's `amount` is not a stack size but a number of independent rolls, each yielding
 one item at `chance` percent, and a `chance` keyed by growth stage is how a plant pays
@@ -185,7 +187,7 @@ Port status
       no light, soil or bone meal involved. Fresh cheese poured from a bucket turns
       into a cheese block about a day later. New in the port rather than ported
 
-Eighteen distinct archetypes appear across `mod-content/`, deferred packs included,
+Eighteen distinct archetypes appear across `base-content/`, deferred packs included,
 and seventeen of them register. The one that does not is `furnace`, which is content
 this port dropped rather than an archetype it cannot build — see the table below. See
 [PORTING.md](PORTING.md) for the full breakdown and the version-specific gotchas
@@ -362,10 +364,9 @@ worked out at render time, and Minecraft has spent a blockstate on it since 1.8.
 least because it follows from both: right-click a listed block and it plays a crunch,
 drops what the definition says that block gives up — not what the block itself drops —
 and two times in three clears it away. The crimson sickle reaps nether wart with it.
-It also turned up the one genuine bug in the deferred content: the sickle asks for
-`nethwerwart`, and in 2013 a single unresolvable name failed the whole item, so the
-crimson sickle has never worked in any version. Here the bad name is dropped, counted
-and named in the log, and the rest of the item works.
+In 2013 it never registered at all, because its nether wart drop was misspelt
+`nethwerwart` and one unresolvable name failed the whole item; the content spells it
+right now.
 
 `transforms` is the only other thing in the port that needed a class, and for the
 same reason at a smaller scale. A `tool` is otherwise five data components and no

@@ -8,11 +8,9 @@ per use — which doubles as proof that every click landed, since the damage on
 the sickle is the number of times it worked.
 
 Two are not. The 2% ``etherWart`` is not something a run can wait for without
-being flaky, so what is asserted instead holds however the rolls fall: nothing
-but ``etherWart`` is ever dropped. That is the live half of the ``nethwerwart``
-typo — the bad name is left out and counted, so a run that started dropping six
-nether wart would be the regression. And the crunch is the clicked block's
-*step* sound, which no assertion can hear.
+being flaky, so it is only noted. The nether wart is asserted, because six rolls
+at 20% over sixteen swings all failing is a chance below one in a billion. And
+the crunch is the clicked block's *step* sound, which no assertion can hear.
 
 Creative mode does not wear tools — ``ItemStack.hurtAndBreak`` returns
 immediately for a player with infinite materials — so this one runs in
@@ -67,10 +65,9 @@ def run(game, expect):
     # Counted in the player's hands rather than on the ground: a drop lands at
     # their feet and is picked up within the second.
     dropped = game.count_items(DROP)
-    expect.that("the drop that does not resolve is left out rather than swapped",
-                not game.probe("execute if items entity %s container.* %s"
-                               % (game.player, WART)),
-                "a run dropping nether wart would be the nethwerwart typo coming back")
+    reaped = game.count_items(WART)
+    expect.that("the sickle's nether wart drop reaches the player", reaped > 0,
+                "%d nether wart from %d swings, at six rolls of 20%%" % (reaped, CLICKS))
     expect.note("%d ether wart from %d swings, at the 2%% the table asks for"
                 % (dropped, CLICKS))
 

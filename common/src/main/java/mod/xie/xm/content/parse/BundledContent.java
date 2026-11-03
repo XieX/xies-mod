@@ -20,7 +20,7 @@ import java.util.function.Function;
  * as a directory from the classpath, which is what the index is for: it is written
  * at build time and read here, one relative path per line.
  *
- * <p>The pack is extracted to {@code <container>/mod-content/} on the first launch
+ * <p>The pack is extracted to {@code <container>/base-content/} on the first launch
  * that finds no such directory, and never touched again. That is deliberate: the
  * content is opt-out rather than opt-in, so a user who deletes a definition file or
  * renames a directory with a leading underscore has made an edit, and an upgrade
@@ -35,7 +35,7 @@ import java.util.function.Function;
 public final class BundledContent {
 
     /** The directory the bundled pack is installed as, under the content directory. */
-    public static final String PACK_NAME = "mod-content";
+    public static final String PACK_NAME = "base-content";
 
     /** Where the build puts the bundled files on the classpath. */
     public static final String RESOURCE_ROOT = "/bundled/";

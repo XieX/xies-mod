@@ -35,7 +35,7 @@ tasks.test {
     systemProperty(
         "xie.content.dir",
         providers.systemProperty("xie.content.dir")
-            .orElse(layout.projectDirectory.dir("../mod-content").asFile.absolutePath)
+            .orElse(layout.projectDirectory.dir("../base-content").asFile.absolutePath)
             .get()
     )
 }

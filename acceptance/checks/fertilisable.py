@@ -27,14 +27,20 @@ SPACING = 4
 BONE_MEAL = "minecraft:bone_meal"
 
 #: The refusal, and two controls: this mod's own plant that says nothing about
-#: fertiliser, and a vanilla sapling that proves the rig fires at all.
+#: fertiliser, and a vanilla sapling that proves the rig fires at all. Then the
+#: top of a ripe corn stalk, which refuses at its full three and takes it at two,
+#: where there is still a segment to grow. The last field is how many are stacked.
 CELLS = [
     ("blazeTreeSapling refuses bone meal", "xiesmod:blaze_tree_sapling",
-     "minecraft:soul_sand", False),
+     "minecraft:soul_sand", False, 1),
     ("a Xie sapling that does not refuse takes it", "xiesmod:apple_sapling",
-     "minecraft:dirt", True),
+     "minecraft:dirt", True, 1),
     ("a vanilla sapling takes it, which is the rig working", "minecraft:oak_sapling",
-     "minecraft:dirt", True),
+     "minecraft:dirt", True, 1),
+    ("the top of a full-height ripe corn stalk refuses it", "xiesmod:corn_crop[age=6]",
+     "minecraft:farmland", False, 3),
+    ("the top of a ripe corn stalk with room to grow takes it", "xiesmod:corn_crop[age=6]",
+     "minecraft:farmland", True, 2),
 ]
 
 
@@ -46,20 +52,21 @@ def run(game, expect):
     game.gamemode("creative")
 
     fired = []
-    for index, (label, plant, soil, expected) in enumerate(CELLS):
+    for index, (label, plant, soil, expected, height) in enumerate(CELLS):
         x = x0 + SPACING * index
-        dispenser = (x, Y + 1, z0)
+        dispenser = (x, Y + height, z0)
         game.setblock((x, GROUND, z0), soil)
-        game.setblock((x, Y, z0), plant)
+        for level in range(height):
+            game.setblock((x, Y + level, z0), plant)
         game.replace(dispenser, "minecraft:dispenser[facing=down]")
         game.cmd("item replace block %d %d %d container.0 with %s 1"
                  % (dispenser[0], dispenser[1], dispenser[2], BONE_MEAL))
         # Clear first: setblock with the block already there is a no-op, so a
         # pulse that re-places the redstone leaves triggered=1 and does nothing.
-        game.replace((x + 1, Y + 1, z0), "minecraft:redstone_block")
+        game.replace((x + 1, Y + height, z0), "minecraft:redstone_block")
         fired.append((label, dispenser, expected))
 
-    # A dispenser fires four ticks after the pulse. Read all three afterwards
+    # A dispenser fires four ticks after the pulse. Read them all afterwards
     # rather than waiting on each: a refusal never arrives, and waiting for it
     # is waiting for nothing.
     time.sleep(2.0)

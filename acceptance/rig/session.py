@@ -25,7 +25,7 @@ from . import winput
 from .rcon import Rcon
 
 #: The four deferred packs the baseline counts are quoted against, and where
-#: each one lives inside ``mod-content/``. ``_wip/steel`` sits one level deeper
+#: each one lives inside ``base-content/``. ``_wip/steel`` sits one level deeper
 #: than the rest. They are taken from the source in this checkout, not
 #: from the copy the mod installs into ``xiecontent/``: the jar bundles the live
 #: content only, so an underscored directory is never there to copy.
@@ -37,7 +37,7 @@ DEFERRED_PACKS = {
 }
 
 #: Not a pack: the live content, and the pack this run generates.
-NOT_A_PACK = {"mod-content", "_generated"}
+NOT_A_PACK = {"base-content", "_generated"}
 
 WORLD_NAME = "acceptance-world"
 
@@ -141,15 +141,15 @@ class Session:
                 shutil.rmtree(world)
 
     def _arrange_packs(self):
-        content_repo = os.path.join(self.repo, "mod-content")
+        content_repo = os.path.join(self.repo, "base-content")
         if not os.path.isdir(content_repo):
             raise SessionError("no content at %s" % content_repo)
 
         # The live content itself needs no arranging: the server installs the
         # bundled copy on the first launch that finds none, and never touches one
         # that is there.
-        if not os.path.isdir(os.path.join(self.content_dir, "mod-content")):
-            say("no mod-content in %s; the server will install the bundled copy"
+        if not os.path.isdir(os.path.join(self.content_dir, "base-content")):
+            say("no base-content in %s; the server will install the bundled copy"
                 % self.content_dir)
 
         for pack, source in DEFERRED_PACKS.items():

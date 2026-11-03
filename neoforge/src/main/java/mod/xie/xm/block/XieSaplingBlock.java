@@ -5,6 +5,7 @@ import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.grower.TreeGrower;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
@@ -70,6 +71,12 @@ public class XieSaplingBlock extends XiePlantBlock {
     @Override
     protected boolean growsWhenRipe() {
         return grower.isPresent();
+    }
+
+    /** A sapling does not stack, so only the air above counts; the feature judges the rest. */
+    @Override
+    protected boolean hasRoomWhenRipe(LevelReader level, BlockPos pos) {
+        return level.isEmptyBlock(pos.above());
     }
 
     /**

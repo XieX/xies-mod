@@ -34,9 +34,9 @@ class BundledContentTest {
         files.put(BundledContent.VERSION_RESOURCE, version + "\n");
         files.put(BundledContent.INDEX_RESOURCE,
             "farming/tomato.json\n\ntextures/blocks/tomato_bush.png\nLICENSE\n");
-        files.put("/bundled/mod-content/farming/tomato.json", "{\"blocks\":{}}");
-        files.put("/bundled/mod-content/textures/blocks/tomato_bush.png", "png");
-        files.put("/bundled/mod-content/LICENSE", "CC BY 4.0");
+        files.put("/bundled/base-content/farming/tomato.json", "{\"blocks\":{}}");
+        files.put("/bundled/base-content/textures/blocks/tomato_bush.png", "png");
+        files.put("/bundled/base-content/LICENSE", "CC BY 4.0");
         return files;
     }
 
@@ -49,7 +49,7 @@ class BundledContentTest {
         assertEquals("0.4.0", result.bundledVersion());
         assertNull(result.installedVersion());
 
-        Path pack = container.resolve("mod-content");
+        Path pack = container.resolve("base-content");
         assertEquals("{\"blocks\":{}}", Files.readString(pack.resolve("farming/tomato.json")));
         assertEquals("png", Files.readString(pack.resolve("textures/blocks/tomato_bush.png")));
         assertEquals("CC BY 4.0", Files.readString(pack.resolve("LICENSE")));
@@ -65,7 +65,7 @@ class BundledContentTest {
     @Test
     void neverTouchesAPackThatIsAlreadyThere(@TempDir Path container) throws IOException {
         BundledContent.install(container, classpath(bundle("0.4.0")));
-        Path definition = container.resolve("mod-content/farming/tomato.json");
+        Path definition = container.resolve("base-content/farming/tomato.json");
         Files.delete(definition);
 
         BundledContent.Result again = BundledContent.install(container, classpath(bundle("0.4.0")));
@@ -86,12 +86,12 @@ class BundledContentTest {
         assertEquals("0.5.0", newer.bundledVersion());
         assertEquals("0.4.0", newer.installedVersion());
         assertEquals("0.4.0",
-            Files.readString(container.resolve("mod-content/" + BundledContent.MARKER_FILE)).trim());
+            Files.readString(container.resolve("base-content/" + BundledContent.MARKER_FILE)).trim());
     }
 
     @Test
     void leavesAUserMadePackAloneWhateverTheVersion(@TempDir Path container) throws IOException {
-        Path pack = container.resolve("mod-content");
+        Path pack = container.resolve("base-content");
         Files.createDirectories(pack);
         Files.writeString(pack.resolve("mine.json"), "{}");
 
@@ -107,16 +107,16 @@ class BundledContentTest {
         BundledContent.Result result = BundledContent.install(container, classpath(Map.of()));
 
         assertEquals(BundledContent.Outcome.NOT_BUNDLED, result.outcome());
-        assertFalse(Files.exists(container.resolve("mod-content")));
+        assertFalse(Files.exists(container.resolve("base-content")));
     }
 
     @Test
     void refusesAnIndexThatNamesAMissingFile(@TempDir Path container) {
         Map<String, String> broken = bundle("0.4.0");
-        broken.remove("/bundled/mod-content/LICENSE");
+        broken.remove("/bundled/base-content/LICENSE");
 
         assertThrows(IOException.class, () -> BundledContent.install(container, classpath(broken)));
-        assertFalse(Files.exists(container.resolve("mod-content")),
+        assertFalse(Files.exists(container.resolve("base-content")),
             "a failed install must not leave a pack the parser would load");
     }
 
@@ -124,7 +124,7 @@ class BundledContentTest {
     void refusesAnIndexThatEscapesThePack(@TempDir Path container) {
         Map<String, String> hostile = bundle("0.4.0");
         hostile.put(BundledContent.INDEX_RESOURCE, "../outside.json\n");
-        hostile.put("/bundled/mod-content/../outside.json", "{}");
+        hostile.put("/bundled/base-content/../outside.json", "{}");
 
         assertThrows(IOException.class, () -> BundledContent.install(container, classpath(hostile)));
         assertTrue(Files.notExists(container.resolve("outside.json")));

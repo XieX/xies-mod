@@ -243,6 +243,15 @@ public class XiePlantBlock extends VegetationBlock implements BonemealableBlock 
     }
 
     /**
+     * Whether {@link #growWhenRipe} has anywhere to go: air above and a column not
+     * yet {@code growthHeight} tall. Asked by bone meal, so the top of a full stalk
+     * refuses it and the stack is kept, as vanilla's ripe wheat does.
+     */
+    protected boolean hasRoomWhenRipe(LevelReader level, BlockPos pos) {
+        return level.isEmptyBlock(pos.above()) && columnHeight(level, pos) < config.growthHeight();
+    }
+
+    /**
      * The denominator of the per-tick growth roll: a 1-in-<var>n</var> chance.
      *
      * <p>{@code growthRate} is a percentage where 100 is vanilla's default speed,
@@ -258,11 +267,9 @@ public class XiePlantBlock extends VegetationBlock implements BonemealableBlock 
      * The new segment starts at age 0 and grows through its own stages.
      */
     private void growTaller(ServerLevel level, BlockPos pos) {
-        BlockPos above = pos.above();
-        if (!level.isEmptyBlock(above) || columnHeight(level, pos) >= config.growthHeight()) {
-            return;
+        if (hasRoomWhenRipe(level, pos)) {
+            level.setBlockAndUpdate(pos.above(), defaultBlockState());
         }
-        level.setBlockAndUpdate(above, defaultBlockState());
     }
 
     /**
@@ -289,7 +296,7 @@ public class XiePlantBlock extends VegetationBlock implements BonemealableBlock 
         if (!config.fertilisable()) {
             return false;
         }
-        return !isRipe(state) || (growsWhenRipe() && level.isEmptyBlock(pos.above()));
+        return !isRipe(state) || (growsWhenRipe() && hasRoomWhenRipe(level, pos));
     }
 
     @Override

@@ -60,7 +60,7 @@ BASELINES = [
         "not emitted",
         r"Not emitted: (\d+) drops, (\d+) recipes, (\d+) worldgen entries and (\d+) culls",
         ("drops", "recipes", "worldgen entries", "culls"),
-        (1, 1, 1, 0),
+        (0, 1, 1, 0),
     ),
     (
         "properties nobody reads",

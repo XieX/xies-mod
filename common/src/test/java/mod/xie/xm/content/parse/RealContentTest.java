@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * the format as documented, this proves it handles the format as actually written
  * over several years by several people.
  *
- * <p>Skipped when {@code mod-content/} is missing. Point it elsewhere with {@code -Dxie.content.dir=...}.
+ * <p>Skipped when {@code base-content/} is missing. Point it elsewhere with {@code -Dxie.content.dir=...}.
  */
 class RealContentTest {
 
@@ -41,7 +41,7 @@ class RealContentTest {
     @BeforeAll
     static void parseOnce() throws IOException {
         String configured = System.getProperty("xie.content.dir");
-        contentDir = configured != null ? Paths.get(configured) : Paths.get("..", "mod-content");
+        contentDir = configured != null ? Paths.get(configured) : Paths.get("..", "base-content");
         assumeTrue(Files.isDirectory(contentDir),
             "content not found at " + contentDir.toAbsolutePath() + "; skipping");
         result = XieParser.parsePack(contentDir);
@@ -122,6 +122,25 @@ class RealContentTest {
             .map(BlockDef::qualifiedName)
             .toList();
         assertTrue(stingy.isEmpty(), () -> "can be picked for nothing: " + stingy);
+    }
+
+    /**
+     * A ripe crop always gives its crop when broken, as vanilla's ripe wheat gives one
+     * wheat for certain. Unripe stages owe nothing.
+     */
+    @Test
+    void everyCropPaysOutWhenRipe() {
+        List<String> stingy = result.pack().blocks().values().stream()
+            .filter(block -> block.archetype().equals("crop"))
+            .filter(block -> {
+                int ripe = block.props().peekString("maxGrowth").map(String::trim)
+                    .map(Integer::parseInt).orElse(block.impliedMaxMeta());
+                return block.drops().drops().stream().noneMatch(drop -> drop.chanceFor(ripe) > 0
+                    && (drop.min() >= 1 || drop.chanceFor(ripe) >= 100));
+            })
+            .map(BlockDef::qualifiedName)
+            .toList();
+        assertTrue(stingy.isEmpty(), () -> "can be harvested ripe for nothing: " + stingy);
     }
 
     /** What the emitter warns about, held at none: no crop pays for its seed unripe. */

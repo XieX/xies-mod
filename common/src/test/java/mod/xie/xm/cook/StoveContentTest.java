@@ -32,7 +32,7 @@ class StoveContentTest {
     @BeforeAll
     static void parse() throws IOException {
         String configured = System.getProperty("xie.content.dir");
-        Path contentDir = configured != null ? Paths.get(configured) : Paths.get("..", "mod-content");
+        Path contentDir = configured != null ? Paths.get(configured) : Paths.get("..", "base-content");
         assumeTrue(Files.isDirectory(contentDir),
             "content not found at " + contentDir.toAbsolutePath() + "; skipping");
 

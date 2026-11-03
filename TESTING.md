@@ -33,7 +33,7 @@ python acceptance/run.py
 
 It starts the server, joins a client, asserts a fixed list of in-game behaviours and
 prints pass or fail for each with a summary, exiting non-zero if anything failed.
-A hundred and eight assertions, about three and a half minutes end to end, unattended. `--list`
+A hundred and ten assertions, about three and a half minutes end to end, unattended. `--list`
 names the checks, `--only <name>` runs one, `--no-client` runs the one check that
 needs no player — `counts` — and a failure presses `F2` and names the screenshot.
 
@@ -51,8 +51,8 @@ It needs Python 3 and a Windows desktop whose foreground it can take, because a
 | `sapling` | Bone meal grows a sapling into its tree, and both that tree and the same tree placed as a *feature* come up with a few leaves already ripe — every tree bears, which is the 2013 keystone's asymmetry dropped on purpose and read as a count over the canopy. |
 | `decay` | A canopy beside a `blazeLog` measures one block from it and is still there after four hundred ticks of ticking; the same canopy on stone measures seven and dies. `XieTreeBlock` *is* a `LeavesBlock`, so this is the one generated tag entry that every fruit tree in the game stands on. |
 | `spikey` | Walking into `blazeTree` costs health, and the stop position is `wall + 0.1 - 0.3` — the inset canopy — where the same walk into leaves that are not spikey stops at `wall - 0.3` and costs nothing. |
-| `fertilisable` | `blazeTreeSapling` refuses bone meal from a dispenser and keeps the stack; a Xie sapling that does not refuse, and a vanilla one, both consume it. |
-| `sickle` | Sixteen right-clicks on ripe nether wart clear sixteen blocks and cost sixteen durability, in survival; a block the sickle does not list is left alone and costs nothing. |
+| `fertilisable` | `blazeTreeSapling` refuses bone meal from a dispenser and keeps the stack; a Xie sapling that does not refuse, and a vanilla one, both consume it. The top of a ripe corn stalk three high, its full `growthHeight`, keeps the stack too, and the top of one two high takes it. |
+| `sickle` | Sixteen right-clicks on ripe nether wart clear sixteen blocks, cost sixteen durability and hand over nether wart, in survival; a block the sickle does not list is left alone and costs nothing. |
 | `fist` | Stone becomes a gold block, dirt becomes air, and the bottom face does nothing — checked against the same block clicked from above a moment later. |
 | `bows` | `redstoneBow` fires with the button still down, hands back redstone, disallows pickup and burns; the same bow with arrows instead fires nothing; `boneBow` fires nothing until release and its arrow is cold; `blazeBow` fires with an empty inventory and its arrow is creative-only. |
 | `crafter` | A crafter fed the dressed-garden-salad recipe ejects the salad **and** the mayonnaise's bowl, which is `craftRemainder` and which no predicate can see. |
@@ -76,9 +76,7 @@ tells you something and one that agrees with you:
   clicks sent, because a click the client never raycast reaches nothing.
 - **What cannot be asserted is said out loud rather than dropped.** The run prints a
   `SKIP` line for the sickle's crunch, because no assertion can hear a sound. The
-  2% `etherWart` is not waited for either — what is asserted instead holds however
-  the rolls fall, that nothing *but* `etherWart` is ever dropped, which is the live
-  half of the `nethwerwart` typo.
+  2% `etherWart` is not waited for either, and is noted with its count instead.
 
 **What it arranges, and puts back.** The run has to be able to happen on a working
 tree somebody else is using, so `acceptance/rig/session.py` restores every one of

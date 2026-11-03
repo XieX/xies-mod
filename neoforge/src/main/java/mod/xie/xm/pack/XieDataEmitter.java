@@ -24,6 +24,7 @@ import mod.xie.xm.reg.XieOverrides;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -207,6 +208,9 @@ public final class XieDataEmitter {
     /** What the registrar registered; empty until {@link #emit} has been called. */
     private RegisteredContent registered = RegisteredContent.empty();
 
+    /** The registered ids of everything declared {@code type: food}; see {@link #foodIds}. */
+    private Set<String> foods = Set.of();
+
     /** Files written into the override pack, which is registered only if there are any. */
     private int overrides;
 
@@ -271,7 +275,7 @@ public final class XieDataEmitter {
 
         int tags = writeAliasTags(packs);
         int blockTags = writeBlockTags(registered);
-        Set<String> foods = foodIds(packs, registered);
+        foods = foodIds(packs, registered);
 
         int lootTables = 0;
         int skippedDrops = 0;
@@ -350,7 +354,7 @@ public final class XieDataEmitter {
                 }
             }
 
-            recipes += writeCookingRecipes(pack, foods);
+            recipes += writeCookingRecipes(pack);
         }
 
         int fuels = writeFuelValues(packs);
@@ -566,9 +570,7 @@ public final class XieDataEmitter {
      * are not a loot table — they are handed to {@link mod.xie.xm.item.XieStickItem},
      * which resolves them the first time somebody swings it — so without this they are
      * the only drops in the content that could go missing without being counted, and
-     * they would go missing hours into a game rather than at load. There is one:
-     * {@code crimsonSickle} asks for {@code nethwerwart}, and nether wart is spelt with
-     * the letters the other way round.
+     * they would go missing hours into a game rather than at load.
      *
      * <p>Asked of a {@code stick} and nothing else, which is where {@code JobItem} read
      * the {@code blocks} key — {@code doStick} and nowhere else. Checking every item
@@ -989,6 +991,7 @@ public final class XieDataEmitter {
             }
             JsonObject root = new JsonObject();
             root.addProperty("type", "minecraft:smelting");
+            root.addProperty("category", cookingCategory(result.get().get("id").getAsString()));
             root.addProperty("ingredient", ingredient.get());
             root.addProperty("experience", SMELT_EXPERIENCE);
             root.addProperty("cookingtime", SMELT_TIME);
@@ -1014,20 +1017,19 @@ public final class XieDataEmitter {
      * that. It applies to blocks as well as items, which is why this walks both, and a
      * block only has a recipe input if it has an item form.
      *
-     * @param foods the registered ids of everything declared {@code type: food}
      * @return how many recipe files this pack's {@code cooked} properties produced
      */
-    private int writeCookingRecipes(ContentPack pack, Set<String> foods) throws IOException {
+    private int writeCookingRecipes(ContentPack pack) throws IOException {
         int written = 0;
         for (ItemDef def : pack.items().values()) {
             for (String path : registered.itemPaths().getOrDefault(def.name(), List.of())) {
-                written += writeCooking(def.props(), def.qualifiedName(), path, foods);
+                written += writeCooking(def.props(), def.qualifiedName(), path);
             }
         }
         for (BlockDef def : pack.blocks().values()) {
             for (String path : registered.blockPaths().getOrDefault(def.name(), List.of())) {
                 if (registered.blockItems().contains(path)) {
-                    written += writeCooking(def.props(), def.qualifiedName(), path, foods);
+                    written += writeCooking(def.props(), def.qualifiedName(), path);
                 }
             }
         }
@@ -1043,8 +1045,8 @@ public final class XieDataEmitter {
      * result rather than the ingredient because that is where the food is: corn
      * kernels are seeds, and popping them still belongs in a smoker.
      */
-    private int writeCooking(PropertyMap props, String origin, String inputPath,
-                             Set<String> foods) throws IOException {
+    private int writeCooking(PropertyMap props, String origin, String inputPath)
+            throws IOException {
         Optional<String> cooked = props.getString("cooked").or(() -> props.getString("smelted"));
         if (cooked.isEmpty()) {
             return 0;
@@ -1070,6 +1072,7 @@ public final class XieDataEmitter {
             }
             JsonObject root = new JsonObject();
             root.addProperty("type", cooker.recipeType());
+            root.addProperty("category", cookingCategory(resultId.get()));
             String ingredient = XiesMod.MOD_ID + ":" + inputPath;
             root.addProperty("ingredient", ingredient);
             root.addProperty("experience", SMELT_EXPERIENCE);
@@ -1081,6 +1084,29 @@ public final class XieDataEmitter {
             written++;
         }
         return written;
+    }
+
+    /**
+     * The recipe-book tab a cooking recipe files under.
+     *
+     * <p>Vanilla's recipe builder takes this as an argument, and its data generator
+     * gives food to a smoker, a campfire and a furnace recipe that cooks food, blocks
+     * to a furnace recipe that makes a block (smooth stone, glass, terracotta) and misc
+     * to the rest (ingots, charcoal, dye). This reads the same three cases off the
+     * result. Food is the content's own, as for the smoker: item components are not
+     * bound yet when this runs, so a vanilla food cannot be recognised. A block is a
+     * definition that registered an item form, not any item that places a block, or
+     * a {@code seeds} item would count as a building block.
+     */
+    private String cookingCategory(String resultId) {
+        if (foods.contains(resultId)) {
+            return "food";
+        }
+        Identifier id = Identifier.parse(resultId);
+        boolean block = id.getNamespace().equals(XiesMod.MOD_ID)
+            ? registered.blockItems().contains(id.getPath())
+            : BuiltInRegistries.ITEM.getValue(id) instanceof BlockItem;
+        return block ? "blocks" : "misc";
     }
 
     /**

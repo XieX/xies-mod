@@ -78,7 +78,15 @@ roll, `growthHeight` and bone meal. The subclasses differ in exactly one method 
   pick in four. `RealContentTest` holds the live content to it.
 - **`crop`** is annual — break it and replant from seed — and divides its growth roll
   by vanilla's farmland-adjacency bonus, so a crop in a tended field grows several
-  times faster than the same crop alone on dry soil.
+  times faster than the same crop alone on dry soil. A ripe crop always gives its
+  crop, as vanilla's ripe wheat gives one wheat for certain: `hybridWheat` already
+  did, and since November 2026 a ripe corn segment gives one cob and a second half
+  the time (`min` 1), where its two rolls at half came up empty one break in four.
+  Corn's 20% at stage 5 went with it, as vanilla pays nothing unripe and a `min`
+  there would have made the early break nearly as good. `RealContentTest` holds the
+  live content to it. Bone meal on the top of a stalk already `growthHeight` tall is
+  refused and kept; it used to be taken for nothing, the check having asked only
+  for air above.
 - **`basic`** grows at all, so it is not in that hierarchy: it is a plain `Block` with
   `becomesWhenDestroyed`, `walkthroughable` and `textureBase`, and no `age` property.
 
@@ -1749,7 +1757,7 @@ left here is what the port itself cost time on, with the file that encodes each 
   distance `salt.json` asks for and 2197 at `Spawnable`'s default of 6. The emitter
   caps the radius, which only ever makes the test stricter.
 - **The run directory holds a copy of the content**, at
-  `neoforge/run/xiecontent/mod-content`. It does not track edits to `mod-content/`,
+  `neoforge/run/xiecontent/base-content`. It does not track edits to `base-content/`,
   and the bundled copy is never extracted over it — delete the directory and the next
   launch installs the bundled content fresh from the build's own copy, which is the
   re-sync.
