@@ -67,13 +67,15 @@ class StoveContentTest {
     void theMealsCarryTheAgreedFoodValues() {
         assertHunger("weak_soup", 4);
         assertHunger("soup", 6);
-        assertHunger("stew", 8);
+        assertHunger("stew", 10);
     }
 
     @Test
     void theIngredientAliasesExist() {
         assertTrue(pack.aliases().containsKey("soupable"),
             "the food ingredient list is the $soupable alias");
+        assertTrue(pack.aliases().containsKey("soupProtein"),
+            "the protein list is the $soupProtein alias");
         assertTrue(pack.aliases().containsKey("flavouring"),
             "the flavouring list is the $flavouring alias");
 

@@ -172,8 +172,8 @@ Port status
 - [x] Every property the content declares and nothing reads, counted and named in the log
 - [x] An acceptance run — one command that drives a real client into the dedicated
       server and asserts the behaviours only a running game can show
-- [x] `stove` — the cookpot, a cauldron over a campfire that turns water, any of a
-      dozen ingredients and a seasoning into soup or stew, fed by right-click. The
+- [x] `stove` — the cookpot, a cauldron over a campfire that turns water, nearly
+      any plain food, meat and a seasoning into soup or stew, fed by right-click. The
       port's first block entity, rebuilt from the mod posting rather than from a file
 - [x] `ripening` — a solid block that ages where it stands and becomes another, with
       no light, soil or bone meal involved. Fresh cheese poured from a bucket turns

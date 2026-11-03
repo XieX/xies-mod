@@ -337,9 +337,11 @@
               "fuelCapacity": { "description": "Ticks of fuel it holds.", "$ref": "#/definitions/int" },
               "foodCapacity": { "description": "Ingredient slots.", "$ref": "#/definitions/int" },
               "flavourCapacity": { "description": "Flavouring slots.", "$ref": "#/definitions/int" },
+              "proteinCapacity": { "description": "Protein slots.", "$ref": "#/definitions/int" },
               "waterBase": { "description": "What fills the pot, e.g. \"bucketWater\".", "$ref": "#/definitions/itemRef" },
-              "ingredients": { "description": "What may go in the pot, as an alias.", "$ref": "#/definitions/refList" },
-              "flavourings": { "description": "What may season the pot, as an alias.", "$ref": "#/definitions/refList" }
+              "ingredients": { "description": "What may go in the pot as a food, as an alias.", "$ref": "#/definitions/refList" },
+              "flavourings": { "description": "What may season the pot, as an alias.", "$ref": "#/definitions/refList" },
+              "proteins": { "description": "What may go in the pot as a protein, as an alias.", "$ref": "#/definitions/refList" }
             }
           }
         },

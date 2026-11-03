@@ -102,6 +102,12 @@ class ResourceNamesTest {
         assertEquals("sweet_berries", ResourceNames.toVanillaPath(ItemRef.parse("sweetBerries")));
         assertEquals("glow_berries", ResourceNames.toVanillaPath(ItemRef.parse("glowBerries")));
         assertEquals("beetroot", ResourceNames.toVanillaPath(ItemRef.parse("beetroot")));
+        assertEquals("mutton", ResourceNames.toVanillaPath(ItemRef.parse("mutton")));
+        assertEquals("rabbit", ResourceNames.toVanillaPath(ItemRef.parse("rabbit")));
+        assertEquals("salmon", ResourceNames.toVanillaPath(ItemRef.parse("salmon")));
+        assertEquals("dried_kelp", ResourceNames.toVanillaPath(ItemRef.parse("driedKelp")));
+        assertEquals("baked_potato", ResourceNames.toVanillaPath(ItemRef.parse("bakedPotato")));
+        assertEquals("pumpkin_pie", ResourceNames.toVanillaPath(ItemRef.parse("pumpkinPie")));
     }
 
     /**

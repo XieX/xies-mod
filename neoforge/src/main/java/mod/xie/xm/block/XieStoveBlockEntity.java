@@ -39,6 +39,7 @@ public class XieStoveBlockEntity extends BlockEntity {
     private static final String KEY_BASE = "Base";
     private static final String KEY_FOOD = "Food";
     private static final String KEY_FLAVOUR = "Flavour";
+    private static final String KEY_PROTEIN = "Protein";
     private static final String KEY_COOK = "CookProgress";
     private static final String KEY_BURN = "BurnTime";
 
@@ -71,7 +72,7 @@ public class XieStoveBlockEntity extends BlockEntity {
         super(type(), pos, state);
 
         XieStoveBlock.Config config = XieStoveBlock.configOf(state);
-        this.pot = new StovePot(config.foodCapacity(), config.flavourCapacity());
+        this.pot = new StovePot(config.foodCapacity(), config.flavourCapacity(), config.proteinCapacity());
         this.cookTime = config.cookTime();
         this.fuelCapacity = config.fuelCapacity();
     }
@@ -133,12 +134,11 @@ public class XieStoveBlockEntity extends BlockEntity {
      * that is deliberate: a batch cooker that makes you wait between items is a
      * worse version of the same idea. What the timer gates now is the bowl.
      *
-     * @param flavouring whether this is a flavouring rather than a food
+     * @param ingredient which of the pot's three classes this is
      * @return whether the pot took it, which is a question of capacity alone
      */
-    public boolean addIngredient(boolean flavouring) {
-        boolean accepted = flavouring ? pot.addFlavour() : pot.addFood();
-        if (!accepted) {
+    public boolean addIngredient(StovePot.Ingredient ingredient) {
+        if (!pot.add(ingredient)) {
             return false;
         }
         cookProgress = cookTime;
@@ -174,16 +174,17 @@ public class XieStoveBlockEntity extends BlockEntity {
     /**
      * What the pot looks like, as the {@code pot} blockstate value.
      *
-     * <p>The cooked colour means "a bowl will fill", not merely "the timer ran out".
+     * <p>The cooked colour means "a bowl will fill, with this meal", not merely "the
+     * timer ran out".
      * A pot of plain water has nothing to serve and shows raw, and so does one left
      * holding a single stranded flavouring — in both cases the player still has
      * something to add, and a pot that looked done would be lying about it.
      */
     public int appearance() {
-        boolean servable = isCooked() && pot.canExtract();
+        Optional<StovePot.Meal> next = isCooked() ? pot.peek() : Optional.empty();
         return switch (pot.base()) {
             case NONE -> XieStoveBlock.POT_EMPTY;
-            case WATER -> servable ? XieStoveBlock.POT_WATER_READY : XieStoveBlock.POT_WATER_RAW;
+            case WATER -> next.map(XieStoveBlock::potServing).orElse(XieStoveBlock.POT_WATER_RAW);
         };
     }
 
@@ -217,7 +218,8 @@ public class XieStoveBlockEntity extends BlockEntity {
         super.loadAdditional(input);
 
         StovePot.Base base = parseBase(input.getStringOr(KEY_BASE, StovePot.Base.NONE.name()));
-        pot.load(base, input.getIntOr(KEY_FOOD, 0), input.getIntOr(KEY_FLAVOUR, 0));
+        pot.load(base, input.getIntOr(KEY_FOOD, 0), input.getIntOr(KEY_FLAVOUR, 0),
+            input.getIntOr(KEY_PROTEIN, 0));
 
         cookProgress = Math.max(0, input.getIntOr(KEY_COOK, 0));
         burnTime = Math.max(0, input.getIntOr(KEY_BURN, 0));
@@ -230,6 +232,7 @@ public class XieStoveBlockEntity extends BlockEntity {
         output.putString(KEY_BASE, pot.base().name());
         output.putInt(KEY_FOOD, pot.food());
         output.putInt(KEY_FLAVOUR, pot.flavour());
+        output.putInt(KEY_PROTEIN, pot.protein());
         output.putInt(KEY_COOK, cookProgress);
         output.putInt(KEY_BURN, burnTime);
     }

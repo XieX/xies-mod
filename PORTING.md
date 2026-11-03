@@ -49,7 +49,7 @@ From the 17 blocks and 53 items in the live content repo:
 | items | 68 of 53 definitions | multi-variant `names` split into one item each, plus five sapling block items and the cookpot's |
 | recipes | 111 | 99 of the 101 in `recipes` sections, plus 12 from `cooked`; the other 2 are `cull` and remove rather than add |
 | loot tables | 25 | per-age drop chances as `block_state_property` pools |
-| alias tags | 15 | `$protein` became `#xiesmod:protein`, so one recipe replaces hundreds |
+| alias tags | 16 | `$protein` became `#xiesmod:protein`, so one recipe replaces hundreds |
 | worldgen | 9 of 10 `spawns` | the 1 left is the dropped melon |
 | tree features | 5 | a `minecraft:tree` configured feature per `tree` block |
 | burn times | 8 | `fuel`, as one entry each in NeoForge's furnace-fuel data map |
@@ -481,20 +481,38 @@ is what the posting called it; the block is the cookpot because that is what it 
 - **It is a cauldron with a fire under it, and the recipe says so.** Campfire plus
   cauldron, shapeless. The 2013 stove was a furnace with an iron top because the
   cauldron did not exist yet, and the old iron-and-furnace recipe went with it.
-  Every model is vanilla's own cauldron with the `content` sprite swapped — water,
-  then mud for stew — so the block needs no art at all, and the three meals are the
-  only sprites the pack ships for it.
+  Every model is vanilla's own cauldron with the `content` sprite swapped, one per
+  `pot` state: empty, water while it cooks, and then whichever of Weak Soup, Soup or
+  Stew the next bowl will be, so a mixed pot steps down as it is ladled. The four
+  liquids are the content's `cookpot_water`, `_weakSoup`, `_soup` and `_stew` sprites,
+  Xie's own; without them the pot draws vanilla water and
+  one mud for all three meals, which says raw or done and nothing more. Vanilla
+  water would draw grey here anyway, because the cauldron's content face is tinted
+  and nothing registers a block colour for the cookpot.
 - **Everything goes in by hand, with no menu.** Water on an empty pot starts it;
-  anything in the `ingredients` alias is a food and anything in `flavourings` is a
-  seasoning; an empty bowl ladles out the best meal the pot can afford once it has
-  cooked; any furnace fuel stokes it. The 2013 stove had a menu, and dropping it for
-  right-click costs nothing that existed, since the pot was always the whole of it.
-- **Water, food, bowl is a Weak Soup; a second food or a flavouring makes it Soup;
-  both make Stew.** The tier is food plus flavouring, capped at two and one per meal,
-  and the pot always ladles the highest tier it can afford. Hunger 4, 6 and 8, all
-  on a bowl, so the cookpot is a way of turning any of a dozen cheap ingredients
-  into a few medium-value meals. Where it departs from the posting is capacity: the
-  original cooked one meal at a time, and this one accumulates and serves repeatedly.
+  anything in the `ingredients` alias is a food, anything in `proteins` a protein
+  and anything in `flavourings` a seasoning; an empty bowl ladles out the best meal
+  the pot can afford once it has cooked; any furnace fuel stokes it. The 2013 stove
+  had a menu, and dropping it for right-click costs nothing that existed, since the
+  pot was always the whole of it. The client guesses from the blockstate whether a
+  click will land, so a refused item no longer swings the arm as if it went in.
+- **A food is a Weak Soup, a food and a flavouring or a protein alone a Soup, and
+  all three a Stew.** The posting's rule was food plus flavouring, two foods making
+  a Soup, and that was what shipped first; in November 2026 Xie replaced it with this
+  table so meat has a job. Hunger 4, 6 and 10, all on a bowl. A protein Soup is about
+  what the furnace makes of the same meat, so the pot is no shortcut; a Stew is the
+  ingredients of two Soups in one bowl, worse per ingredient and better per bowl, the
+  trade vanilla's rabbit stew makes and at its 10 hunger and 12 saturation. The
+  `$soupable` list takes nearly any plain food; `$soupProtein` is its own alias
+  rather than the shared `$protein`, which would have let raw meat into sammiches.
+  Left out on purpose: harmful foods (rotten flesh, spider eye, poisonous potato,
+  pufferfish), magical ones (golden foods, chorus fruit), anything served in a
+  container. Jerky, which one raw beef makes four of, would be four Soups as a
+  protein, so it is a flavouring instead, salt cut with beef: four jerky season four
+  foods for 8 hunger, what eating them gives. It replaced dandelion seeds, which had
+  only been there so salt was not the one seasoning. Where it departs from the
+  posting is also capacity: the original cooked one meal at a time, and this one
+  accumulates and serves repeatedly.
 - **The fried half is deliberately not ported.** The posting listed the same meals
   again with oil in place of water — Fried Mess, Fried Meal, Stirfry — sharing the
   ingredient list, the flavouring list and the food values, so it was six items doing
@@ -504,10 +522,10 @@ is what the posting called it; the block is the cookpot because that is what it 
   machine to the same meal names and the agreed food values, and `StovePotTest`
   covers the rules without a world. The interaction is the `cookpot` acceptance
   check (`acceptance/checks/cookpot.py`, see TESTING.md): real right-clicks in
-  survival put water, coal, foods, salt and a bowl into three pots and read the
-  meal back out of the player's inventory, with a null beside each positive — a
-  second bucket refused, an unfuelled pot still raw after `cookTime`, a bowl kept
-  on an empty and on an unfinished pot, and an apple moving nothing. Its first run
+  survival put water, coal, foods, a porkchop, salt and a bowl into three pots and
+  read the meal back out of the player's inventory, with a null beside each
+  positive — a second bucket refused, an unfuelled pot still raw after `cookTime`,
+  a bowl kept on an empty and on an unfinished pot, and rotten flesh moving nothing. Its first run
   found that a bowl on a pot with nothing to serve was being burnt as furnace
   fuel, which vanilla lists a bowl as; a bowl is now never fuel.
 

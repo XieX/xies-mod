@@ -1407,8 +1407,10 @@ public final class XieRegistrar {
             props.getInt("fuelCapacity", 6000),
             props.getInt("foodCapacity", 8),
             props.getInt("flavourCapacity", 4),
+            props.getInt("proteinCapacity", 4),
             itemTag(props.getString("ingredients")),
             itemTag(props.getString("flavourings")),
+            itemTag(props.getString("proteins")),
             baseIds(pack, props.getString("waterBase")));
     }
 

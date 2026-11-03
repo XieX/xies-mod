@@ -15,9 +15,10 @@ on the same pot with the same click:
 * nothing cooks without fuel — a pot with a carrot in it is still raw after
   ``cookTime`` has passed — and once coal goes in it finishes within
   ``cookTime`` plus a margin;
-* a bowl on a cooked pot yields the meal the tier predicts: one food is a Weak
-  Soup, one food and salt a Soup, two foods and salt a Stew. A bowl on an empty
-  pot and on a pot still cooking yields nothing and keeps the bowl;
+* a bowl on a cooked pot yields the meal the table predicts, and the pot shows
+  that meal before the bowl goes in: one food is a Weak Soup, one food and salt a
+  Soup, a food, a protein and salt a Stew. A bowl on an empty pot and on a pot
+  still cooking yields nothing and keeps the bowl;
 * an item that is none of base, ingredient, flavouring or fuel is refused with
   the pot and the inventory unchanged.
 
@@ -27,9 +28,10 @@ falls through to vanilla ``BucketItem``, which empties the water onto the
 neighbour of the clicked face — the player's own feet, from above — and a
 neighbour it cannot replace is what keeps the bucket full, which is the only
 thing that tells a refusal from an acceptance once the pot already holds water.
-And the null item is an apple rather than a stick, because a stick is a furnace
-fuel and would be stoked rather than refused; the apple is a food the pot does
-not list, which is the nearer miss anyway.
+And the null item is rotten flesh rather than a stick, because a stick is a
+furnace fuel and would be stoked rather than refused; rotten flesh is a food the
+pot leaves out on purpose, which is the nearer miss anyway. The player is fed
+first, so the refused click cannot start eating it either.
 
 Survival throughout: creative would not consume the bucket, the carrot or the
 bowl, and consumption is half of what is being read.
@@ -48,14 +50,17 @@ BUCKET = "minecraft:bucket"
 BOWL = "minecraft:bowl"
 COAL = "minecraft:coal"
 CARROT = "minecraft:carrot"
-TOMATO = "xiesmod:tomato"
+PORKCHOP = "minecraft:porkchop"
 SALT = "xiesmod:salt"
-APPLE = "minecraft:apple"
+ROTTEN = "minecraft:rotten_flesh"
 
 WEAK_SOUP = "xiesmod:weak_soup"
 SOUP = "xiesmod:soup"
 STEW = "xiesmod:stew"
 MEALS = (WEAK_SOUP, SOUP, STEW)
+
+#: The ``pot`` blockstate value of a cooked pot whose next bowl is each meal.
+SHOWS = {WEAK_SOUP: 2, SOUP: 3, STEW: 4}
 
 #: ``cookTime`` from ``cooking/cookpot.json``, in ticks, and how long that is.
 COOK_TICKS = 200
@@ -173,10 +178,10 @@ def _weak_soup(game, expect, pot):
     expect.that("furnace fuel lights the fire", clicks, _took(clicks))
     expect.equal("and is consumed", game.count_items(COAL), 0)
 
-    done = game.wait_until(lambda: game.block_is(pot, "%s[pot=2]" % POT),
+    done = game.wait_until(lambda: game.block_is(pot, "%s[pot=%d]" % (POT, SHOWS[WEAK_SOUP])),
                            timeout=COOK_SECONDS + MARGIN + 5.0, interval=0.25)
     elapsed = time.monotonic() - lit_at
-    expect.that("with fuel the pot finishes within cookTime plus a margin",
+    expect.that("with fuel the pot finishes within cookTime plus a margin, showing a Weak Soup",
                 done and elapsed <= COOK_SECONDS + MARGIN,
                 "%.1fs for a cookTime of %.0fs" % (elapsed, COOK_SECONDS))
 
@@ -200,7 +205,7 @@ def _soup(game, expect, pot):
     _start(game, expect, pot, "second pot")
     _feed(game, expect, pot, CARROT, food=1)
     _feed(game, expect, pot, SALT, flavour=1)
-    _cooked(game, expect, pot, "one food and salt")
+    _cooked(game, expect, pot, "one food and salt", SOUP)
 
     game.clear_inventory()
     game.hold(BOWL)
@@ -212,35 +217,37 @@ def _soup(game, expect, pot):
 # ---------------------------------------------------------------- pot three
 
 def _stew(game, expect, pot):
-    """Two foods and one flavouring: tier three, and the refused item."""
+    """A food, a protein and a flavouring: tier three, and the refused item."""
     _aim(game, pot)
     _start(game, expect, pot, "third pot")
     _feed(game, expect, pot, CARROT, food=1)
-    _feed(game, expect, pot, TOMATO, food=2)
+    _feed(game, expect, pot, PORKCHOP, protein=1)
     _feed(game, expect, pot, SALT, flavour=1)
-    _cooked(game, expect, pot, "two foods and salt")
+    _cooked(game, expect, pot, "a food, a protein and salt", STEW)
 
     # The null item, on a pot with everything in it: none of base, food,
-    # flavouring or fuel, so the pot passes and nothing moves. The bowl a
-    # moment later is the control that says the same aim reaches the pot.
+    # protein, flavouring or fuel, so the pot passes and nothing moves. The
+    # bowl a moment later is the control that says the same aim reaches the pot.
+    game.heal()
     game.clear_inventory()
-    game.hold(APPLE)
+    game.hold(ROTTEN)
     before = _contents(game, pot)
     game.right_click()
     time.sleep(0.6)
     after = _contents(game, pot)
-    same = all(after[key] == before[key] for key in ("Base", "Food", "Flavour", "CookProgress"))
+    same = all(after[key] == before[key]
+               for key in ("Base", "Food", "Flavour", "Protein", "CookProgress"))
     expect.that("an item the pot does not list is refused, with the pot unchanged",
-                same and game.block_is(pot, "%s[pot=2,lit=true]" % POT),
+                same and game.block_is(pot, "%s[pot=%d,lit=true]" % (POT, SHOWS[STEW])),
                 "pot %s" % _said(after))
     expect.that("and the inventory unchanged",
-                game.count_items(APPLE) == 1 and _meals(game) == 0,
-                "%d apples, %d meals" % (game.count_items(APPLE), _meals(game)))
+                game.count_items(ROTTEN) == 1 and _meals(game) == 0,
+                "%d rotten flesh, %d meals" % (game.count_items(ROTTEN), _meals(game)))
 
     game.clear_inventory()
     game.hold(BOWL)
     clicks = game.click_until(lambda: game.count_items(STEW) == 1)
-    expect.that("two foods and salt ladle out a Stew", clicks,
+    expect.that("a food, a protein and salt ladle out a Stew", clicks,
                 "%s; %s" % (_meals_said(game), _took(clicks)))
 
 
@@ -258,8 +265,13 @@ def _start(game, expect, pot, which):
     expect.that("and coal lights it", clicks, _took(clicks))
 
 
-def _feed(game, expect, pot, item, food=None, flavour=None):
-    key, count = ("Food", food) if food is not None else ("Flavour", flavour)
+def _feed(game, expect, pot, item, food=None, flavour=None, protein=None):
+    if food is not None:
+        key, count = "Food", food
+    elif protein is not None:
+        key, count = "Protein", protein
+    else:
+        key, count = "Flavour", flavour
     game.clear_inventory()
     game.hold(item)
     clicks = game.click_until(lambda: _contents(game, pot)[key] == count)
@@ -267,11 +279,11 @@ def _feed(game, expect, pot, item, food=None, flavour=None):
                 _took(clicks))
 
 
-def _cooked(game, expect, pot, what):
+def _cooked(game, expect, pot, what, meal):
     started = time.monotonic()
-    done = game.wait_until(lambda: game.block_is(pot, "%s[pot=2]" % POT),
+    done = game.wait_until(lambda: game.block_is(pot, "%s[pot=%d]" % (POT, SHOWS[meal])),
                            timeout=COOK_SECONDS + MARGIN + 5.0, interval=0.25)
-    expect.that("%s cook through" % what, done,
+    expect.that("%s cook through, showing %s" % (what, meal), done,
                 "%.1fs since the last ingredient" % (time.monotonic() - started))
 
 
@@ -285,7 +297,7 @@ def _aim(game, pot):
 def _contents(game, pot):
     """The block entity's own record: base, counts and both timers."""
     raw = game.block_data(pot)
-    found = {"Base": "", "Food": -1, "Flavour": -1, "CookProgress": -1, "BurnTime": -1}
+    found = {"Base": "", "Food": -1, "Flavour": -1, "Protein": -1, "CookProgress": -1, "BurnTime": -1}
     for key in found:
         match = re.search(r'\b%s: (?:"([A-Z_]+)"|(-?\d+))' % key, raw)
         if match:
@@ -294,8 +306,8 @@ def _contents(game, pot):
 
 
 def _said(contents):
-    return "%s/%s food/%s flavour, cook %s, burn %s" % (
-        contents["Base"], contents["Food"], contents["Flavour"],
+    return "%s/%s food/%s flavour/%s protein, cook %s, burn %s" % (
+        contents["Base"], contents["Food"], contents["Flavour"], contents["Protein"],
         contents["CookProgress"], contents["BurnTime"])
 
 

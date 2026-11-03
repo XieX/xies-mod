@@ -1,6 +1,7 @@
 package mod.xie.xm.cook;
 
 import mod.xie.xm.cook.StovePot.Base;
+import mod.xie.xm.cook.StovePot.Ingredient;
 import mod.xie.xm.cook.StovePot.Meal;
 
 import org.junit.jupiter.api.Test;
@@ -15,45 +16,49 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The recipes in the original mod posting are the specification here, so the first
- * test walks them literally. Everything after it covers behaviour the posting does
- * not describe, which is the batching the port adds.
- *
- * <p>The posting listed eight recipes; four are tested. The other four were the oil
- * base, cut because it shared this one's ingredients, flavourings and food values
- * and so was three more items for no behaviour. See {@link StovePot}.
+ * The recipe table in {@link StovePot} is the specification here, so the first test
+ * walks it literally. Everything after it covers what the table does not say: the
+ * combinations it leaves out, and the batching the port adds.
  */
 class StovePotTest {
 
     private static StovePot pot() {
-        return new StovePot(8, 4);
+        return new StovePot(8, 4, 4);
     }
 
-    /** Add a base, then n foods, then m flavourings, then take one meal out. */
-    private static Optional<Meal> cook(Base base, int foods, int flavourings) {
+    /** Add a base, then the given ingredients, then take one meal out. */
+    private static Optional<Meal> cook(int foods, int flavourings, int proteins) {
+        StovePot pot = filled(foods, flavourings, proteins);
+        return pot.extract();
+    }
+
+    private static StovePot filled(int foods, int flavourings, int proteins) {
         StovePot pot = pot();
-        assertTrue(pot.setBase(base), "base should be accepted by an empty pot");
+        assertTrue(pot.setBase(Base.WATER), "base should be accepted by an empty pot");
         for (int i = 0; i < foods; i++) {
             assertTrue(pot.addFood(), "food " + (i + 1) + " should be accepted");
         }
         for (int i = 0; i < flavourings; i++) {
             assertTrue(pot.addFlavour(), "flavouring " + (i + 1) + " should be accepted");
         }
-        return pot.extract();
+        for (int i = 0; i < proteins; i++) {
+            assertTrue(pot.addProtein(), "protein " + (i + 1) + " should be accepted");
+        }
+        return pot;
     }
 
-    // -- the posted recipes ---------------------------------------------------
+    // -- the table ------------------------------------------------------------
 
     @Test
-    void reproducesThePostedRecipes() {
-        assertEquals(Optional.of(Meal.WEAK_SOUP), cook(Base.WATER, 1, 0));
-        assertEquals(Optional.of(Meal.SOUP), cook(Base.WATER, 1, 1));
-        assertEquals(Optional.of(Meal.SOUP), cook(Base.WATER, 2, 0));
-        assertEquals(Optional.of(Meal.STEW), cook(Base.WATER, 2, 1));
+    void reproducesTheRecipeTable() {
+        assertEquals(Optional.of(Meal.WEAK_SOUP), cook(1, 0, 0));
+        assertEquals(Optional.of(Meal.SOUP), cook(1, 1, 0));
+        assertEquals(Optional.of(Meal.SOUP), cook(0, 0, 1));
+        assertEquals(Optional.of(Meal.STEW), cook(1, 1, 1));
     }
 
     @Test
-    void tierIsFoodPlusFlavouring() {
+    void tiersNameTheThreeMeals() {
         assertEquals(Meal.WEAK_SOUP, StovePot.mealFor(Base.WATER, 1));
         assertEquals(Meal.SOUP, StovePot.mealFor(Base.WATER, 2));
         assertEquals(Meal.STEW, StovePot.mealFor(Base.WATER, 3));
@@ -66,7 +71,7 @@ class StovePotTest {
         assertThrows(IllegalArgumentException.class, () -> StovePot.mealFor(Base.WATER, 0));
     }
 
-    // -- batching -------------------------------------------------------------
+    // -- what the table leaves out ----------------------------------------------
 
     /** Drain the pot a bowl at a time until it stops yielding. */
     private static List<Meal> drain(StovePot pot) {
@@ -79,15 +84,33 @@ class StovePotTest {
     }
 
     @Test
-    void sixFoodAndThreeFlavouringsMakeThreeStews() {
-        StovePot pot = pot();
-        pot.setBase(Base.WATER);
-        for (int i = 0; i < 6; i++) {
-            pot.addFood();
-        }
-        for (int i = 0; i < 3; i++) {
-            pot.addFlavour();
-        }
+    void twoFoodsAreTwoWeakSoupsNotOneSoup() {
+        assertEquals(List.of(Meal.WEAK_SOUP, Meal.WEAK_SOUP), drain(filled(2, 0, 0)));
+    }
+
+    @Test
+    void proteinAndFoodWithoutFlavouringAreServedApart() {
+        assertEquals(List.of(Meal.SOUP, Meal.WEAK_SOUP), drain(filled(1, 0, 1)));
+    }
+
+    @Test
+    void aFlavouringDoesNotUpgradeProteinAlone() {
+        StovePot pot = filled(0, 1, 1);
+
+        assertEquals(Optional.of(Meal.SOUP), pot.extract());
+        assertEquals(1, pot.flavour(), "the flavouring should wait for a vegetable");
+        assertFalse(pot.canExtract(), "a flavouring alone is not a meal");
+
+        assertTrue(pot.addFood());
+        assertEquals(Optional.of(Meal.SOUP), pot.extract());
+        assertTrue(pot.isEmpty());
+    }
+
+    // -- batching -------------------------------------------------------------
+
+    @Test
+    void threeOfEachMakeThreeStews() {
+        StovePot pot = filled(3, 3, 3);
 
         assertEquals(List.of(Meal.STEW, Meal.STEW, Meal.STEW), drain(pot));
         assertTrue(pot.isEmpty(), "draining the pot should leave it empty");
@@ -95,65 +118,33 @@ class StovePotTest {
 
     @Test
     void takesTheHighestTierFirstAndThenWhatIsLeft() {
-        StovePot pot = pot();
-        pot.setBase(Base.WATER);
-        for (int i = 0; i < 3; i++) {
-            pot.addFood();
-        }
-        pot.addFlavour();
-
-        // 3 food + 1 flavouring: a stew takes 2+1, leaving one food for a weak soup.
-        assertEquals(List.of(Meal.STEW, Meal.WEAK_SOUP), drain(pot));
-    }
-
-    @Test
-    void twoFoodsAreSpentBeforeAFlavouringAtTheSameTier() {
-        StovePot pot = pot();
-        pot.setBase(Base.WATER);
-        pot.addFood();
-        pot.addFood();
-        pot.addFood();
-        pot.addFood();
-        pot.addFlavour();
-
-        // 4 food + 1 flavouring. The first bowl takes 2+1 for a stew; the second
-        // finds 2 food and no flavouring, so it is a soup rather than nothing.
-        assertEquals(List.of(Meal.STEW, Meal.SOUP), drain(pot));
-    }
-
-    @Test
-    void aStrandedFlavouringWaitsForMoreFood() {
-        StovePot pot = pot();
-        pot.setBase(Base.WATER);
-        pot.addFood();
-        pot.addFood();
-        pot.addFlavour();
-        pot.addFlavour();
-
-        assertEquals(Optional.of(Meal.STEW), pot.extract());
-        assertEquals(0, pot.food());
-        assertEquals(1, pot.flavour(), "the second flavouring should still be in the pot");
-        assertFalse(pot.canExtract(), "a flavouring alone is not a meal");
-
-        // The base has not cleared, because the pot is not empty.
-        assertEquals(Base.WATER, pot.base());
-        assertTrue(pot.addFood());
-        assertEquals(Optional.of(Meal.SOUP), pot.extract());
-        assertTrue(pot.isEmpty());
+        // A stew takes one of each; then the second protein is a Soup, and the
+        // second food, with no flavouring left, a Weak Soup.
+        assertEquals(List.of(Meal.STEW, Meal.SOUP, Meal.WEAK_SOUP), drain(filled(2, 1, 2)));
     }
 
     @Test
     void peekDoesNotConsume() {
-        StovePot pot = pot();
-        pot.setBase(Base.WATER);
-        pot.addFood();
-        pot.addFood();
-        pot.addFlavour();
+        StovePot pot = filled(1, 1, 1);
 
         assertEquals(Optional.of(Meal.STEW), pot.peek());
         assertEquals(Optional.of(Meal.STEW), pot.peek());
-        assertEquals(2, pot.food());
+        assertEquals(1, pot.food());
         assertEquals(1, pot.flavour());
+        assertEquals(1, pot.protein());
+    }
+
+    @Test
+    void addDispatchesOnTheIngredientClass() {
+        StovePot pot = pot();
+        pot.setBase(Base.WATER);
+
+        assertTrue(pot.add(Ingredient.FOOD));
+        assertTrue(pot.add(Ingredient.FLAVOUR));
+        assertTrue(pot.add(Ingredient.PROTEIN));
+        assertEquals(1, pot.food());
+        assertEquals(1, pot.flavour());
+        assertEquals(1, pot.protein());
     }
 
     // -- the base -------------------------------------------------------------
@@ -170,11 +161,7 @@ class StovePotTest {
 
     @Test
     void theBaseClearsOnlyWhenThePotRunsDry() {
-        StovePot pot = pot();
-        pot.setBase(Base.WATER);
-        pot.addFood();
-        pot.addFood();
-        pot.addFood();
+        StovePot pot = filled(1, 0, 1);
 
         assertEquals(Optional.of(Meal.SOUP), pot.extract());
         assertEquals(Base.WATER, pot.base(), "one food left, so the water stays");
@@ -192,6 +179,7 @@ class StovePotTest {
         StovePot pot = pot();
         assertFalse(pot.addFood(), "food needs a liquid to go into");
         assertFalse(pot.addFlavour(), "flavouring needs a liquid to go into");
+        assertFalse(pot.addProtein(), "protein needs a liquid to go into");
         assertFalse(pot.canExtract());
         assertEquals(Optional.empty(), pot.extract());
     }
@@ -208,50 +196,51 @@ class StovePotTest {
 
     @Test
     void theCapRejectsRatherThanSwallows() {
-        StovePot pot = new StovePot(2, 1);
+        StovePot pot = new StovePot(1, 1, 1);
         pot.setBase(Base.WATER);
 
         assertTrue(pot.addFood());
-        assertTrue(pot.addFood());
         assertFalse(pot.addFood(), "a full pot should refuse rather than eat the item");
-        assertEquals(2, pot.food());
-
         assertTrue(pot.addFlavour());
         assertFalse(pot.addFlavour());
+        assertTrue(pot.addProtein());
+        assertFalse(pot.addProtein());
+
+        assertEquals(1, pot.food());
         assertEquals(1, pot.flavour());
+        assertEquals(1, pot.protein());
     }
 
     @Test
-    void aPotTooSmallForOneMealIsRejectedAtConstruction() {
-        assertThrows(IllegalArgumentException.class, () -> new StovePot(1, 1));
-        assertThrows(IllegalArgumentException.class, () -> new StovePot(2, 0));
+    void aPotThatCouldNeverMakeAStewIsRejectedAtConstruction() {
+        assertThrows(IllegalArgumentException.class, () -> new StovePot(0, 1, 1));
+        assertThrows(IllegalArgumentException.class, () -> new StovePot(1, 0, 1));
+        assertThrows(IllegalArgumentException.class, () -> new StovePot(1, 1, 0));
     }
 
     // -- persistence ----------------------------------------------------------
 
     @Test
     void loadClampsToCapacity() {
-        StovePot pot = new StovePot(4, 2);
-        pot.load(Base.WATER, 99, 99);
+        StovePot pot = new StovePot(4, 2, 3);
+        pot.load(Base.WATER, 99, 99, 99);
 
         assertEquals(4, pot.food());
         assertEquals(2, pot.flavour());
+        assertEquals(3, pot.protein());
     }
 
     @Test
     void loadingNoBaseDiscardsAnyContents() {
         StovePot pot = pot();
-        pot.load(Base.NONE, 5, 5);
+        pot.load(Base.NONE, 5, 5, 5);
 
         assertTrue(pot.isEmpty(), "ingredients cannot outlive the liquid they sat in");
     }
 
     @Test
     void clearEmptiesEverything() {
-        StovePot pot = pot();
-        pot.setBase(Base.WATER);
-        pot.addFood();
-        pot.addFlavour();
+        StovePot pot = filled(1, 1, 1);
         pot.clear();
 
         assertTrue(pot.isEmpty());

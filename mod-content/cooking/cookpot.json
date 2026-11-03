@@ -2,8 +2,9 @@
   "$schema": "../../common/src/main/resources/xie-content.schema.json",
   "_requires": "salt.json",
   "aliases": {
-    "soupable": "carrot,potato,beetroot,mushroom,redmushroom,tomato,lettuce,onion,soyBeans,cornCob,tofu,avocado,cheeseSlice",
-    "flavouring": "salt,dandelionSeeds"
+    "soupable": "carrot,potato,bakedPotato,beetroot,mushroom,redmushroom,tomato,lettuce,onion,soyBeans,cornCob,cornCobCooked,avocado,orange,apple,item.melon,sweetBerries,glowBerries,driedKelp,bread,cookie,pumpkinPie",
+    "soupProtein": "beefRaw,beefCooked,porkchopRaw,porkchopCooked,chickenRaw,chickenCooked,mutton,cookedMutton,rabbit,cookedRabbit,fishRaw,fishCooked,salmon,cookedSalmon,tofu,tofuCooked,cheeseSlice",
+    "flavouring": "salt,jerky"
   },
   "blocks": {
     "cookpot": {
@@ -15,9 +16,11 @@
       "fuelCapacity": 6000,
       "foodCapacity": 8,
       "flavourCapacity": 4,
+      "proteinCapacity": 4,
       "waterBase": "bucketWater",
       "ingredients": "$soupable",
-      "flavourings": "$flavouring"
+      "flavourings": "$flavouring",
+      "proteins": "$soupProtein"
     }
   },
   "items": {
@@ -40,7 +43,7 @@
     "stew": {
       "name": "Stew",
       "type": "food",
-      "hunger": 8,
+      "hunger": 10,
       "nourishment": 0.6,
       "container": "bowl",
       "stacksize": 1

@@ -52,9 +52,9 @@ import java.util.Set;
  *
  * <ul>
  *   <li>water on an empty stove starts a pot;</li>
- *   <li>anything in the {@code ingredients} tag is a food and anything in
- *       {@code flavourings} is a seasoning; either may go in at any time, and each
- *       restarts the cook;</li>
+ *   <li>anything in the {@code ingredients} tag is a food, anything in
+ *       {@code proteins} a protein and anything in {@code flavourings} a seasoning;
+ *       any of them may go in at any time, and each restarts the cook;</li>
  *   <li>an empty bowl ladles out the best meal the pot can afford, once it has
  *       finished cooking;</li>
  *   <li>any furnace fuel stokes the fire.</li>
@@ -65,9 +65,11 @@ import java.util.Set;
  * it. Dropping the menu for right-click therefore costs nothing that existed, and
  * buys an interaction that does not need a screen to explain itself.
  *
- * <p>An item that is both fuel and an ingredient resolves as an ingredient. Nothing
- * in the current content is both, but the content decides what goes in these lists
- * and the order the click is resolved in should not depend on that staying true.
+ * <p>An item that is both fuel and an ingredient resolves as an ingredient, and one
+ * in more than one ingredient list resolves as a flavouring, then a protein, then a
+ * food. Nothing in the current content is in two lists, but the content decides
+ * what goes in them and the order the click is resolved in should not depend on
+ * that staying true.
  * A bowl is the one item that is never fuel here, whatever vanilla's burn table
  * says: a bowl on a pot that has nothing to serve is refused, not burnt.
  */
@@ -81,31 +83,51 @@ public class XieStoveBlock extends Block implements EntityBlock {
      *
      * <p>This is the mod posting's "wait until the pot changes colour". Each value is
      * one cauldron model with a different {@code content} texture, so the pot really
-     * does change colour as it cooks: clear water darkens to stew. See
-     * {@code XiePackEmitter.STOVE_CONTENTS} for the three textures.
+     * does change colour as it cooks: clear water darkens to whichever meal the next
+     * bowl will be, and a mixed pot steps down as it is ladled, best bowl first. See
+     * {@code XiePackEmitter.STOVE_CONTENTS} for the textures.
      *
-     * <p>Base and doneness share one property rather than taking two, because every
-     * combination of them is exactly one model. With the oil base cut there is only
-     * one liquid, so the two are currently in step; the property is still the pot's
-     * appearance rather than its contents, and a second base would widen it here.
+     * <p>Base, doneness and meal share one property rather than taking three, because
+     * every combination of them is exactly one model. With the oil base cut there is
+     * only one liquid; the property is still the pot's appearance rather than its
+     * contents, and a second base would widen it here.
      */
-    public static final IntegerProperty POT = IntegerProperty.create("pot", 0, 2);
+    public static final IntegerProperty POT = IntegerProperty.create("pot", 0, 4);
 
     public static final int POT_EMPTY = 0;
     public static final int POT_WATER_RAW = 1;
-    public static final int POT_WATER_READY = 2;
+    public static final int POT_WEAK_SOUP = 2;
+    public static final int POT_SOUP = 3;
+    public static final int POT_STEW = 4;
+
+    /** The {@code pot} value of a cooked pot whose next bowl is this meal. */
+    public static int potServing(StovePot.Meal meal) {
+        return switch (meal) {
+            case WEAK_SOUP -> POT_WEAK_SOUP;
+            case SOUP -> POT_SOUP;
+            case STEW -> POT_STEW;
+        };
+    }
+
+    /** Whether a bowl on a pot showing this value will fill. */
+    public static boolean isServing(int pot) {
+        return pot >= POT_WEAK_SOUP;
+    }
 
     /**
      * @param cookTime        ticks the pot takes to come up to a servable meal
      * @param fuelCapacity    most fuel the pot will hold, in ticks
      * @param foodCapacity    how many foods the pot holds at once
      * @param flavourCapacity how many flavourings the pot holds at once
+     * @param proteinCapacity how many proteins the pot holds at once
      * @param ingredients     tag of things that count as a food ingredient
      * @param flavourings     tag of things that count as a flavouring
+     * @param proteins        tag of things that count as a protein
      * @param waterItems      ids that start a pot
      */
     public record Config(int cookTime, int fuelCapacity, int foodCapacity, int flavourCapacity,
-                         Optional<TagKey<Item>> ingredients, Optional<TagKey<Item>> flavourings,
+                         int proteinCapacity, Optional<TagKey<Item>> ingredients,
+                         Optional<TagKey<Item>> flavourings, Optional<TagKey<Item>> proteins,
                          Set<Identifier> waterItems) {
 
         public Config {
@@ -114,7 +136,7 @@ public class XieStoveBlock extends Block implements EntityBlock {
 
         /** Used only to satisfy the block codec; never placed in a world. */
         public static final Config PLACEHOLDER = new Config(
-            200, 6000, 8, 4, Optional.empty(), Optional.empty(), Set.of());
+            200, 6000, 8, 4, 4, Optional.empty(), Optional.empty(), Optional.empty(), Set.of());
     }
 
     public static final MapCodec<XieStoveBlock> CODEC =
@@ -245,7 +267,7 @@ public class XieStoveBlock extends Block implements EntityBlock {
         if (level.isClientSide()) {
             // Whether the click will land is decided server-side; the client swings
             // for anything the stove could plausibly take so the two do not disagree.
-            return couldAccept(stack, stove) ? InteractionResult.SUCCESS : InteractionResult.PASS;
+            return couldAccept(stack, state, level) ? InteractionResult.SUCCESS : InteractionResult.PASS;
         }
 
         if (tryBase(stack, stove, player, level, pos)) {
@@ -269,13 +291,27 @@ public class XieStoveBlock extends Block implements EntityBlock {
         return InteractionResult.PASS;
     }
 
-    /** A cheap client-side guess at whether the server will take this item. */
-    private boolean couldAccept(ItemStack stack, XieStoveBlockEntity stove) {
-        return baseOf(stack).isPresent()
-            || isBowl(stack)
-            || isIngredient(stack)
-            || isFlavouring(stack)
-            || stove.burnTime() < config.fuelCapacity();
+    /**
+     * A cheap client-side guess at whether the server will take this item.
+     *
+     * <p>The block entity is never synced, so the client cannot see the counts or
+     * the fuel; it reads the blockstate instead, which says whether there is a pot
+     * and whether it will serve. A wrong yes swings the arm at an item the pot then
+     * ignores, which looks like it went in. A water bucket is always claimed, so one
+     * the pot refuses is kept rather than poured out beside it.
+     */
+    private boolean couldAccept(ItemStack stack, BlockState state, Level level) {
+        int pot = state.getValue(POT);
+        if (baseOf(stack).isPresent()) {
+            return true;
+        }
+        if (isBowl(stack)) {
+            return isServing(pot);
+        }
+        if (ingredientOf(stack).isPresent() && pot != POT_EMPTY) {
+            return true;
+        }
+        return level.fuelValues().isFuel(stack);
     }
 
     private boolean tryBase(ItemStack stack, XieStoveBlockEntity stove, Player player,
@@ -318,11 +354,8 @@ public class XieStoveBlock extends Block implements EntityBlock {
 
     private boolean tryIngredient(ItemStack stack, XieStoveBlockEntity stove, Player player,
                                   Level level, BlockPos pos) {
-        boolean flavouring = isFlavouring(stack);
-        if (!flavouring && !isIngredient(stack)) {
-            return false;
-        }
-        if (!stove.addIngredient(flavouring)) {
+        Optional<StovePot.Ingredient> ingredient = ingredientOf(stack);
+        if (ingredient.isEmpty() || !stove.addIngredient(ingredient.get())) {
             return false;
         }
         consumeOne(stack, player);
@@ -357,14 +390,22 @@ public class XieStoveBlock extends Block implements EntityBlock {
         return stack.getItem() == Items.BOWL;
     }
 
-    private boolean isIngredient(ItemStack stack) {
-        return config.ingredients().isPresent()
-            && stack.is(holder -> holder.is(config.ingredients().get()));
+    /** Which class of ingredient an item is, if any; see the class comment for ties. */
+    private Optional<StovePot.Ingredient> ingredientOf(ItemStack stack) {
+        if (inTag(stack, config.flavourings())) {
+            return Optional.of(StovePot.Ingredient.FLAVOUR);
+        }
+        if (inTag(stack, config.proteins())) {
+            return Optional.of(StovePot.Ingredient.PROTEIN);
+        }
+        if (inTag(stack, config.ingredients())) {
+            return Optional.of(StovePot.Ingredient.FOOD);
+        }
+        return Optional.empty();
     }
 
-    private boolean isFlavouring(ItemStack stack) {
-        return config.flavourings().isPresent()
-            && stack.is(holder -> holder.is(config.flavourings().get()));
+    private static boolean inTag(ItemStack stack, Optional<TagKey<Item>> tag) {
+        return tag.isPresent() && stack.is(holder -> holder.is(tag.get()));
     }
 
     /** The registered meal item, or empty if the content does not declare it. */

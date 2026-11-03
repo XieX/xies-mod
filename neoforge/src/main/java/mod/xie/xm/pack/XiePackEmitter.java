@@ -671,6 +671,10 @@ public final class XiePackEmitter {
         Path target = assets().resolve("textures").resolve("block");
         boolean split = !names.isEmpty();
 
+        if (def.archetype().equals(STOVE)) {
+            return copyStoveTextures(source, target, def, stages);
+        }
+
         // Asked for here rather than down in the slicer, because this is the point at
         // which the definition's texture assignment is consulted whether or not the
         // indices turn out to be needed — a migrated pack ships the files and they are
@@ -1100,27 +1104,59 @@ public final class XiePackEmitter {
     private static final String STOVE = "stove";
 
     /**
+     * What fills the pot in one {@code pot} blockstate value.
+     *
+     * @param sprite  the suffix of the content's own sprite, {@code cookpot_stew.png}
+     *                for a block named {@code cookpot}
+     * @param vanilla what is drawn when the content ships no such sprite
+     */
+    private record PotContent(String sprite, String vanilla) {}
+
+    /**
      * The {@code content} texture for each {@code pot} blockstate value.
      *
      * <p>This table <em>is</em> the mod posting's "wait until the pot changes
      * colour". Vanilla's cauldron models take an arbitrary {@code content} sprite, so
-     * these give three distinguishable pot states without the pack shipping any art:
-     * water goes in clear and comes out as mud-thick stew.
+     * each state can be its own colour: water goes in clear and comes out as
+     * whichever meal the next bowl will be.
      *
      * <p>Index is the {@code pot} value. Index 0 is empty and has no content layer at
-     * all, which is why it is null. Retexturing the pot later is a change to these
-     * strings and nothing else.
+     * all, which is why it is null. A pack without the sprites still draws every
+     * state, as vanilla water and one mud for all three meals, which tells raw from
+     * done and nothing more.
      */
-    private static final String[] STOVE_CONTENTS = {
+    private static final PotContent[] STOVE_CONTENTS = {
         null,
-        "minecraft:block/water_still",
-        "minecraft:block/mud"
+        new PotContent("water", "minecraft:block/water_still"),
+        new PotContent("weakSoup", "minecraft:block/mud"),
+        new PotContent("soup", "minecraft:block/mud"),
+        new PotContent("stew", "minecraft:block/mud")
     };
+
+    /**
+     * Copies whichever pot sprites the content ships, each under its model's name.
+     * The rest are left to {@link #writeStoveModels}, which draws vanilla's instead.
+     */
+    private Sprites copyStoveTextures(Path source, Path target, BlockDef def, Stages stages)
+            throws IOException {
+        int copied = 0;
+        for (int pot = 0; pot < STOVE_CONTENTS.length; pot++) {
+            if (STOVE_CONTENTS[pot] == null) {
+                continue;
+            }
+            Optional<Path> found = findTexture(source, def.name() + "_" + STOVE_CONTENTS[pot].sprite());
+            if (found.isPresent()) {
+                copy(found.get(), target, stoveModelName(stages, pot) + ".png");
+                copied++;
+            }
+        }
+        return copied == 0 ? Sprites.NONE : new Sprites(copied, Map.of(), Map.of());
+    }
 
     /**
      * The stove's blockstate: every {@code pot} value against both {@code lit} values.
      *
-     * <p>Six entries, because a missing variant is a hard load error rather than a
+     * <p>Ten entries, because a missing variant is a hard load error rather than a
      * fallback. {@code lit} does not change the model — a cauldron has no furnace
      * front to light up, and the fire is particles from
      * {@link mod.xie.xm.block.XieStoveBlock#animateTick} — but it has to be named
@@ -1145,10 +1181,10 @@ public final class XiePackEmitter {
     /**
      * One cauldron model per pot state.
      *
-     * <p>Every texture is vanilla's, so the stove needs no art to render correctly.
-     * The empty state is vanilla's own {@code block/cauldron}; the four filled ones
-     * are {@code block/template_cauldron_full} with the content sprite swapped, which
-     * is exactly how vanilla builds its water, lava and powder snow cauldrons.
+     * <p>The pot itself is vanilla's, so only the contents are ever the pack's art.
+     * The empty state is vanilla's own {@code block/cauldron}; the filled ones are
+     * {@code block/template_cauldron_full} with the content sprite swapped, which is
+     * exactly how vanilla builds its water, lava and powder snow cauldrons.
      *
      * <p>The stove was a furnace with an iron top in 2013 because the cauldron did
      * not exist yet. It does now, and a pot you drop ingredients into should look
@@ -1161,11 +1197,16 @@ public final class XiePackEmitter {
             JsonObject model = new JsonObject();
             JsonObject textures = new JsonObject();
 
+            String name = stoveModelName(stages, pot);
             if (STOVE_CONTENTS[pot] == null) {
                 model.addProperty("parent", "minecraft:block/cauldron");
             } else {
+                boolean drawn = Files.exists(assets().resolve("textures").resolve("block")
+                    .resolve(name + ".png"));
                 model.addProperty("parent", "minecraft:block/template_cauldron_full");
-                textures.addProperty("content", STOVE_CONTENTS[pot]);
+                textures.addProperty("content", drawn
+                    ? XiesMod.MOD_ID + ":block/" + name
+                    : STOVE_CONTENTS[pot].vanilla());
             }
 
             textures.addProperty("particle", "minecraft:block/cauldron_side");
@@ -1176,7 +1217,7 @@ public final class XiePackEmitter {
             model.add("textures", textures);
 
             write(assets().resolve("models").resolve("block")
-                .resolve(stoveModelName(stages, pot) + ".json"), model);
+                .resolve(name + ".json"), model);
             written++;
         }
         return written;

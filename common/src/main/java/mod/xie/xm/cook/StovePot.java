@@ -16,10 +16,22 @@ import java.util.Optional;
  *   Water... food... food... flavouring... bowl  =&gt; Stew
  * </pre>
  *
- * <p>All four collapse to one rule &mdash; <b>tier = food + flavouring</b> &mdash;
- * which is what {@link #mealFor} encodes. Nothing here depends on <em>which</em> food
- * went in, which is the design the posting describes: condensing assorted low-value
- * ingredients into a few homogeneous medium-value meals.
+ * <p>Those collapse to one rule, tier = food + flavouring, which is what the port
+ * shipped first. It was replaced in November 2026 by a table with a third class of
+ * ingredient, <b>protein</b>, so that meat has a job in the pot:
+ *
+ * <pre>
+ *   food                        =&gt; Weak Soup   (vegetable laundering)
+ *   food + flavouring           =&gt; Soup       ("upgraded" vegetables)
+ *   protein                     =&gt; Soup       (protein laundering)
+ *   protein + food + flavouring =&gt; Stew
+ * </pre>
+ *
+ * <p>A Stew is the ingredients of two Soups in one bowl, so it is never the most
+ * food per ingredient; it is the most food per bowl, the same trade vanilla's rabbit
+ * stew makes. Nothing here depends on <em>which</em> food went in, only on its class,
+ * which is still the posting's design: condensing assorted low-value ingredients
+ * into a few homogeneous medium-value meals.
  *
  * <p>The posting listed the same four again with Oil in place of Water, yielding
  * Fried Mess, Fried Meal and Stirfry. That half is <b>deliberately not ported</b>: it
@@ -29,9 +41,10 @@ import java.util.Optional;
  * reinstating it means adding an enum constant and three meals &mdash; but it should
  * only come back if it comes back <em>different</em>.
  *
- * <p>Where this departs from the posting is capacity. The original pot cooked one
- * meal at a time; this one accumulates up to {@code foodCapacity} and
- * {@code flavourCapacity} and lets a bowl be used repeatedly, so the block is a
+ * <p>The other departure from the posting is capacity. The original pot cooked one
+ * meal at a time; this one accumulates up to {@code foodCapacity},
+ * {@code flavourCapacity} and {@code proteinCapacity} and lets a bowl be used
+ * repeatedly, so the block is a
  * batch cooker rather than a single-recipe station. {@link #extract} therefore takes
  * the <em>highest tier the contents can currently afford</em> and leaves the rest.
  *
@@ -71,25 +84,35 @@ public final class StovePot {
         }
     }
 
-    /** The most food and flavouring one extraction can consume. See {@link #plan}. */
-    public static final int MAX_FOOD_PER_MEAL = 2;
-    public static final int MAX_FLAVOUR_PER_MEAL = 1;
+    /** The three classes of thing that go into a started pot. */
+    public enum Ingredient {
+        FOOD,
+        FLAVOUR,
+        PROTEIN
+    }
 
     private final int foodCapacity;
     private final int flavourCapacity;
+    private final int proteinCapacity;
 
     private Base base = Base.NONE;
     private int food;
     private int flavour;
+    private int protein;
 
-    public StovePot(int foodCapacity, int flavourCapacity) {
-        if (foodCapacity < MAX_FOOD_PER_MEAL || flavourCapacity < MAX_FLAVOUR_PER_MEAL) {
+    /**
+     * @throws IllegalArgumentException if any capacity is below one, since a Stew
+     *         takes one of each and a pot that could never make one is a content error
+     */
+    public StovePot(int foodCapacity, int flavourCapacity, int proteinCapacity) {
+        if (foodCapacity < 1 || flavourCapacity < 1 || proteinCapacity < 1) {
             throw new IllegalArgumentException(
-                "a pot too small for one meal can never produce anything: "
-                    + foodCapacity + " food, " + flavourCapacity + " flavouring");
+                "a pot too small for a stew can never make one: " + foodCapacity + " food, "
+                    + flavourCapacity + " flavouring, " + proteinCapacity + " protein");
         }
         this.foodCapacity = foodCapacity;
         this.flavourCapacity = flavourCapacity;
+        this.proteinCapacity = proteinCapacity;
     }
 
     public Base base() {
@@ -104,6 +127,10 @@ public final class StovePot {
         return flavour;
     }
 
+    public int protein() {
+        return protein;
+    }
+
     public int foodCapacity() {
         return foodCapacity;
     }
@@ -112,9 +139,13 @@ public final class StovePot {
         return flavourCapacity;
     }
 
+    public int proteinCapacity() {
+        return proteinCapacity;
+    }
+
     /** Whether the pot holds nothing at all &mdash; no base and no ingredients. */
     public boolean isEmpty() {
-        return base == Base.NONE && food == 0 && flavour == 0;
+        return base == Base.NONE && food == 0 && flavour == 0 && protein == 0;
     }
 
     /**
@@ -162,6 +193,28 @@ public final class StovePot {
     }
 
     /**
+     * Add one protein.
+     *
+     * @return whether it was accepted; false if the pot has no base or is full
+     */
+    public boolean addProtein() {
+        if (base == Base.NONE || protein >= proteinCapacity) {
+            return false;
+        }
+        protein++;
+        return true;
+    }
+
+    /** Add one ingredient of the given class. */
+    public boolean add(Ingredient ingredient) {
+        return switch (ingredient) {
+            case FOOD -> addFood();
+            case FLAVOUR -> addFlavour();
+            case PROTEIN -> addProtein();
+        };
+    }
+
+    /**
      * Whether a bowl used now would produce anything. Equivalent to {@link #peek}
      * being present, and cheaper to read at a glance.
      */
@@ -193,7 +246,8 @@ public final class StovePot {
 
         food -= taken.food();
         flavour -= taken.flavour();
-        if (food == 0 && flavour == 0) {
+        protein -= taken.protein();
+        if (food == 0 && flavour == 0 && protein == 0) {
             base = Base.NONE;
         }
         return Optional.of(meal);
@@ -204,64 +258,59 @@ public final class StovePot {
         base = Base.NONE;
         food = 0;
         flavour = 0;
+        protein = 0;
     }
 
     /** Restore saved contents. Values outside the pot's capacity are clamped. */
-    public void load(Base savedBase, int savedFood, int savedFlavour) {
+    public void load(Base savedBase, int savedFood, int savedFlavour, int savedProtein) {
         base = savedBase == null ? Base.NONE : savedBase;
         if (base == Base.NONE) {
             food = 0;
             flavour = 0;
+            protein = 0;
             return;
         }
         food = Math.clamp(savedFood, 0, foodCapacity);
         flavour = Math.clamp(savedFlavour, 0, flavourCapacity);
+        protein = Math.clamp(savedProtein, 0, proteinCapacity);
     }
 
-    /** What one extraction would take out of the pot. */
-    private record Claim(int food, int flavour) {
-        int tier() {
-            return food + flavour;
-        }
+    /** What one extraction would take out of the pot, and the tier it makes. */
+    private record Claim(int food, int flavour, int protein, int tier) {
     }
 
     /**
      * Choose what the next bowl takes: the highest tier the contents can afford.
      *
-     * <p>Tier 2 is reachable two ways &mdash; two foods, or one food and one
-     * flavouring &mdash; and two foods is tried first so the scarcer ingredient is
-     * kept back for a later tier 3. That ordering is a judgement call, not something
-     * the posting settles; it costs nothing when only one of the two is available.
+     * <p>The two ways to a Soup never compete. Protein alone and food with
+     * flavouring are both available only when all three classes are, and then a
+     * Stew is taken instead.
      *
-     * <p>Greedy, and so not always the most food overall: two foods and two
-     * flavourings yield one Stew and a stranded flavouring, where two Soups would
-     * have used everything. The stranded ingredient is not lost &mdash; adding one
-     * more food makes it a meal &mdash; and "highest available tier" is the rule the
-     * block advertises, so it is the rule it follows.
+     * <p>A flavouring only upgrades food. Protein with flavouring and no food is a
+     * protein Soup, and the flavouring stays in the pot for the next vegetable; it
+     * is not lost, and a pot holding nothing but flavouring shows raw, which says
+     * there is something still to add.
      */
     private Optional<Claim> plan() {
         if (base == Base.NONE) {
             return Optional.empty();
         }
-        if (food >= 2 && flavour >= 1) {
-            return Optional.of(new Claim(2, 1));
+        if (protein >= 1 && food >= 1 && flavour >= 1) {
+            return Optional.of(new Claim(1, 1, 1, 3));
         }
-        if (food >= 2) {
-            return Optional.of(new Claim(2, 0));
+        if (protein >= 1) {
+            return Optional.of(new Claim(0, 0, 1, 2));
         }
         if (food >= 1 && flavour >= 1) {
-            return Optional.of(new Claim(1, 1));
+            return Optional.of(new Claim(1, 1, 0, 2));
         }
         if (food >= 1) {
-            return Optional.of(new Claim(1, 0));
+            return Optional.of(new Claim(1, 0, 0, 1));
         }
         return Optional.empty();
     }
 
-    /**
-     * The meal a base and a tier name. Tier is {@code food + flavouring}, which is
-     * 1, 2 or 3 for every combination the pot can claim.
-     */
+    /** The meal a base and a tier name: 1, 2 or 3 for every claim the pot makes. */
     public static Meal mealFor(Base base, int tier) {
         return switch (base) {
             case WATER -> switch (tier) {
