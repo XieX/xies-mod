@@ -9,7 +9,7 @@ the attached stem taking the right facing.
 Two things about ``StemBlock.randomTick`` shape the rig here. It only fruits at
 light 9 or better, which the arena's open sky gives it; and the fruit needs a
 *neighbouring* position that is air with the stem's own soil under it — which
-is the decision recorded in PORTING.md, that 1.6 hardcoded the fruit's ground
+is the decision recorded in ``XieRegistrar``, that 1.6 hardcoded the fruit's ground
 to the untilled form of the very ground the stem stands on, so
 ``plantType: nether`` puts both on soul sand.
 

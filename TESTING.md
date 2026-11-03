@@ -58,7 +58,7 @@ It needs Python 3 and a Windows desktop whose foreground it can take, because a
 | `crafter` | A crafter fed the dressed-garden-salad recipe ejects the salad **and** the mayonnaise's bowl, which is `craftRemainder` and which no predicate can see. |
 | `cookpot` | Water starts an empty pot and is refused by one with a base; a carrot in an unfuelled pot is still raw after `cookTime`, and coal cooks it in exactly that; the pot shows the meal its next bowl will be from the moment the carrot goes in, with `cooking` saying whether it is ready, and a bowl ladles the meal the tier predicts — one food a Weak Soup, one food and salt a Soup, a food, a porkchop and salt a Stew — and on an empty or unfinished pot serves nothing and is kept; rotten flesh, a food the pot leaves out on purpose and no fuel, moves nothing. |
 | `ripen` | Six fresh cheese blocks, in the dark and on stone, all ripen into cheese blocks — which a plant's light rule would stall for ever. Bone meal from a dispenser does nothing to one and is kept, beside a vanilla sapling that takes it; broken before it ripens it yields nothing, beside a cheese block that drops itself. |
-| `blocks` | A salt deposit broken by hand becomes sand; a shrub comes away with its soil and a salt deposit does not. |
+| `blocks` | A shrub comes away with its soil and a salt deposit with its sand, while a salt block, which is terrain, stays where it was put. |
 | `cull` | The poppy and dandelion dye recipes are gone from the recipe registry, and a vanilla recipe nothing culls and this mod's own red dye are still in it. |
 
 **Three rules the checks follow**, which are the difference between a suite that

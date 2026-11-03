@@ -1,95 +1,57 @@
-xies-mod
-========
+Xie's Mod
+=========
 
-Xie's content engine for Minecraft. Define blocks, items and recipes in plain text
-files rather than in Java.
+A revival of Xie's Farming Mod from 2011: new crops, fruit trees, foods and a
+cookpot, aiming for a vanilla feel. Every block, item and recipe is defined in plain
+JSON files, so you can change any of it, leave parts out, or add content of your own
+in the same format without writing any Java.
 
-Ported from Minecraft 1.6.2 (2013) to NeoForge.
+[The base content](base-content/README.md) describes what comes with the mod and how
+to play with it: seed splicing, crops, fruit trees, salt, the food recipes, the
+cookpot and cheese.
 
-Layout
-------
+Installing
+----------
 
-| Path       | What it is |
-|------------|------------|
-| `common/`  | The content model and parser. No Minecraft dependency at all, so it compiles and tests in seconds. |
-| `neoforge/`| The mod itself: entry point, registration, pack emission. Compiles `common/`'s sources into the jar. |
-| `base-content/` | Xie's content packs and textures, licensed CC BY 4.0 rather than MIT. Bundled into the jar. |
-| `mod/`     | The original 1.6.2 source tree, kept for reference. Not part of the build. |
-| `acceptance/` | The acceptance run: one command that starts a server, joins a client and asserts the behaviours a datapack cannot show. |
+Needs Minecraft 26.1.2 with NeoForge 26.1.2.94 or later. Put the jar in `mods/` on
+both the client and the server, and give both the same content: blocks and items
+are registered from it, so a client and a server that disagree cannot connect.
 
-The engine knows nothing about this content, so packs can be written without using
-any of it; until November 2026 it was a repository of its own for that reason. The
-build bundles `base-content/` into the jar, so one download is the whole mod. At
-runtime the mod reads packs from `<gamedir>/xiecontent/`, and the first launch that
-finds no `base-content/` there extracts the bundled one. It is never overwritten
-after that: the content is opt-out, so deleting a definition file or renaming a
-directory with a leading underscore leaves that content out for good, and a newer
-jar over an older install says so in the log rather than putting anything back.
-Move the directory away and relaunch to take the new content. Every other directory
-in `xiecontent/` is a pack of its own and loads beside it, so your own content goes
-in a sibling directory, where taking new base content never touches it.
+This is a beta. Growth rates, spawn rates and yields are still being tuned.
 
-Building
---------
+**The first launch unpacks the content** into `.minecraft/xiecontent/base-content/`
+as plain JSON. Change a food value, growth rate or recipe there and restart the
+game. To leave something out, delete its file or put an underscore at the start of
+the file or folder name.
 
-Needs **JDK 25** (Minecraft 26.1+ ships Java 25 to players, so mods target it).
+**Updating never overwrites that folder**, so your edits are safe, and a newer jar
+over older content says so in the log. To take the new content, move
+`xiecontent/base-content` somewhere else and relaunch. The mod unpacks a fresh copy,
+and you can bring your edits back over.
 
-The Gradle wrapper is committed, so:
+**Worldgen is a data pack of its own**, "Xie's Mod worldgen". It is on by default, in
+new worlds and in existing ones the first time they load with the mod, and only
+chunks generated afterwards are affected. To leave it out, untick it under Data
+Packs when creating a world, or run `/datapack disable "xiesmod_generated_worldgen"`
+and reopen the world. Saplings still grow either way. What is lost is what only
+worldgen supplies: wild fruit trees, wild plants and salt deposits. Every crop and
+tree can still be grown from spliced seeds, and dried kelp still smelts into salt.
 
-```bash
-./gradlew :common:test
-```
+Making your own content
+-----------------------
 
-```bash
-./gradlew :neoforge:runClient
-```
+Each folder in `xiecontent/` is a content pack. Put yours beside `base-content/`
+rather than inside it, and taking new base content will never touch it. A pack is
+a folder of `.json` definition files, plus a `textures/` folder and optional `.loc`
+files of display names. Files and folders starting with `_` are skipped. The
+`.xie` extension the format used in 2013 is the same JSON, and still loads.
 
-Target platform versions live in `gradle.properties`. NeoForge for Minecraft 26.2
-is still beta, so the build targets the current stable 26.1.2 line; bump
-`minecraft_version`, `minecraft_version_range` and `neo_version` together.
-
-Verifying
----------
-
-Two commands, and between them they cover both halves of what this mod does.
-
-```bash
-./gradlew :common:test
-```
-
-The parser and the content model, in seconds, with no Minecraft anywhere near it.
-
-```bash
-python acceptance/run.py
-```
-
-The **acceptance run**: it starts the dedicated server, joins a real client to it,
-and asserts the behaviours only a running game can show — a stem fruiting, a leaf
-ripening and picked, a sapling growing, a canopy that stays up on a trunk this mod invented,
-bone meal being refused, the sickle, the Ultimate Fist, the bows, a craft remainder,
-a block that comes away with its soil, and the culled recipes. It prints pass or fail per assertion and exits non-zero on any
-failure, so it can be left alone. Add `--list` to see the checks, `--only <name>`
-to run one, `--no-client` for the subset rcon alone can answer.
-
-It needs Python 3 and a Windows desktop whose foreground it can take, because a
-`useOn` is a real right-click at a real window and there is no command for it. It
-arranges what it needs — the four deferred packs, its own flat world, and
-`pauseOnLostFocus` — and puts all of it back afterwards. See
-[TESTING.md](TESTING.md) for what each check is measuring, why it is measured that
-way, and what driving Minecraft from a script turns out to cost.
-
-Format
-------
-
-A content pack is a directory of `.json` definition files, plus optional `.loc` display
-names and a `textures/` tree. Files and directories starting with `_` are skipped.
-The `.xie` extension the format wore for its first decade is the same JSON under
-another name, and still loads; there is no reason to rename a working pack.
-
-Every launch writes `xie-content.schema.json` into `<gamedir>/xiecontent/`, beside
-the packs. Point a definition file at it and any editor that understands JSON
-Schema will complete property names, describe them on hover and flag a typo before
-the game does:
+Every launch writes what the packs produce to `xiecontent/_generated/`, as a
+resource pack and a data pack side by side, so you can open it and see exactly what
+a definition became. It also writes `xie-content.schema.json` beside the packs.
+Point a definition file at it and any editor that understands JSON Schema will
+complete property names, describe them on hover, and flag a typo before the game
+does:
 
 ```json
 {
@@ -108,359 +70,162 @@ the game does:
     }
   },
   "items": {
-    "tomato": { "name": "Tomato", "type": "food", "hunger": 4, "nourishment": 0.3 }
+    "tomato": { "name": "Tomato", "type": "food", "hunger": 4, "nourishment": 0.3 },
+    "tomatoSeeds": { "name": "Tomato Seeds", "type": "seeds", "growsInto": "tomatoBush" }
   },
   "recipes": { "tomatoSeeds": "tomato" }
 }
 ```
 
-The completion follows the `type`. A `block` or `item` lists only what every archetype
-reads, and an `allOf` of `if`/`then` branches keyed on the type adds the rest, each
-property in the one branch whose `if` names exactly the archetypes that consume it — so a
-bush is offered `growthRate` and a stove `cookTime`, and neither is offered the other's.
-The branches were taken from the registrar and the emitters rather than from the old
-description prefixes, which were wrong about more than a dozen properties and silent
-about eight more that the engine reads, and they are guidance rather than a fence:
-`additionalProperties` stays open, because another mod's archetype
-has properties this schema has never heard of, and a property declared outside its
-archetype's branches still validates and is left for the unread-property report to name.
-The one hard requirement is a stem's `grows`, without which the engine refuses to
-register it. The branches match the lower-case spelling, so a `"type": "Crop"`, which the
-engine accepts, gets the common properties and no more. The content's own files
-point `$schema` at `common/src/main/resources/`, which is not bundled beside them, so the build
-rewrites each bundled file's `$schema` to climb out of `base-content/` to the installed schema.
+A file can have five sections: `blocks`, `items`, `recipes`, `aliases` and
+`spawns`. The schema follows each definition's `type`, so it offers a bush
+`growthRate` and a cookpot `cookTime` and neither the other's. It does not forbid
+anything, because another pack's archetype may have properties it has never heard
+of.
 
-A drop's `amount` is not a stack size but a number of independent rolls, each yielding
-one item at `chance` percent, and a `chance` keyed by growth stage is how a plant pays
-more as it ripens: the tomato's seeds above come at 20% a roll from stage 1 and 60%
-from stage 3. That is the 1.6 semantics exactly, emitted as a loot pool per run of
-stages. `min` is new: that many of the `amount` drop without a roll wherever the chance
-is above zero, so the tomato's picks give one for certain and a second half the time.
-A bush's `fruit`, written the same way and read at its ripe stage, is what a right-click
-picks; its `drops` are what breaking it leaves, which is the seed to replant. When the drop is the plant's own seed, keep chance times amount
-under one at the unripe stages, so breaking what you just planted gives back less than
-you put in. `soy.json` is the example: three rolls at 25% through stage 2, 50% at
-stage 3 and 90% when ripe.
+### Archetypes
 
-`.xid` files assigning numeric block and item ids are skipped — Minecraft dropped
-numeric ids in 1.7.
+A definition's `type` picks its archetype. With no `type` it is `basic`.
 
-Port status
------------
+| block | what it is |
+|---|---|
+| `basic` | A plain block. `walkthroughable` makes it something you walk through that breaks when its support goes, and `becomesWhenDestroyed` leaves another block behind. |
+| `plant` | Grows through stages on the blocks in `growsOn`, at `growthRate`, and is broken to harvest. `growthHeight` lets it grow taller than one block. |
+| `bush` | A plant that is picked instead: a right-click on a ripe one gives its `fruit` and sets it back three stages. Breaking it gives its `drops`. |
+| `crop` | A plant that grows faster in a tended field, the way vanilla wheat does. |
+| `sapling` | A plant that grows into the tree named by `growsInto`. |
+| `tree` | Leaves on a vanilla-shaped tree, whose `trunk` is the log. Leaves with `fruit` ripen on the outside of the canopy and are picked by right-click. |
+| `log` | A log, which keeps a tree's leaves alive. |
+| `stem` | A melon-style stem that fruits into the block named by `grows`. |
+| `ripening` | A solid block that ages where it stands and becomes `growsInto`, with no light or soil needed. |
+| `stove` | The cookpot: a cauldron that cooks `ingredients`, `proteins` and `flavourings` into meals by right-click. |
 
-- [x] Gradle build targeting NeoForge
-- [x] Content model and parser, with tests over the real content
-- [x] Registrar: definitions to `DeferredRegister` (every block and item archetype the content uses)
-- [x] Emitter: generated resource pack (blockstates, models, textures, lang)
-- [x] Emitter: generated datapack (loot tables from `drops`, recipes, alias tags)
-- [x] Recipe-book unlock advancements for every recipe, variants grouped by product
-- [x] Multi-variant definitions (`names`) as one registered object per subtype
-- [x] Perennial harvest on `bush`, following vanilla's sweet berry bush
-- [x] Annual `crop` with vanilla's farmland-adjacency growth bonus, and `growthHeight`
-- [x] `basic` blocks — `becomesWhenDestroyed`, `walkthroughable`, `textureBase`
-- [x] Worldgen from `spawns` — configured features, placed features, biome modifiers
-- [x] Fruit trees — `sapling` and `tree`, with `fruit` ripening on the leaves and picked off them
-- [x] Food as data components — `container`, `action`, `potionEffect` and a food's `drops`
-- [x] `cooked` as furnace, smoker and campfire recipes; `fuel` as furnace burn times
-- [x] `cull` recipes, as a pass over the recipe JSON as it loads
-- [x] `tool` and `sword` as data components — `damage`, `uses`, `enchantability`,
-      `canBlock`, and `blocksEffective` as a generated block tag
-- [x] Vanilla overrides — `override` as components patched onto a vanilla item and a
-      loot table written at a vanilla block's own id
-- [x] `bow` — `ammo`, `ammoless`, `ammoConsumed`, `semiautomatic`, `power`, `punch`
-      and `flame`, as the port's first item class
-- [x] `transforms` — the one `tool` property that is behaviour rather than
-      description, replacing the block you right-click
-- [x] `log` and `stem` — a rotated pillar and a fruiting stem, both of which turned
-      out to be vanilla's own blocks
-- [x] `stick` — right-click a listed block and harvest it where it stands
-- [x] `seed`, which is `seeds` spelt in the singular and always was
-- [x] `spikey` and `fertilisable` — a block that hurts what stands in it, and a plant
-      that refuses bone meal
-- [x] Every property the content declares and nothing reads, counted and named in the log
-- [x] An acceptance run — one command that drives a real client into the dedicated
-      server and asserts the behaviours only a running game can show
-- [x] `stove` — the cookpot, a cauldron over a campfire that turns water, nearly
-      any plain food, meat and a seasoning into soup or stew, fed by right-click. The
-      port's first block entity, rebuilt from the mod posting rather than from a file
-- [x] `ripening` — a solid block that ages where it stands and becomes another, with
-      no light, soil or bone meal involved. Fresh cheese poured from a bucket turns
-      into a cheese block about a day later. New in the port rather than ported
+| item | what it is |
+|---|---|
+| `basic` | A plain item. |
+| `food` | Eaten or, with `action: "drink"`, drunk: `hunger`, `nourishment`, `potionEffect`, and `drops` for what is left in your hand. |
+| `seeds` | Plants the block named by `growsInto`. |
+| `tool` | `material` is the tier, `blocksEffective` and `canHarvest` what it mines, and `transforms` turns one block into another on right-click. |
+| `sword` | `damage`, `uses`, `enchantability`, and `canBlock` to raise it like a shield. |
+| `bow` | `ammo` to fire something other than arrows, `ammoless`, `ammoConsumed` for shots that can't be picked up, `semiautomatic`, and extra `power`, `punch` and `flame`. |
+| `stick` | Right-click a block listed in `blocks` to harvest it where it stands. |
 
-Eighteen distinct archetypes appear across `base-content/`, deferred packs included,
-and seventeen of them register. The one that does not is `furnace`, which is content
-this port dropped rather than an archetype it cannot build — see the table below. See
-[PORTING.md](PORTING.md) for the full breakdown and the version-specific gotchas
-worth not rediscovering.
+Any item may also declare `cooked` (what it becomes in a furnace, smoker and
+campfire), `fuel` (a burn time), and `container` (what is left behind when it is
+eaten or used in a recipe, like the bowl a salad comes in).
 
-Content superseded by vanilla
------------------------------
+### Names
 
-Minecraft has gained equivalents to several things this mod added in 2013, so they
-have been dropped rather than shipped as worse duplicates:
+A definition is referred to by its key, `tomatoBush`. A definition with `names`
+becomes one block or item per name, referred to as `name:count:subtype`, so
+`fruitJuice:1:2` is one of the third fruit juice. Vanilla things go by their
+modern id in camel case (`driedKelpBlock`) or by their 1.6 name (`beefCooked`).
+Ids are made from display names, so `"Apple Seeds"` is `xiesmod:apple_seeds`.
 
-| removed | vanilla equivalent |
-|---------|--------------------|
-| `campfire`, `ashpile` | Campfire (1.14) |
-| `fertiliser`, `potash` | Composter and bone meal (1.14) |
-| `pumpkinPiece`, `pumpkinCooked` | Pumpkin pie |
-| `glowberryBush` | Glow berries on cave vines (1.17) |
-| `melon` override | Vanilla melon mechanics |
-| `foragingStick` | Superseded by chest loot and villager trades |
-| `cocoaLeaves`, `cocoaSapling` | Cocoa pods on jungle logs, which 1.6 already had |
+### Drops
 
-The sibling Food Stacking and Hunger mods are obsolete outright — food stacks to 64
-in vanilla, and hunger has been a core mechanic since Beta 1.8.
+A drop's `amount` is not a stack size but a number of independent rolls, each
+giving one item at `chance` percent. A `chance` keyed by growth stage is how a
+plant gives more as it ripens: the tomato seeds above come at 20% a roll from stage
+1 and 60% from stage 3, and `"3+"` means stage 3 and every stage after it. `min`
+makes that many of the rolls certain wherever the chance is above zero, so each pick
+above gives one tomato for certain and a second half the time.
 
-Vanilla has still never added fruit trees, salt, tofu, or sandwiches. Salt does now
-have a renewable source for worlds whose deserts were generated before the mod was
-installed: a dried kelp block smelts into a salt block, which crafts into four salt
-and back, as a storage block does. Nine kelp to four salt, so a deposit on the beach
-is still the cheaper find. New in the port rather than ported.
+A bush's `fruit` is what a right-click picks, and its `drops` are what breaking it
+leaves, which is the place for its seeds. When a plant drops its own seed, keep
+chance times amount below one at the early stages, so breaking what you just
+planted gives back less than you put in.
 
-The generated pack is written to `<gamedir>/xiecontent/_generated/` on every launch
-rather than served from memory, so you can open it and see exactly what a
-definition file produced. One directory is registered twice, as a resource pack and as a
-datapack, so `assets/` and `data/` sit side by side in it.
+### Recipes
 
-The three growing archetypes share one class, as they did in 2013. `plant` is both
-an archetype in its own right and the base `bush` and `crop` extend, and it holds
-everything that does not depend on which of the three you are: the growth stage
-property, the per-stage collision boxes, where the block may be planted, how tall it
-stacks, and bone meal. A bush is a plant that regrows when you pick it instead of
-being destroyed; a crop is a plant that grows faster on well-tended farmland. That
-is the whole difference, and it is one overridden method each.
+The key is the product, with an optional `:count`:
 
-A `ripening` block ages too, and is deliberately not one of them. A plant is
-vanilla's `VegetationBlock` — walk-through, rooted in soil, needing light — and every
-rule it adds is a plant's. Fresh cheese is a solid block on a cellar floor, so the
-two share only the age property, through a small helper, and `growthRate` means the
-same thing in both.
+- **Shapeless:** a string of ingredients, `"cornKernels:2": "cornCob"`.
+- **Shaped:** `{"pattern": "XXX,YYY, Z ", "content": "sugar,cocoabeans,milk"}`.
+  Rows are separated by commas, and each distinct character takes the next
+  ingredient in `content`, in order of first appearance. A space is an empty slot.
+- **Smelting:** `{"smelt": "milkBucket"}`. An item's own `cooked` property is the
+  shorter way, and also gives smoker and campfire recipes when the result is food.
+- **Several recipes for one product:** give each its own key and name the product
+  with `"product"`, as in `{"product": "mayo", "content": "lemon,egg,oil"}`.
+- **Removing vanilla recipes:** `{"cull": "redDye"}` removes every recipe that
+  makes red dye, except this mod's own.
 
-Fruit trees are the mod's most distinctive content — vanilla still has none — and
-they cost less code than anything else in it. The 2013 engine carried three tree
-generators, and all three were Minecraft's own oak, spruce and pine copied out of
-vanilla, so a `tree` is emitted as a `minecraft:tree` configured feature and vanilla
-places it, for worldgen and for a growing sapling alike. Leaf decay is vanilla's too.
-What is left is the fruit, and that follows vanilla's berries rather than the 2013
-keystone: a leaf on the outside of the canopy, with no ripe leaf beside it, ripens on
-its own random ticks, shows its fruit, and hands it over on a right-click that leaves the leaf standing, with
-the harvest written as a loot table the way a cave vine's is.
+An **alias** is a group of interchangeable ingredients. `"aliases": {"protein":
+"beefCooked,tofu"}` lets a recipe say `$protein`, and becomes the item tag
+`#xiesmod:protein`. Aliases with the same name in different files are merged.
 
-Worldgen is the clearest case of the port deleting code rather than moving it. In
-2013 a generator ran on every chunk populate and hand-placed blocks; now a `spawns`
-entry is three JSON files — what to place, where to place it, and which biomes to
-add it to — and vanilla's own generator runs them. The engine has no worldgen code
-at runtime at all. It is also what finally makes the wild shrubs and the salt
-deposits reachable: they have no seed and no item, so generating in the world is the
-only way they were ever meant to be found.
+### Worldgen
 
-The one thing that did not survive the translation is biome names. 1.6 had no biome
-ids, so a pack said `"biomes": "swamp"` and the engine matched that against the
-biome's display name, which caught other mods' swamps by accident. Biome tags are
-the modern form of that accident, so a biome word maps to a `c:` tag wherever one
-exists — a mod that tags its own swamp gets wild tomatoes without either side
-knowing about the other. Two words have no modern counterpart of their own: `marsh`
-and `shrubland` were biomes from the mod packs of the day, and nothing tags anything
-as either, so each takes its nearest neighbour — a marsh joins the swamps and a
-shrubland the savannas. A tag can also reach further than the word did:
-`#c:is_forest` now includes the snowy grove and the pale garden, so `forest` takes the
-tag minus those two.
+A `spawns` entry places a block in the world: `block`, `biomes`, `rarity` (one
+attempt in so many chunks), `clusterSize`, `clump` for a solid patch rather than a
+scatter, and `spawnsOn`, `spawnsIn`, `spawnsUnder` and `spawnsNear` for what it
+needs around it. Biomes are words such as `forest`, `savanna` or `swamp`, which map
+to the common biome tags, so other mods' biomes are included. `!birchforest` leaves
+a word's biomes out. A `tree` block spawns as its whole tree.
 
-Everything the `spawns` sections add to the world goes in a datapack of its own,
-"Xie's Mod worldgen". It is on by default, in new worlds and in existing ones the
-first time they load with the mod, and only chunks generated afterwards are
-affected. To leave it out, untick it under Data Packs when creating a world, or run
-`/datapack disable "xiesmod_generated_worldgen"` and reopen the world. Saplings
-still grow either way. What is lost is the content that only worldgen supplies:
-wild corn and wild tomato plants, and salt, which comes only from salt deposits.
-Every seed and sapling can still be made by splicing.
+### Changing vanilla
 
-Aliases are the clearest win from the port. `$salady` used to be expanded into the
-cartesian product of concrete recipes at load time, turning one sammich recipe with
-three alias slots into hundreds of registered ones. It is now a single item tag and
-the recipe stays a single recipe.
+`override` names a vanilla item or block that a definition speaks for. Nothing new
+is registered: an item's properties are patched onto the vanilla item, and a
+block's `drops` replace its loot table.
 
-The recipe book needed the same care, because it shows a recipe only once the player
-has unlocked it, and vanilla unlocks each of its own with an advancement that fires
-the first time an ingredient lands in the inventory. Every recipe the engine writes
-gets one in vanilla's shape, with an ingredient criterion for each distinct thing the
-recipe asks for, an alias tested by its tag — so picking up corn kernels puts the
-tortilla in the book and any protein puts the tacos there. The variants of one
-product share a recipe `group`, which is how vanilla folds its red dye recipes into a
-single entry: the dozen alias combinations for a snack taco are one entry in the book
-with the variants behind it, and the full taco is another. Without JEI or EMI that
-book is the only place a player finds out what the content can make.
+### Textures
 
-Multi-variant definitions are the other place the two versions of Minecraft
-disagree structurally. A 1.6 id carried up to sixteen subtypes told apart by a
-damage value, declared in one go with a `names` list and referred to as
-`fruitSeed:1:2`. Damage-value subtypes are gone, so each entry in `names` becomes
-its own registered object. Its id comes from its own display name rather than from
-`fruitSeed_2`, because the content already agrees with itself on those names: the
-aliases packs declare for their subtypes reduce to the same id, so `appleSeeds` and
-`"Apple Seeds"` both give `apple_seeds` and a reference written either way lands on
-the same item. Where a subtype has no usable display name the id falls back to
-`<definition>_<meta>`. Nothing is renamed to match an alias that disagrees —
-`fruitLeaves` is aliased as `appleTree` but its subtypes are named "Apple Leaves",
-so the block is `apple_leaves` and `appleTree` stays an item tag.
+Sprites go in `textures/blocks/` and `textures/items/`, one PNG each, named after
+the definition. A block with growth stages has one per stage (`tomatoBush_0.png`,
+`tomatoBush_1.png`, …), and a definition with `names` one per subtype
+(`fruitJuice_2.png`). A block with both uses `<definition>_<subtype>_<stage>.png`.
+An animated sprite takes a `.png.mcmeta` beside it, as in vanilla.
 
-`cull` is the one property that removes rather than adds, and the one that leaves
-nothing in the generated pack. It names the output of a recipe and deletes every
-recipe producing it, which is a question no datapack can ask — a pack replaces a
-recipe by id, and a cull knows no ids. So it stays what it always was, a pass over
-the recipes: NeoForge hands the raw recipe JSON to every mod once it has been read
-off every pack and before any of it is deserialised, and anything producing a culled
-item is dropped there. Recipes this mod generated are spared, because the content
-that culls a thing is the content that replaces it — the flower bushes cull red dye
-so that red dye has to come from rose seeds, and a poppy in a crafting grid now
-yields the seeds instead.
+### What the log tells you
 
-`override` is the other property that touches vanilla, and it is the one whose 2013
-meaning did not survive at all. It was an id-collision escape hatch: a definition
-whose numeric id was already taken could claim it anyway and evict whatever was
-sitting there. Numeric ids are gone, but the name the property carries was never the
-accidental part — a definition that overrides `crops` goes on to describe a wheat crop,
-and one that overrides `pickaxeWood` goes on to describe a deliberately worse wooden
-pickaxe. So it now means that the definition speaks for that vanilla object: nothing
-new is registered, and what the definition declares is applied to the object that
-already exists. An item's properties are data components patched onto it; a block's
-drops are a loot table written at the block's own id, which is the one kind of
-override a datapack can state outright. What needs the block or item to be a
-*different* object — the wheat override's collision boxes, and nothing else in the
-live content — is named as a loss rather than implied away.
+The log says how many blocks, items and recipes each pack produced, and names
+anything that was not emitted: a recipe or drop naming something that doesn't
+exist, a declaration that couldn't be read, and properties that nothing reads,
+which is usually a typo.
 
-The `bow` is the one archetype that ends the port with more code than it started
-with. Everything else described an item and modern Minecraft has words for the
-description; a bow takes decisions while it is being drawn, and no component takes a
-decision. Even so, two thirds of the 2013
-implementation turned out to be in the game already. The custom arrow entity existed
-only to remember what it was fired from and give that back when picked up, which is
-a field on every vanilla arrow now — so a crossbow firing redstone drops redstone
-without a line of code. And `power`, `punch` and `flame` were written in 2013 as
-numbers *added to* an enchantment level, so they are applied as extra enchantment
-levels — on a copy of the bow that lives inside the arrow, which is why the bow in
-your hand has no glint, no tooltip line and nothing an anvil could move elsewhere.
-What is genuinely new is three properties' worth of firing logic: a bow that needs
-no ammunition, a bow whose ammunition is not arrows and cannot be recovered, and a
-`semiautomatic` one that — despite the name, and as its own readme says — is fully
-automatic, firing on every click without ever charging.
+Building from source
+--------------------
 
-The most repeated finding of the whole port is that a 2013 class which looks like an
-implementation is usually Minecraft's own class with a name on it. It has now
-happened five times: the three tree generators, leaf decay, the custom arrow entity,
-the log block and the stem block. The tell is always the same — a three-hundred-line
-file whose class body proper is under ten lines, with the rest marked
-`// copy-pasta from XieBlock`. A `log` is a rotated pillar that joins
-`#minecraft:logs`, which is simultaneously what made it mineable with an axe, what
-made it sustain leaves, and what keeps a fruit tree's canopy from decaying off a trunk
-this mod invented. A `stem` needed no class at all: vanilla's own melon stem takes
-what it fruits into as a registry key looked up at the moment it fruits, so a stem
-that grows a block this mod registered is something vanilla could already say. What
-the stem did cost was a second registered block for the bent half — in 1.6 that was
-worked out at render time, and Minecraft has spent a blockstate on it since 1.8.
+Needs JDK 25. The Gradle wrapper is committed:
 
-`stick` is the third piece of behaviour, after the bow and `transforms`, and adds
-least because it follows from both: right-click a listed block and it plays a crunch,
-drops what the definition says that block gives up — not what the block itself drops —
-and two times in three clears it away. The crimson sickle reaps nether wart with it.
-In 2013 it never registered at all, because its nether wart drop was misspelt
-`nethwerwart` and one unresolvable name failed the whole item; the content spells it
-right now.
+```bash
+./gradlew :common:test
+```
 
-`transforms` is the only other thing in the port that needed a class, and for the
-same reason at a smaller scale. A `tool` is otherwise five data components and no
-code; this one property replaces the block you right-click — stone becomes a gold
-block, dirt becomes air — and nothing describes that, so the one definition declaring
-it gets an item class and the other eight go on dissolving completely. Vanilla writes
-the method twice already: tilling a block into farmland with a hoe and flattening one
-into a path with a shovel are the same shape, down to the guard that says a click on
-the underside of a block does nothing. Everything else it does is 2013's, including
-the odd part, which is that the sound you hear is the block that appeared rather than
-the one that was destroyed.
+```bash
+./gradlew :neoforge:runClient
+```
 
-Anything a recipe or drop names is checked against the registry before it is
-written, so the parts of the content whose archetypes are not ported yet are left
-out rather than emitted as JSON that fails to load. The counts in the log say how
-much that is.
+| Path | What it is |
+|---|---|
+| `common/` | The content model and parser, with no Minecraft dependency, so it builds and tests in seconds. |
+| `neoforge/` | The mod: registration, and the generated packs. |
+| `base-content/` | The content that ships with the mod, bundled into the jar. |
+| `acceptance/` | The acceptance run, which drives a real client and server. See [TESTING.md](TESTING.md). |
+| `mod/` | The 2013 source, kept for reference and not built. |
 
-Those counts are checked every time the server starts, which left an odd gap: every
-number was verified constantly and every *behaviour* exactly once, by hand, and then
-never again. A datapack can be validated by loading it; a stem fruiting, a tree
-dropping its fruit, bone meal being refused and a sickle spending durability cannot.
-So `acceptance/run.py` starts the server, joins a real client to it, and asserts them
-— a hundred and one assertions in about three and a half minutes, pass or fail per assertion, non-zero
-exit on failure. It exists because there is no other way to ask: no command right-clicks a
-block, so a `useOn` needs synthetic input at a focused game window, and nothing
-random-ticks or scheduled-ticks at all unless a player is standing there, forceloading
-or no forceloading.
+Platform versions live in `gradle.properties`; bump `minecraft_version`,
+`minecraft_version_range` and `neo_version` together. [TODO.md](TODO.md) lists
+unfinished work, and [AGENTS.md](AGENTS.md) is for coding agents.
 
-It earned itself on the first day, on a tree that was supposed to stop shedding once
-eight of its apples were lying under it and turned out to shed a ninth about two times
-in five. That is the kind of failure verifying a behaviour once cannot find: watching
-a tree shed proves that it sheds, and watching it stop proves nothing until you have
-watched it fail to stop. [TESTING.md](TESTING.md) has the fourteen checks, what each one
-is really measuring, and the rules they are written to.
+History
+-------
 
-Every archetype the content uses is now ported, which changes what is left to find:
-not a missing kind of block, but a *property* the engine reads nothing from. Those had
-been turning up one at a time, by reading a definition file next to the registrar and
-noticing. They are counted now — the parser has always tracked which properties
-anybody read, and at the end of pack emission the ones nobody did are listed with the
-definitions that declared them. Running it for the first time found three consumers
-that were reading a property without recording it, and then four genuine cases, of
-which none is a loss this port introduced: three are things 1.6 read nothing from
-either, and the fourth is a decision documented in PORTING.md. The steel pack, which
-had never been run before, turned out to declare custom tool and armour materials that
-the 2013 engine parsed into a method whose body is `// TODO FTFESAD` — so the numbers
-were never used by anything, and there is nothing to port but the intention.
+Xie's Mod started in 2011 as a port of Zenith's discontinued sammich mod. It grew
+into separate Farming, Cooking, Hunger and Food Stacking mods, then became one
+engine that read all its content from text files, so players could write their own
+packs, and some did. The last release was for Minecraft 1.6.4 in November 2013.
 
-That report had a blind spot of its own, and it has been closed. A property the parser
-turns into a structure of its own — what a block drops, what a tree bears, the blocks a
-sickle reaps, a collision box, a texture assignment — was marked read the moment the
-parser read it, which said nothing about whether any archetype then wanted the value.
-That is how a fruit tree's collision box went missing in silence for as long as it did:
-it parsed perfectly and nothing asked for it. The mark moves to the point of use now, so
-the question is whether a registrar or an emitter consulted the definition, and the log
-distinguishes a property nothing reads from one that parses and is then consulted by
-nobody — different gaps, in different files. Auditing every archetype against the 2013
-source for each of those structures first, then wiring it up, found four places where
-the port consults less than 1.6 did and no content in the repo that reaches any of them.
-The mechanism was proved against a throwaway pack written to trip each one.
-
-The same pass closed the one gap where content could go missing from every count at
-once. A declaration the reader refuses is in none of the lists it returns, so it is in
-none of the totals the registrar and the emitters report either; three of the steel
-pack's six recipes misspell `content` as `contents`, which failed the job outright in
-1.6 as well, and the pack reported one recipe not emitted while four were gone. The
-reader counts what it rejects now and the load summary says so.
-
-Textures need no migration: the definition files still address spritesheet indices, but
-`textures/` is already one PNG per sprite named `<definition>[_<meta>].png`. A pack
-that never migrated falls back to the indices, and the emitter cuts the sprite out
-of the sheet — sixteen across, tile size from the width, which is what an `Icon`
-index meant. Blocks fall back the same way as items, so a pack that names one sheet
-and a `sides` and an `ends` per block gets its faces cut out of it. A file always
-wins, so a pack shipping both is unaffected.
-
-An index with no sheet named at all is not a broken declaration either. 1.6 answered a
-definition that named no `texFile` with `/terrain.png`, so the number addresses
-vanilla's own sheet: `LegacyTerrain` translates it into a modern texture id and the
-model points straight at Minecraft's sprite rather than a copy of it. That is how
-`blazeTree` gets leaves of fire — index 31 was `Block.fire` — and keeps them animated.
-The table holds what the content addresses, and an index it has no answer for is named
-in the log rather than guessed at.
-
-A block that has an item form has no item sprite to draw, and vanilla answers that two
-ways: a sapling in an inventory slot is its block texture on a flat model, and a melon
-is its block model shown as a cube. The emitter picks between them by the block's shape
-now. Doing it one way for both worked for a block with a single texture and named a
-sprite that does not exist for one with a face per side — found by running two such
-blocks side by side for the first time.
+Thirteen years later vanilla still doesn't have sandwiches, so it has been ported to
+modern Minecraft and NeoForge, with the content reworked to fit how the game plays
+now: the Cooking Mod's stove is a cauldron-like cookpot, and fruit is picked from the
+leaves instead of waiting for it to drop.
 
 Licence
 -------
 
-The engine is [MIT](LICENSE). The content packs live in the separate content
-repository and are Creative Commons Attribution 4.0 (CC BY 4.0), because
-definition files and textures are closer to art than to software.
+The code is [MIT](LICENSE). The content in `base-content/`, textures included, is
+[CC BY 4.0](base-content/LICENSE). Textures by Xie, and some of the best of them by
+Thistle.

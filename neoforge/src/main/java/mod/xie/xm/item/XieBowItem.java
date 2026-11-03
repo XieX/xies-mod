@@ -386,8 +386,8 @@ public class XieBowItem extends BowItem {
      * in flight and stop setting anything alight, which is neither what the code did
      * nor what the readme promises.
      *
-     * <p><strong>Nothing here is on the player's bow.</strong> PORTING.md declines the
-     * enchantment route for {@code flame} on {@code blazeSword}, because an
+     * <p><strong>Nothing here is on the player's bow.</strong> {@code XieToolProperties.forSword}
+     * declines the enchantment route for {@code flame} on {@code blazeSword}, because an
      * enchantment puts a glint and a tooltip line on the item and lets an anvil move
      * it somewhere else. None of that applies to a stack that exists for the length of
      * a constructor call: the copy goes into {@code AbstractArrow.firedFromWeapon},

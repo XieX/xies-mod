@@ -101,7 +101,7 @@ def run(game, expect):
     _stew(game, expect, pots[2])
 
     expect.skip("the fire and steam particles, and the bucket, splash and ladle sounds",
-                "no assertion can see or hear them; PORTING.md records the reading")
+                "no assertion can see or hear them")
 
 
 # ------------------------------------------------------------------ pot one

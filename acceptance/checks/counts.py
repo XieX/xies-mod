@@ -21,7 +21,7 @@ BASELINES = [
         "packs",
         r"Xie content: (\d+) packs, (\d+) blocks, (\d+) items, (\d+) recipes",
         ("packs", "block definitions", "item definitions", "recipes"),
-        (5, 27, 75, 118),
+        (5, 27, 75, 119),
     ),
     (
         "declarations rejected",
@@ -44,7 +44,7 @@ BASELINES = [
         ("block models", "item models", "textures", "loot tables", "recipes",
          "recipe advancements", "alias tags", "block tags", "worldgen features", "trees",
          "burn times", "vanilla overrides"),
-        (114, 93, 183, 38, 127, 127, 15, 2, 9, 5, 7, 0),
+        (114, 93, 183, 38, 128, 128, 15, 2, 9, 5, 7, 0),
     ),
     (
         # The flame tree, and nothing else: `blazeTree` addresses vanilla's terrain.png

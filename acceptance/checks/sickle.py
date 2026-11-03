@@ -83,4 +83,4 @@ def run(game, expect):
                 game.holding("%s[minecraft:damage=%d]" % (SICKLE, cleared)))
 
     expect.skip("the crunch is the clicked block's step sound",
-                "no assertion can hear it; PORTING.md records the reading")
+                "no assertion can hear it; XieStickItem records the reading")

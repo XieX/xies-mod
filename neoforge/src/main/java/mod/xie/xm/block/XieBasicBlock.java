@@ -36,8 +36,8 @@ import java.util.Set;
  *
  * <ul>
  *   <li>{@code becomesWhenDestroyed} — the block left behind when a player breaks
- *       it. {@code saltDeposit} leaves sand, so scraping salt off a beach leaves
- *       the beach rather than a hole.</li>
+ *       it, so that scraping something off the ground leaves the ground rather
+ *       than a hole.</li>
  *   <li>{@code walkthroughable} — no collision, applied as {@code noCollision()}
  *       when the properties are built; see {@code XieBlockProperties.forBasic}.</li>
  *   <li>{@code textureBase} — inherit a vanilla block's texture and override
@@ -113,10 +113,11 @@ public class XieBasicBlock extends Block {
      * in mid-air reads as a bug no matter what the original did.
      *
      * <p>Only {@code walkthroughable} definitions are affected, which is what tells a
-     * shrub from a {@code saltDeposit} — one is a plant you walk through and the other
-     * is terrain. {@code growsOn} narrows it further if a definition says so, exactly
-     * as it does on {@link XiePlantBlock}; with none declared this falls back to the
-     * rule vanilla uses for grass and flowers.
+     * shrub from a {@code saltBlock} — one is something you walk through and the
+     * other is terrain. {@code growsOn} narrows it further if a definition says so,
+     * exactly as it does on {@link XiePlantBlock}, and is how a salt layer stands on
+     * sand; with none declared this falls back to the rule vanilla uses for grass
+     * and flowers.
      */
     @Override
     protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
