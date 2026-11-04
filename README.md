@@ -121,7 +121,9 @@ eaten or used in a recipe, like the bowl a salad comes in).
 A definition is referred to by its key, `tomatoBush`. A definition with `names`
 becomes one block or item per name, referred to as `name:count:subtype`, so
 `fruitJuice:1:2` is one of the third fruit juice. Vanilla things go by their
-modern id in camel case (`driedKelpBlock`) or by their 1.6 name (`beefCooked`).
+modern id in camel case (`driedKelpBlock`) or by their 1.6 name (`beefCooked`),
+and a 1.6 subtype still picks the modern item: `dyePowder:1:3` is cocoa beans and
+`potion:1:0` is a water bottle, never any other potion.
 Ids are made from display names, so `"Apple Seeds"` is `xiesmod:apple_seeds`.
 
 ### Drops

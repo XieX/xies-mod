@@ -1,6 +1,7 @@
 package mod.xie.xm.content.model;
 
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * Converts Xie definition names into namespaced-id paths.
@@ -201,6 +202,25 @@ public final class ResourceNames {
                 yield tool != null ? tool : toPath(name);
             }
         };
+    }
+
+    /**
+     * The potion a legacy {@code potion} reference names, as a modern potion id.
+     *
+     * <p>1.6's potion was one item whose damage value encoded the brew, and damage 0
+     * was the water bottle. The modern item is still {@code minecraft:potion}, with
+     * the brew in its {@code potion_contents} component, so the id alone matches every
+     * potion. A bare reference is damage 0, as it is for {@code dyePowder}. Only the
+     * water bottle is mapped: the other damage values were a bit field no content uses.
+     *
+     * @return the potion id, or empty when this is not a mapped potion reference
+     */
+    public static Optional<String> legacyPotion(ItemRef ref) {
+        String name = ref.isVanilla() ? ref.vanillaName() : ref.name();
+        if (!name.equalsIgnoreCase("potion") || (ref.hasMeta() && ref.meta() != 0)) {
+            return Optional.empty();
+        }
+        return Optional.of("minecraft:water");
     }
 
     /** The five tool kinds 1.6 had, longest first so {@code axe} cannot eat a pickaxe. */

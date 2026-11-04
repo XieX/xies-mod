@@ -1,7 +1,9 @@
 package mod.xie.xm.pack;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.mojang.logging.LogUtils;
 
 import mod.xie.xm.XiesMod;
@@ -907,7 +909,7 @@ public final class XieDataEmitter {
                     recipe.origin(), bound.getValue());
                 return false;
             }
-            key.addProperty(String.valueOf(bound.getKey()), ingredient.get());
+            key.add(String.valueOf(bound.getKey()), ingredientJson(bound.getValue(), ingredient.get()));
             ingredients.add(ingredient.get());
         }
 
@@ -950,6 +952,7 @@ public final class XieDataEmitter {
         // is what the 1.6 shapeless matcher did too. Content that wants two of
         // something writes it twice.
         List<String> ingredients = new ArrayList<>();
+        JsonArray grid = new JsonArray();
         for (ItemRef ref : recipe.ingredients()) {
             Optional<String> ingredient = ingredient(ref);
             if (ingredient.isEmpty()) {
@@ -958,10 +961,9 @@ public final class XieDataEmitter {
                 return false;
             }
             ingredients.add(ingredient.get());
+            grid.add(ingredientJson(ref, ingredient.get()));
         }
 
-        JsonArray grid = new JsonArray();
-        ingredients.forEach(grid::add);
         JsonObject root = new JsonObject();
         root.addProperty("type", "minecraft:crafting_shapeless");
         root.add("ingredients", grid);
@@ -992,7 +994,7 @@ public final class XieDataEmitter {
             JsonObject root = new JsonObject();
             root.addProperty("type", "minecraft:smelting");
             root.addProperty("category", cookingCategory(result.get().get("id").getAsString()));
-            root.addProperty("ingredient", ingredient.get());
+            root.add("ingredient", ingredientJson(inputs.get(i), ingredient.get()));
             root.addProperty("experience", SMELT_EXPERIENCE);
             root.addProperty("cookingtime", SMELT_TIME);
             // Deep-copy the result: several files may be written from one definition.
@@ -1336,6 +1338,33 @@ public final class XieDataEmitter {
             // nothing to map them onto until those groups are ported.
             case BUILTIN_GROUP -> Optional.empty();
         };
+    }
+
+    /**
+     * An ingredient as recipe JSON: its id, or a NeoForge components ingredient when
+     * the id alone matches more than the reference means.
+     *
+     * <p>A legacy water bottle resolves to {@code minecraft:potion}, which as a bare id
+     * accepts every potion, so it is written with water in its {@code potion_contents}.
+     * The unlock advancement still tests the bare id: holding any potion shows the
+     * recipe in the book, and only a water bottle crafts it.
+     */
+    private static JsonElement ingredientJson(ItemRef ref, String id) {
+        Optional<String> potion = id.equals("minecraft:potion")
+            ? ResourceNames.legacyPotion(ref)
+            : Optional.empty();
+        if (potion.isEmpty()) {
+            return new JsonPrimitive(id);
+        }
+        JsonObject contents = new JsonObject();
+        contents.addProperty("potion", potion.get());
+        JsonObject components = new JsonObject();
+        components.add("minecraft:potion_contents", contents);
+        JsonObject ingredient = new JsonObject();
+        ingredient.addProperty("neoforge:ingredient_type", "neoforge:components");
+        ingredient.addProperty("items", id);
+        ingredient.add("components", components);
+        return ingredient;
     }
 
     /**

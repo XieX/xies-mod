@@ -1,5 +1,7 @@
 package mod.xie.xm.content.model;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -121,6 +123,18 @@ class ResourceNamesTest {
         assertEquals("red_dye", ResourceNames.toVanillaPath(ItemRef.parse("dyePowder:1:1")));
         assertEquals("bone_meal", ResourceNames.toVanillaPath(ItemRef.parse("dyePowder:1:15")));
         assertEquals("ink_sac", ResourceNames.toVanillaPath(ItemRef.parse("dyePowder")));
+    }
+
+    /**
+     * {@code potion:1:0} is a water bottle, and the modern potion item needs its
+     * contents named to mean only that. Other damage values stay unmapped.
+     */
+    @Test
+    void resolvesWaterBottleByMetadata() {
+        assertEquals(Optional.of("minecraft:water"), ResourceNames.legacyPotion(ItemRef.parse("potion:1:0")));
+        assertEquals(Optional.of("minecraft:water"), ResourceNames.legacyPotion(ItemRef.parse("potion")));
+        assertEquals(Optional.empty(), ResourceNames.legacyPotion(ItemRef.parse("potion:1:16")));
+        assertEquals(Optional.empty(), ResourceNames.legacyPotion(ItemRef.parse("glassBottle")));
     }
 
     /**
