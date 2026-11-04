@@ -17,12 +17,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 
 /**
@@ -60,8 +64,11 @@ public final class XieParser {
      * @param diagnostics every problem found while reading it
      * @param rejected    how many declarations were reported and thrown away, and so
      *                    appear in no other count. See {@link XieFileReader.Result}.
+     * @param fingerprint eight hex digits that change when any definition file does.
+     *                    See {@link #fingerprint}.
      */
-    public record ParseResult(ContentPack pack, Diagnostics diagnostics, int rejected) { }
+    public record ParseResult(ContentPack pack, Diagnostics diagnostics, int rejected,
+                              String fingerprint) { }
 
     private XieParser() { }
 
@@ -116,7 +123,7 @@ public final class XieParser {
 
         if (!Files.isDirectory(root)) {
             diagnostics.error(packName, "not a directory: " + root);
-            return new ParseResult(ContentPack.empty(packName), diagnostics, 0);
+            return new ParseResult(ContentPack.empty(packName), diagnostics, 0, fingerprint(Map.of()));
         }
 
         Map<String, BlockDef> blocks = new LinkedHashMap<>();
@@ -126,6 +133,7 @@ public final class XieParser {
         Map<String, AliasDef> aliases = new LinkedHashMap<>();
         Map<String, String> displayNames = new LinkedHashMap<>();
         Map<String, String> texturePaths = new LinkedHashMap<>();
+        Map<String, String> definitionTexts = new LinkedHashMap<>();
         int rejected = 0;
 
         XieFileReader xieReader = new XieFileReader(diagnostics);
@@ -137,6 +145,7 @@ public final class XieParser {
             String text = readText(file, relative, diagnostics);
 
             if (isDefinitionFile(lower)) {
+                definitionTexts.put(relative, text);
                 String basename = stripExtension(file.getFileName().toString());
                 XieFileReader.Result result = xieReader.read(relative, basename, new StringReader(text));
                 rejected += result.rejected();
@@ -149,7 +158,40 @@ public final class XieParser {
 
         ContentPack pack = new ContentPack(packName, blocks, items, recipes, spawns,
             aliases, displayNames, texturePaths);
-        return new ParseResult(pack, diagnostics, rejected);
+        return new ParseResult(pack, diagnostics, rejected, fingerprint(definitionTexts));
+    }
+
+    /**
+     * A short hash of a pack's definition files, for telling whether a client and a
+     * server have the same content.
+     *
+     * <p>Only definition files count. Blocks and items are registered from them, and
+     * the properties a client predicts with, such as hardness, come from them too, so
+     * a difference there is a broken connection. {@code .loc} names and textures only
+     * reach the client's resource pack, which vanilla already lets a player swap.
+     *
+     * <p>Line endings are normalised, because a pack copied through git on Windows can
+     * come out CRLF on one side and LF on the other with nothing else changed. Files are
+     * taken in order of their {@code /}-separated relative path rather than the order
+     * they were read in, which sorts by the platform's separator and so differs
+     * between a Windows client and a Linux server.
+     *
+     * @param texts relative path to file text
+     */
+    static String fingerprint(Map<String, String> texts) {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("every JVM provides SHA-256", e);
+        }
+        for (Map.Entry<String, String> entry : new TreeMap<>(texts).entrySet()) {
+            digest.update(entry.getKey().getBytes(StandardCharsets.UTF_8));
+            digest.update((byte) 0);
+            digest.update(entry.getValue().replace("\r\n", "\n").getBytes(StandardCharsets.UTF_8));
+            digest.update((byte) 0);
+        }
+        return HexFormat.of().formatHex(digest.digest(), 0, 4);
     }
 
     private static void mergeFile(

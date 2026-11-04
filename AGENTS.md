@@ -115,5 +115,8 @@ Minecraft 26.1 and NeoForge
 - **There is no "within n blocks" block predicate.** It is one offset test per
   position, `(2n+1)³` of them, so the emitter caps the radius.
 - **Biome modifiers are read when a world opens.** `/reload` does not apply them.
+- **Channel versions are negotiated before registries sync**, and a
+  `RegisterConfigurationTasksEvent` task runs after both. A check that must beat the
+  registry error goes in a channel version, which is how `XieContentCheck` works.
 - **A skeleton does not fire through the bow item**, so summoning one holding a Xie
   bow tests almost nothing. Only a player fires a bow.

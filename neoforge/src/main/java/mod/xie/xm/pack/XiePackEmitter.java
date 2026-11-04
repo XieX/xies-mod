@@ -27,6 +27,7 @@ import javax.imageio.ImageIO;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -65,6 +66,9 @@ public final class XiePackEmitter {
     /** The two archetypes whose blockstate is not the general "one model per age". */
     private static final String LOG = "log";
     private static final String STEM = "stem";
+
+    /** The mod's logo, copied into each generated pack as the pack screens' icon. */
+    private static final String PACK_ICON = "/logo.png";
 
     /**
      * A second pack root inside the first, holding only the files that replace a
@@ -322,6 +326,7 @@ public final class XiePackEmitter {
         JsonObject root = new JsonObject();
         root.add("pack", pack);
         write(outputRoot.resolve("pack.mcmeta"), root);
+        writePackIcon(outputRoot);
     }
 
     /**
@@ -340,6 +345,15 @@ public final class XiePackEmitter {
         JsonObject meta = new JsonObject();
         meta.add("pack", pack);
         write(root.resolve("pack.mcmeta"), meta);
+        writePackIcon(root);
+    }
+
+    private static void writePackIcon(Path root) throws IOException {
+        try (InputStream in = XiePackEmitter.class.getResourceAsStream(PACK_ICON)) {
+            if (in != null) {
+                Files.copy(in, root.resolve("pack.png"), StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
     }
 
     private static JsonArray packFormat(int major, int minor) {

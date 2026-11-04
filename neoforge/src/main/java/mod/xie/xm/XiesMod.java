@@ -6,6 +6,7 @@ import mod.xie.xm.content.model.ContentPack;
 import mod.xie.xm.content.parse.BundledContent;
 import mod.xie.xm.content.parse.Diagnostic;
 import mod.xie.xm.content.parse.XieParser;
+import mod.xie.xm.net.XieContentCheck;
 import mod.xie.xm.pack.XiePackProvider;
 import mod.xie.xm.recipe.XieRecipeCuller;
 import mod.xie.xm.reg.XieRegistrar;
@@ -49,11 +50,15 @@ public class XiesMod {
 
     private static final List<ContentPack> PACKS = new ArrayList<>();
 
+    private static final List<String> FINGERPRINTS = new ArrayList<>();
+
     private static final XieRegistrar REGISTRAR = new XieRegistrar();
 
     public XiesMod(IEventBus modEventBus, ModContainer container) {
         loadContentPacks();
         REGISTRAR.register(modEventBus, PACKS);
+
+        modEventBus.addListener(XieContentCheck::register);
 
         // Fires once for resources and once for data; the same generated directory
         // is registered as both a resource pack and a datapack.
@@ -72,6 +77,14 @@ public class XiesMod {
     /** Every pack that loaded, in load order. Empty until the constructor has run. */
     public static List<ContentPack> packs() {
         return Collections.unmodifiableList(PACKS);
+    }
+
+    /**
+     * Every pack that loaded with its fingerprint, as "name fingerprint" in load order,
+     * comma-separated. "no content" when nothing loaded.
+     */
+    public static String contentVersion() {
+        return FINGERPRINTS.isEmpty() ? "no content" : String.join(", ", FINGERPRINTS);
     }
 
     private static void loadContentPacks() {
@@ -135,9 +148,10 @@ public class XiesMod {
         for (XieParser.ParseResult result : results) {
             ContentPack pack = result.pack();
             PACKS.add(pack);
+            FINGERPRINTS.add(pack.name() + " " + result.fingerprint());
             rejected += result.rejected();
 
-            LOGGER.info("Loaded content pack {}", pack);
+            LOGGER.info("Loaded content pack {} ({})", pack, result.fingerprint());
 
             for (Diagnostic diagnostic : result.diagnostics().all()) {
                 switch (diagnostic.severity()) {

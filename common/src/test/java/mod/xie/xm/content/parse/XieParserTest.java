@@ -9,11 +9,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Which files in a pack directory are definition files, and what the reader makes of them. */
@@ -87,6 +90,41 @@ class XieParserTest {
         write("xiecontent/mypack/apple.json", ONE_ITEM.formatted("apple", "Apple"));
         XieParser.ParseResult result = XieParser.parseAll(container).get(0);
         assertEquals(List.of("apple"), List.copyOf(result.pack().items().keySet()));
+    }
+
+    @Test
+    void fingerprintFollowsDefinitionsOnly() throws IOException {
+        write("foods/apple.json", ONE_ITEM.formatted("apple", "Apple"));
+        String before = XieParser.parsePack(root).fingerprint();
+        assertTrue(before.matches("[0-9a-f]{8}"), before);
+
+        write("names.loc", "apple=Red Apple\n");
+        write("textures/apple.png", "not really a png");
+        write("_wip/pear.json", ONE_ITEM.formatted("pear", "Pear"));
+        assertEquals(before, XieParser.parsePack(root).fingerprint(),
+            "names, textures and work in progress are not what a connection depends on");
+
+        write("foods/apple.json", ONE_ITEM.formatted("apple", "Apple").replace("\n", "\r\n"));
+        assertEquals(before, XieParser.parsePack(root).fingerprint(), "line endings are not content");
+
+        write("foods/apple.json", ONE_ITEM.formatted("apple", "Apple").replace("\"hunger\": 1", "\"hunger\": 2"));
+        assertNotEquals(before, XieParser.parsePack(root).fingerprint());
+    }
+
+    @Test
+    void fingerprintDependsOnPathsNotReadOrder() {
+        // "a-b" sorts before "a/b" with a forward slash and after "a\b" with a
+        // backslash, so a read-order hash would differ between Linux and Windows.
+        Map<String, String> one = new LinkedHashMap<>();
+        one.put("a-b.json", "{}");
+        one.put("a/b.json", "{}");
+        Map<String, String> other = new LinkedHashMap<>();
+        other.put("a/b.json", "{}");
+        other.put("a-b.json", "{}");
+        assertEquals(XieParser.fingerprint(one), XieParser.fingerprint(other));
+
+        assertNotEquals(XieParser.fingerprint(Map.of("a.json", "{}")),
+            XieParser.fingerprint(Map.of("b.json", "{}")), "a renamed file is a different file");
     }
 
     @Test

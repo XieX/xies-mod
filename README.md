@@ -15,7 +15,11 @@ Installing
 
 Needs Minecraft 26.1.2 with NeoForge 26.1.2.94 or later. Put the jar in `.minecraft/mods/` on
 both the client and the server, and give both the same content: blocks and items
-are registered from it, so a client and a server that disagree cannot connect.
+are registered from it, so a client and a server that disagree cannot connect. The
+server refuses such a client with a "Channel of mod" message showing the content
+each side has, one name and fingerprint per pack; the log prints each pack's
+fingerprint as it loads. Only definition files count: `.loc` names and textures may
+differ, the way resource packs may.
 
 **The first launch unpacks the content** into `.minecraft/xiecontent/base-content/`
 as plain JSON. Change a food value, growth rate or recipe there and restart the

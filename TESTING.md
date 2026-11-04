@@ -116,7 +116,13 @@ on the client's screen — the client is present because the server needs a play
 because the run looks at it. The screenshot on failure is evidence for a human, not an
 assertion. `SurvivalTweaks/` is not among the four packs, so the two pickaxe overrides
 and the wheat loot table are still verified by hand; the culls it declares are not the
-ones the `cull` check uses, which are the live content's own.
+ones the `cull` check uses, which are the live content's own. The client and server
+share `neoforge/run/xiecontent/`, so the run cannot show `XieContentCheck` refusing a
+client whose content differs. That is checked by hand: start the server, add a
+throwaway pack, start the client, and the join fails on the mod mismatch screen
+with the extra pack in the client's version and not in the server's. Confirmed
+that way in November 2026, against a matching client joining the same server
+first.
 
 Driving the game
 ----------------
