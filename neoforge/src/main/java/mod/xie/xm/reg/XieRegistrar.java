@@ -194,16 +194,19 @@ public final class XieRegistrar {
      * <p>Three things need one. A tool's {@code blocksEffective}, {@code canHarvest},
      * {@code cannotHarvest} and {@code canCut} lists, because {@code minecraft:tool}
      * takes tags rather than lists of ids; a stem's {@code growsOn}, for the same
-     * reason on {@code StemBlock}; and {@code #minecraft:logs}, which a {@code log}
-     * joins rather than defines. Keyed by full id because of that last one — it is
-     * the only generated tag that is not in this mod's namespace, and it is additive
-     * rather than a replacement, so it belongs in the content pack and not the
-     * override pack.
+     * reason on {@code StemBlock}; and {@code #minecraft:logs} and
+     * {@code #minecraft:mineable/pickaxe}, which a {@code log} and a {@code stove}
+     * join rather than define. Keyed by full id because of those two — they are not
+     * in this mod's namespace, and they are additive rather than replacements, so
+     * they belong in the content pack and not the override pack.
      */
     private final Map<String, List<String>> blockTags = new LinkedHashMap<>();
 
     /** The tag a {@code log} joins, which is the whole of what made it a log. */
     private static final String LOGS_TAG = "minecraft:logs";
+
+    /** The tag that lets a pickaxe harvest a stove. */
+    private static final String PICKAXE_TAG = "minecraft:mineable/pickaxe";
 
     private final List<DeferredItem<Item>> tabContents = new ArrayList<>();
 
@@ -322,6 +325,9 @@ public final class XieRegistrar {
                 properties -> XieBlockProperties.forStove(def)
             );
             stoveBlocks.add(holder);
+            // forStove requires the correct tool, and this is what makes a pickaxe one.
+            blockTags.computeIfAbsent(PICKAXE_TAG, tag -> new ArrayList<>())
+                .add(XiesMod.MOD_ID + ":" + path);
         } else if (def.archetype().equals(STEM)) {
             holder = registerStem(pack, def, path);
             // A stem's ages are vanilla's 0-7, which is what 1.6's BlockStem had too.
@@ -422,9 +428,10 @@ public final class XieRegistrar {
         int maxAge = def.props().getInt("maxGrowth", split ? 0 : def.impliedMaxMeta());
         int growthRate = def.props().getInt("growthRate", 100);
         int growthHeight = def.props().getInt("growthHeight", 1);
+        int growthLight = def.props().getInt("lightLevel", XiePlantBlock.MIN_GROWTH_LIGHT);
 
         return new XiePlantBlock.Config(maxAge, growthRate, growthHeight, growsOn(pack, def),
-            boundsFor(def, split, meta), fertilisable(def), spikey(def));
+            boundsFor(def, split, meta), fertilisable(def), spikey(def), growthLight);
     }
 
     /** Both spellings, because {@code JobBlock} read both. */
@@ -1217,12 +1224,12 @@ public final class XieRegistrar {
             return items.registerItem(path, Item::new, properties -> common(pack, def, properties));
         }
 
-        // A container is handed back on planting as well as on crafting; see XieSeedItem.
+        // A container is handed back on planting as well as on crafting, and a block
+        // with an item of its own keeps it as its pick-block; see XieSeedItem.
+        boolean claimsBlock = !blockItems.contains(targetPaths.get(targetMeta));
         return items.registerItem(path,
-            properties -> container(pack, def)
-                .<Item>map(container -> new XieSeedItem(target.get(), container,
-                    properties.useItemDescriptionPrefix()))
-                .orElseGet(() -> new BlockItem(target.get(), properties.useItemDescriptionPrefix())),
+            properties -> new XieSeedItem(target.get(), container(pack, def), claimsBlock,
+                properties.useItemDescriptionPrefix()),
             properties -> common(pack, def, properties));
     }
 

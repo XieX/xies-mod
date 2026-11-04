@@ -673,6 +673,12 @@ public final class XieWorldgenEmitter {
      * code, because the 2013 code <em>is</em> those trees: {@code generateOak} rolls
      * {@code nextInt(3) + 4} for its trunk and {@code straight_trunk_placer} with a
      * base of 4 and a random of 2 rolls exactly the same 4 to 6.
+     *
+     * <p>{@code ignore_vines} is true, as it is in all three. Under the trunk, grass
+     * becomes dirt and everything else is left as it is. That is the original's rule,
+     * and vanilla's wherever a Xie tree can stand on grass or dirt; vanilla's own
+     * default also turns anything outside {@code #cannot_replace_below_tree_trunk} to
+     * dirt, which would take the soul sand from under a tree planted on it.
      */
     private static JsonObject treeFeature(String leavesId, RegisteredContent.Tree tree) {
         JsonObject config = new JsonObject();
@@ -681,6 +687,8 @@ public final class XieWorldgenEmitter {
             ? fruitingFoliage(leavesId, tree.fruitAges())
             : stateProvider(leavesId));
         config.add("decorators", new JsonArray());
+        config.addProperty("ignore_vines", true);
+        config.add("below_trunk_provider", grassToDirt());
 
         switch (tree.shape()) {
             case CONIFER -> {
@@ -716,6 +724,20 @@ public final class XieWorldgenEmitter {
         feature.addProperty("type", "minecraft:tree");
         feature.add("config", config);
         return feature;
+    }
+
+    /** A {@code rule_based_state_provider} that answers dirt on grass and nothing elsewhere. */
+    private static JsonObject grassToDirt() {
+        JsonObject onGrass = typed("minecraft:matching_blocks");
+        onGrass.addProperty("blocks", "minecraft:grass_block");
+        JsonObject rule = new JsonObject();
+        rule.add("if_true", onGrass);
+        rule.add("then", stateProvider("minecraft:dirt"));
+        JsonArray rules = new JsonArray();
+        rules.add(rule);
+        JsonObject provider = typed("minecraft:rule_based_state_provider");
+        provider.add("rules", rules);
+        return provider;
     }
 
     private static JsonObject straightTrunk(int baseHeight, int randA, int randB) {

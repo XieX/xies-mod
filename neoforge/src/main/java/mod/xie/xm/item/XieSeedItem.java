@@ -5,12 +5,22 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
 
+import java.util.Map;
+import java.util.Optional;
+
 /**
- * A {@code seeds} item that declares a {@code container}, which it hands back when it
- * plants: placing a bucket of cheese leaves you the bucket.
+ * A {@code seeds} item: a {@link BlockItem} for the block it plants, which hands back
+ * its {@code container} when it plants — placing a bucket of cheese leaves you the
+ * bucket.
+ *
+ * <p>A seed whose block has an item of its own, as an apple seed's sapling does, does
+ * not claim the block's item mapping. That mapping is {@code Block.asItem}, which is
+ * what pick-block and anything else making a stack of the block reads, and the last
+ * {@link BlockItem} registered for a block wins it. Vanilla's wheat seeds claim the
+ * wheat crop because the crop has no other item.
  *
  * <p>This is a deliberate deviation. {@code container} went to
  * {@code Item.setContainerItem} in 2013, whose whole effect was on the crafting grid,
@@ -31,22 +41,38 @@ import net.minecraft.world.level.block.Block;
  * with infinite materials was never charged the seed, so is given nothing back.
  */
 public class XieSeedItem extends BlockItem {
-    private final Item container;
+    private final Optional<Item> container;
+    private final boolean claimsBlock;
 
-    public XieSeedItem(Block block, Item container, Properties properties) {
+    public XieSeedItem(Block block, Optional<Item> container, boolean claimsBlock,
+                       Properties properties) {
         super(block, properties);
         this.container = container;
+        this.claimsBlock = claimsBlock;
     }
 
     @Override
-    public InteractionResult useOn(UseOnContext context) {
-        InteractionResult placed = super.useOn(context);
+    public void registerBlocks(Map<Block, Item> map, Item item) {
+        if (claimsBlock) {
+            super.registerBlocks(map, item);
+        }
+    }
+
+    /**
+     * Hands the container back from {@code place} rather than {@code useOn}, because
+     * {@code BlockItem.useOn} falls back to eating a consumable item that failed to
+     * place, and that counts as an action too.
+     */
+    @Override
+    public InteractionResult place(BlockPlaceContext context) {
+        InteractionResult placed = super.place(context);
         Player player = context.getPlayer();
-        if (!placed.consumesAction() || player == null || player.hasInfiniteMaterials()) {
+        if (container.isEmpty() || !placed.consumesAction() || player == null
+                || player.hasInfiniteMaterials()) {
             return placed;
         }
 
-        ItemStack emptied = new ItemStack(container);
+        ItemStack emptied = new ItemStack(container.get());
         if (context.getItemInHand().isEmpty()) {
             player.setItemInHand(context.getHand(), emptied);
         } else if (!player.getInventory().add(emptied)) {

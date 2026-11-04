@@ -79,7 +79,7 @@ public final class LegacyBlockIds {
         id(41, "gold_block");
         id(42, "iron_block");
         id(43, "smooth_stone_slab");
-        id(44, "stone_slab");
+        id(44, "smooth_stone_slab");
         id(45, "bricks");
         id(46, "tnt");
         id(47, "bookshelf");

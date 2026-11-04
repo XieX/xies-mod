@@ -476,8 +476,15 @@ public final class XieFileReader {
                 diagnostics.warning(origin.toString(),
                     "drop \"" + entry.getKey() + "\" has unparseable chance range \"" + bad + "\"");
             }
-            Optional<MetaMap<Integer>> chance = dropProps.getMetaMap("chance",
-                value -> PropertyMap.asInt(value).orElse(null));
+            // An unreadable chance is a warning and a 0, never a silently certain drop.
+            Optional<MetaMap<Integer>> chance = dropProps.getMetaMap("chance", value -> {
+                Optional<Integer> percent = PropertyMap.asInt(value);
+                if (percent.isEmpty()) {
+                    diagnostics.warning(origin.toString(), "drop \"" + entry.getKey()
+                        + "\" has chance " + value + ", which is not a number; it never drops");
+                }
+                return percent.orElse(0);
+            });
             int amount = dropProps.getInt("amount", 1);
             int min = dropProps.getInt("min", 0);
             dropProps.markUsed("chance", "amount", "min");
@@ -504,9 +511,14 @@ public final class XieFileReader {
             texSource = nested.getAsJsonObject();
         }
 
+        // A nested "tex" may still leave texFile, textureBase or icon beside it, as
+        // JobBlock read them from the definition whether or not "tex" was there.
         PropertyMap texProps = PropertyMap.of(texSource);
-        Optional<String> sheet = texProps.getString("texFile");
-        Optional<String> base = texProps.getString("textureBase");
+        PropertyMap outerProps = nested == null ? texProps : PropertyMap.of(object);
+        Optional<String> sheet = texProps.getString("texFile")
+            .or(() -> outerProps.getString("texFile"));
+        Optional<String> base = texProps.getString("textureBase")
+            .or(() -> outerProps.getString("textureBase"));
 
         Map<String, MetaMap<Integer>> faces = new LinkedHashMap<>();
         for (String key : texProps.keys()) {
@@ -524,6 +536,10 @@ public final class XieFileReader {
             }
             texProps.getMetaMap(key, value -> PropertyMap.asInt(value).orElse(null))
                 .ifPresent(map -> faces.put(key, map));
+        }
+        if (nested != null && !faces.containsKey(TexDef.FACE_ICON)) {
+            outerProps.getMetaMap(TexDef.FACE_ICON, value -> PropertyMap.asInt(value).orElse(null))
+                .ifPresent(map -> faces.put(TexDef.FACE_ICON, map));
         }
 
         if (sheet.isEmpty() && faces.isEmpty() && base.isEmpty()) {
@@ -553,7 +569,7 @@ public final class XieFileReader {
         // A bare string value is the ingredient list: "tomatoSeeds": "tomato".
         if (element.isJsonPrimitive()) {
             if (name.equalsIgnoreCase("cull")) {
-                return Optional.of(cullRecipe(origin, element.getAsString()));
+                return reported(cullRecipe(origin, element.getAsString()));
             }
             List<ItemRef> ingredients = refList(element.getAsString());
             return Optional.of(new RecipeDef(origin, name, RecipeDef.Kind.SHAPELESS,
@@ -571,7 +587,7 @@ public final class XieFileReader {
         if (name.equalsIgnoreCase("cull") || props.has("cull")) {
             String targets = props.getString("cull").orElse("");
             props.markUsed("cull");
-            return Optional.of(cullRecipe(origin, targets));
+            return reported(cullRecipe(origin, targets));
         }
 
         ItemRef product = ItemRef.parse(props.getString("product").orElse(name));
@@ -579,7 +595,7 @@ public final class XieFileReader {
         if (props.has("smelt")) {
             List<ItemRef> input = refList(props.getString("smelt").orElse(""));
             props.markUsed("smelt", "product");
-            return Optional.of(new RecipeDef(origin, name, RecipeDef.Kind.SMELTING,
+            return reported(new RecipeDef(origin, name, RecipeDef.Kind.SMELTING,
                 Optional.of(product), List.of(), input, List.of(), props));
         }
 
@@ -602,11 +618,14 @@ public final class XieFileReader {
         }
         props.markUsed("product", "content", "pattern");
 
-        RecipeDef recipe = new RecipeDef(origin, name, kind, Optional.of(product),
-            pattern, ingredients, List.of(), props);
+        return reported(new RecipeDef(origin, name, kind, Optional.of(product),
+            pattern, ingredients, List.of(), props));
+    }
 
+    /** Warns of whatever {@link RecipeDef#problems} finds, every kind alike. */
+    private Optional<RecipeDef> reported(RecipeDef recipe) {
         for (String problem : recipe.problems()) {
-            diagnostics.warning(origin.toString(), problem);
+            diagnostics.warning(recipe.origin().toString(), problem);
         }
         return Optional.of(recipe);
     }

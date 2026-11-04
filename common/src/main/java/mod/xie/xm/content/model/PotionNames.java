@@ -66,7 +66,10 @@ public final class PotionNames {
             return Optional.empty();
         }
         if (text.contains(":")) {
-            return Optional.of(text.toLowerCase(Locale.ROOT));
+            // Checked here rather than left to the registry, because Identifier.parse
+            // throws on a malformed id where a well-formed unknown one only misses.
+            String id = text.toLowerCase(Locale.ROOT);
+            return id.matches("[a-z0-9_.-]+:[a-z0-9_./-]+") ? Optional.of(id) : Optional.empty();
         }
         // The engine's own comparison string, in case content copied it wholesale.
         if (text.toLowerCase(Locale.ROOT).startsWith("potion.")) {

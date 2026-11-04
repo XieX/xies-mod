@@ -37,7 +37,8 @@ public record DropTable(List<Drop> drops) {
      * One dropped stack.
      *
      * @param item    what drops
-     * @param chance  percentage chance per metadata value; absent means always
+     * @param chance  percentage chance per metadata value; absent means always, and
+     *                a value the map leaves out never drops
      * @param amount  maximum number dropped, 1 unless the source said otherwise
      * @param min     how many of {@code amount} drop without rolling, wherever the
      *                chance is above zero; 0 unless the source said otherwise
@@ -60,9 +61,15 @@ public record DropTable(List<Drop> drops) {
             return percent <= 0 ? 0 : min + (amount - min) * percent / 100.0;
         }
 
-        /** Percentage chance for a metadata value; 100 when unconditional. */
+        /**
+         * Percentage chance for a metadata value: 100 when unconditional, and 0 for a
+         * value a declared chance map leaves out. 1.6's {@code Drop.metaChance} array
+         * held 0 there too, except at metadata 0, which the constructor had already set
+         * to 100 before the map was read; that one exception is not carried, because
+         * {@code "3+": 50} cannot have meant a certain drop from a seedling.
+         */
         public int chanceFor(int meta) {
-            return chance.flatMap(map -> map.get(meta)).orElse(100);
+            return chance.map(map -> map.get(meta).orElse(0)).orElse(100);
         }
 
         public boolean isUnconditional() {

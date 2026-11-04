@@ -9,9 +9,11 @@ tell a refusal from a hit without looking at the plant at all. That is
 deliberate on vanilla's part: ``growCrop`` shrinks the stack whether or not
 ``isBonemealSuccess`` rolled true, so a control never fails by luck.
 
-Two ways to get nothing out of this, both of them the rig rather than the mod:
-an off-by-one on ``facing=down`` (a dispenser two above fires at the air
-between), and building it where no player is standing, since nothing
+Three ways to get nothing out of this, all of them the rig rather than the mod:
+a dispenser one block off its target fires at the air between; one above a ripe
+stalk is the block its next segment needs, so it refuses for a reason that has
+nothing to do with fertiliser, which is why the dispenser stands beside the top
+and fires sideways; and building it where no player is standing, since nothing
 scheduled-ticks there and the dispenser simply takes ``triggered=1`` and waits.
 """
 
@@ -54,16 +56,17 @@ def run(game, expect):
     fired = []
     for index, (label, plant, soil, expected, height) in enumerate(CELLS):
         x = x0 + SPACING * index
-        dispenser = (x, Y + height, z0)
+        top = Y + height - 1
+        dispenser = (x, top, z0 - 1)
         game.setblock((x, GROUND, z0), soil)
         for level in range(height):
             game.setblock((x, Y + level, z0), plant)
-        game.replace(dispenser, "minecraft:dispenser[facing=down]")
+        game.replace(dispenser, "minecraft:dispenser[facing=south]")
         game.cmd("item replace block %d %d %d container.0 with %s 1"
                  % (dispenser[0], dispenser[1], dispenser[2], BONE_MEAL))
         # Clear first: setblock with the block already there is a no-op, so a
         # pulse that re-places the redstone leaves triggered=1 and does nothing.
-        game.replace((x + 1, Y + height, z0), "minecraft:redstone_block")
+        game.replace((x + 1, top, z0 - 1), "minecraft:redstone_block")
         fired.append((label, dispenser, expected))
 
     # A dispenser fires four ticks after the pulse. Read them all afterwards

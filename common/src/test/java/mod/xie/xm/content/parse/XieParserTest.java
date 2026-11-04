@@ -12,7 +12,6 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -49,11 +48,17 @@ class XieParserTest {
 
         ContentPack pack = parse();
 
-        // ContentPack copies its maps with Map.copyOf, whose iteration order is
-        // randomised per JVM run, so only membership is a contract here.
-        assertEquals(Set.of("apple", "pear"), pack.items().keySet());
+        assertEquals(List.of("apple", "pear"), List.copyOf(pack.items().keySet()),
+            "files are read in sorted order, and the pack keeps it");
         assertEquals("apple", pack.items().get("apple").origin().file(),
             "the basename, not the extension, is what parent@name references");
+    }
+
+    /** Notepad's byte-order mark would otherwise begin the first key. */
+    @Test
+    void aByteOrderMarkIsNotPartOfTheFirstName() throws IOException {
+        write("names.loc", "\uFEFFapple=Crab Apple\n");
+        assertEquals("Crab Apple", parse().displayNames().get("apple"));
     }
 
     @Test

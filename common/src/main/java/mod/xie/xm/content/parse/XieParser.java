@@ -239,11 +239,14 @@ public final class XieParser {
     private static String readText(Path file, String relative, Diagnostics diagnostics) throws IOException {
         byte[] bytes = Files.readAllBytes(file);
         try {
-            return StandardCharsets.UTF_8.newDecoder()
+            String text = StandardCharsets.UTF_8.newDecoder()
                 .onMalformedInput(CodingErrorAction.REPORT)
                 .onUnmappableCharacter(CodingErrorAction.REPORT)
                 .decode(ByteBuffer.wrap(bytes))
                 .toString();
+            // Notepad's byte-order mark, which the decoder keeps and a .loc key would
+            // then start with.
+            return text.startsWith("\uFEFF") ? text.substring(1) : text;
         } catch (CharacterCodingException e) {
             diagnostics.warning(relative, "not valid UTF-8, decoded as ISO-8859-1 instead");
             return new String(bytes, StandardCharsets.ISO_8859_1);

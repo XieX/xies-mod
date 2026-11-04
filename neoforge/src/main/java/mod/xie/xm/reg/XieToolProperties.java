@@ -235,7 +235,8 @@ public final class XieToolProperties {
     private static BlocksAttacks blocksAttacks(HolderLookup.Provider context) {
         return new BlocksAttacks(
             0.0f,
-            1.0f,
+            // An axe's disable is scaled by this, and nothing disabled a 1.6 sword.
+            0.0f,
             List.of(new BlocksAttacks.DamageReduction(90.0f, Optional.empty(), 0.0f, BLOCKED_FRACTION)),
             new BlocksAttacks.ItemDamageFunction(1.0f, 0.0f, 0.0f),
             Optional.of(context.getOrThrow(DamageTypeTags.BYPASSES_SHIELD)),

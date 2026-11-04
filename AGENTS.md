@@ -84,6 +84,11 @@ Minecraft 26.1 and NeoForge
 - **A block model needs no `render_type`.** The chunk layer comes from the sprite's
   alpha. `minecraft:block/leaves` tints every face and needs a registered block
   colour; `cube_all` does not.
+- **A block's `useItemOn` must spare a creative stack itself.** The server restores
+  the count only around an item's own `useOn`. Use `stack.consume(1, player)` or
+  `ItemUtils.createFilledResult`, never `shrink`.
+- **`requiresCorrectToolForDrops` needs a `mineable/*` tag**, or no tool is correct
+  and the block drops nothing.
 - **`playerDestroy` is not called in creative.** `Block#destroy` is the
   creative-safe break hook, and the client calls it too as a prediction.
 - **`InteractionResult` is a sealed interface.** `SUCCESS` swings on the client,

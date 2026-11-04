@@ -224,15 +224,31 @@ public final class XieBlockProperties {
     /** {@code XieBlockLeaves} called {@code setHardness(0.2F)}, as vanilla still does. */
     private static final float LEAF_HARDNESS = 0.2f;
 
-    /** Strength and light level, which every archetype reads the same way. */
+    /**
+     * 1.6's {@code Block.getExplosionResistance}: {@code setResistance(r)} stored
+     * {@code 3r} and the getter divided by 5, so a declared resistance is worth 0.6 of
+     * itself now. Obsidian's 2000 is the 1200 it is today.
+     */
+    private static final float LEGACY_RESISTANCE_SCALE = 0.6f;
+
+    /**
+     * Strength and light level, which every archetype reads the same way.
+     *
+     * <p>{@code lightValue} is a fraction of full light, because 1.6's
+     * {@code setLightValue(float)} stored {@code (int) (15 * f)}. {@code lightLevel}
+     * is not light at all: it is the light a plant needs, read by
+     * {@code XieRegistrar.plantConfig}.
+     */
     private static BlockBehaviour.Properties common(BlockDef def,
                                                     BlockBehaviour.Properties properties,
                                                     float defaultHardness) {
         float hardness = def.props().getFloat("hardness", defaultHardness);
-        float resistance = def.props().getFloat("resistance", hardness);
+        float resistance = def.props().getFloat("resistance")
+            .map(declared -> declared * LEGACY_RESISTANCE_SCALE)
+            .orElse(hardness);
         properties = properties.strength(hardness, resistance);
 
-        int light = def.props().getInt("lightValue", def.props().getInt("lightLevel", 0));
+        int light = (int) (15.0f * def.props().getFloat("lightValue", 0f));
         if (light > 0) {
             int clamped = Math.clamp(light, 0, 15);
             properties = properties.lightLevel(state -> clamped);
@@ -254,7 +270,7 @@ public final class XieBlockProperties {
         return switch (sound) {
             case "powder", "sand" -> SoundType.SAND;
             case "wood" -> SoundType.WOOD;
-            case "stone", "piston" -> SoundType.STONE;
+            case "stone", "rock", "piston" -> SoundType.STONE;
             case "metal", "iron" -> SoundType.METAL;
             case "glass" -> SoundType.GLASS;
             case "cloth", "wool" -> SoundType.WOOL;

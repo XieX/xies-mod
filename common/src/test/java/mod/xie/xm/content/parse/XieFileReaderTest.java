@@ -590,4 +590,50 @@ class XieFileReaderTest {
         XieFileReader.Result result = read(TOMATO);
         assertEquals(0, result.rejected());
     }
+
+    /** A stage the map says nothing about drops nothing, stage 0 included; see chanceFor. */
+    @Test
+    void aStageTheChanceMapLeavesOutNeverDrops() {
+        XieFileReader.Result result = read("""
+            { "blocks": { "bush": { "name": "Bush", "type": "bush",
+                "drops": { "berry": { "chance": { "4+": 50 } } } } } }
+            """);
+        DropTable.Drop berry = result.blocks().get("bush").drops().drops().get(0);
+        assertEquals(0, berry.chanceFor(0));
+        assertEquals(0, berry.chanceFor(3));
+        assertEquals(50, berry.chanceFor(4));
+    }
+
+    @Test
+    void anUnreadableChanceWarnsAndNeverDrops() {
+        XieFileReader.Result result = read("""
+            { "blocks": { "bush": { "name": "Bush", "type": "bush",
+                "drops": { "berry": { "chance": "50%" } } } } }
+            """);
+        DropTable.Drop berry = result.blocks().get("bush").drops().drops().get(0);
+        assertFalse(berry.isUnconditional());
+        assertEquals(0, berry.chanceFor(0));
+        assertEquals(1, diagnostics.warnings().size(), diagnostics.toString());
+    }
+
+    /** JobBlock read textureBase from the definition whether or not "tex" was there. */
+    @Test
+    void textureKeysBesideANestedTexStillCount() {
+        XieFileReader.Result result = read("""
+            { "blocks": { "slab": { "name": "Slab", "type": "basic",
+                "textureBase": "stone", "texFile": "a.png", "tex": { "top": 3 } } } }
+            """);
+        TexDef tex = result.blocks().get("slab").tex();
+        assertEquals("stone", tex.base().orElseThrow());
+        assertEquals("a.png", tex.sheet().orElseThrow());
+        assertEquals(3, tex.spriteFor("top", 0).orElseThrow());
+    }
+
+    @Test
+    void smeltAndCullRecipesReportTheirProblems() {
+        read("""
+            { "recipes": { "ingot": { "smelt": "" }, "cull": "" } }
+            """);
+        assertEquals(2, diagnostics.warnings().size(), diagnostics.toString());
+    }
 }

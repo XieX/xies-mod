@@ -418,7 +418,7 @@ public final class XieDataEmitter {
             if (split) {
                 addPools(pools, drop, null, item.get(), clampPercent(drop.chanceFor(meta)));
             } else {
-                addDropPools(pools, blockId, item.get(), drop, maxAge);
+                addDropPools(pools, blockId, item.get(), drop, maxAge, maxAge);
             }
         }
 
@@ -528,8 +528,9 @@ public final class XieDataEmitter {
                 skipped++;
                 continue;
             }
-            addDropPools(pools, targetId, item.get(), drop,
-                Math.min(declaredMaxAge, blockMaxAge.orElse(0)));
+            int blockMax = blockMaxAge.orElse(0);
+            addDropPools(pools, targetId, item.get(), drop, blockMax,
+                Math.min(declaredMaxAge, blockMax));
         }
 
         if (pools.isEmpty()) {
@@ -651,9 +652,14 @@ public final class XieDataEmitter {
      * <p>The chance map is per age, so contiguous ages sharing a chance are
      * collapsed into one pool with a ranged {@code age} predicate. Ages that can
      * never drop the item produce no pool at all.
+     *
+     * <p>{@code lastDeclared} is the last stage the definition knows of, which is
+     * short of {@code maxAge} only for an override of a block with more stages than
+     * it declared. Every stage past it drops as that last one does, so the ripe
+     * vanilla crop still pays out.
      */
     private void addDropPools(JsonArray pools, String blockId, String itemId,
-                              DropTable.Drop drop, int maxAge) {
+                              DropTable.Drop drop, int maxAge, int lastDeclared) {
         if (drop.isUnconditional()) {
             addPools(pools, drop, null, itemId, 100);
             return;
@@ -661,9 +667,10 @@ public final class XieDataEmitter {
 
         int age = 0;
         while (age <= maxAge) {
-            int chance = clampPercent(drop.chanceFor(age));
+            int chance = clampPercent(drop.chanceFor(Math.min(age, lastDeclared)));
             int last = age;
-            while (last < maxAge && clampPercent(drop.chanceFor(last + 1)) == chance) {
+            while (last < maxAge
+                    && clampPercent(drop.chanceFor(Math.min(last + 1, lastDeclared))) == chance) {
                 last++;
             }
             addPools(pools, drop, ageCondition(blockId, age, last, maxAge), itemId, chance);
@@ -792,17 +799,18 @@ public final class XieDataEmitter {
     /**
      * Writes the generated block tags.
      *
-     * <p>Three things need one, and all three for the same reason — the thing that
+     * <p>Four things need one, and all four for the same reason — the thing that
      * reads them takes a tag rather than a list of ids. A tool's
      * {@code blocksEffective}, {@code canHarvest}, {@code cannotHarvest} and
      * {@code canCut} lists become the rules of a {@code minecraft:tool} component; a
-     * stem's soil becomes {@code StemBlock}'s support tag; and a {@code log} joins
+     * stem's soil becomes {@code StemBlock}'s support tag; a {@code log} joins
      * {@code #minecraft:logs}, which is what earns it an axe and keeps a fruit tree's
-     * leaves from decaying off it. Vanilla's own tools point at
-     * {@code #minecraft:mineable/pickaxe} the same way; the difference is only that
-     * these tags are generated rather than shipped.
+     * leaves from decaying off it; and a {@code stove} joins
+     * {@code #minecraft:mineable/pickaxe}, without which it requires a tool nothing
+     * counts as. Vanilla's own tools point at those tags the same way; the
+     * difference is only that these are generated rather than shipped.
      *
-     * <p>The log tag is the one that is not in this mod's namespace, and it is
+     * <p>The vanilla tags are the ones not in this mod's namespace, and they are
      * <em>additive</em> — tags from every pack are merged unless one says
      * {@code replace} — so it belongs in the content pack rather than the override
      * pack, and being below vanilla costs it nothing.

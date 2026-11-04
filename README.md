@@ -92,7 +92,7 @@ A definition's `type` picks its archetype. With no `type` it is `basic`.
 | block | what it is |
 |---|---|
 | `basic` | A plain block. `walkthroughable` makes it something you walk through that breaks when its support goes, and `becomesWhenDestroyed` leaves another block behind. |
-| `plant` | Grows through stages on the blocks in `growsOn`, at `growthRate`, and is broken to harvest. `growthHeight` lets it grow taller than one block. |
+| `plant` | Grows through stages on the blocks in `growsOn`, at `growthRate`, in at least `lightLevel` light (9 unless it says), and is broken to harvest. `growthHeight` lets it grow taller than one block. |
 | `bush` | A plant that is picked instead: a right-click on a ripe one gives its `fruit` and sets it back three stages. Breaking it gives its `drops`. |
 | `crop` | A plant that grows faster in a tended field, the way vanilla wheat does. |
 | `sapling` | A plant that grows into the tree named by `growsInto`. |
@@ -105,7 +105,7 @@ A definition's `type` picks its archetype. With no `type` it is `basic`.
 | item | what it is |
 |---|---|
 | `basic` | A plain item. |
-| `food` | Eaten or, with `action: "drink"`, drunk. `hunger`, `nourishment`, `potionEffect`, and `drops` for what is left in your hand. |
+| `food` | Eaten or, with `action: "drink"`, drunk. `hunger`, `nourishment`, `potionEffect` (`speed:20:1@20` is Speed I for 20 seconds, one time in five; another mod's effect is `mod:effect:20`), and `drops` for what is left in your hand. |
 | `seeds` | Plants the block named by `growsInto`. |
 | `tool` | `material` is the tier, `blocksEffective` and `canHarvest` what it mines, and `transforms` turns one block into another on right-click. |
 | `sword` | `damage`, `uses`, `enchantability`, and `canBlock` to raise it like a shield. |
@@ -114,7 +114,10 @@ A definition's `type` picks its archetype. With no `type` it is `basic`.
 
 Any item may also declare `cooked` (what it becomes in a furnace, smoker and
 campfire), `fuel` (a burn time), and `container` (what is left behind when it is
-eaten or used in a recipe, like the bowl a salad comes in).
+eaten or used in a recipe, like the bowl a salad comes in). Any block may declare
+`hardness`, `resistance` and `lightValue` in their 1.6 units: a resistance is worth
+0.6 of a modern one, and a light value is a fraction of full light, so `1.0` glows
+like a torch-lit fire.
 
 ### Names
 
@@ -131,7 +134,8 @@ Ids are made from display names, so `"Apple Seeds"` is `xiesmod:apple_seeds`.
 A drop's `amount` is not a stack size but a number of independent rolls, each
 giving one item at `chance` percent. A `chance` keyed by growth stage is how a
 plant gives more as it ripens: the tomato seeds above come at 20% a roll from stage
-1 and 60% from stage 3, and `"3+"` means stage 3 and every stage after it. `min`
+1 and 60% from stage 3, and `"3+"` means stage 3 and every stage after it. A stage
+the map leaves out drops nothing. `min`
 makes that many of the rolls certain wherever the chance is above zero, so each pick
 above gives one tomato for certain and a second half the time.
 
@@ -180,7 +184,9 @@ Sprites go in `textures/blocks/` and `textures/items/`, one PNG each, named afte
 the definition. A block with growth stages has one per stage (`tomatoBush_0.png`,
 `tomatoBush_1.png`, …), and a definition with `names` one per subtype
 (`fruitJuice_2.png`). A block with both uses `<definition>_<subtype>_<stage>.png`.
-An animated sprite takes a `.png.mcmeta` beside it, as in vanilla.
+An animated sprite takes a `.png.mcmeta` beside it, as in vanilla. A 2013 pack that
+draws from a spritesheet with `texFile` and `tex` indices still works: the sheet is
+cut up at load, and `texturePaths` can map the `texFile` name to where the sheet is.
 
 ### What the log tells you
 

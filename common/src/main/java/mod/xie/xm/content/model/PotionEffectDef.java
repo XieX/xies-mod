@@ -75,6 +75,19 @@ public record PotionEffectDef(String effect, int durationTicks, int amplifier, f
         }
 
         String[] parts = text.split(":");
+        // "somemod:caffeinated:30" names a namespaced effect: a second part that is
+        // not a number is the rest of its id rather than a duration. Without a
+        // duration after it, only "minecraft:" can say so, because "speed:soon" is a
+        // duration someone mistyped.
+        boolean namespaced = parts.length > 1 && readInt(parts[1]).isEmpty()
+            && (parts[0].trim().equalsIgnoreCase("minecraft")
+                || parts.length > 2 && readInt(parts[2]).isPresent());
+        if (namespaced) {
+            String[] joined = new String[parts.length - 1];
+            joined[0] = parts[0].trim() + ":" + parts[1].trim();
+            System.arraycopy(parts, 2, joined, 1, parts.length - 2);
+            parts = joined;
+        }
         Optional<String> effect = PotionNames.modern(parts[0]);
         if (effect.isEmpty()) {
             return Optional.empty();

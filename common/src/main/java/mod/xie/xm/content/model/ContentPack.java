@@ -1,5 +1,7 @@
 package mod.xie.xm.content.model;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,6 +21,10 @@ import java.util.Optional;
  * @param aliases       named item sets, merged across files
  * @param displayNames  {@code .loc} entries, overriding a definition's own name
  * @param texturePaths  {@code texturePaths} declarations, sheet alias to path
+ *
+ * <p>Every map keeps the order it was built in. {@code Map.copyOf} would not: its
+ * iteration order is salted per JVM, and registration, the creative tab and its icon
+ * all follow these maps.
  */
 public record ContentPack(
     String name,
@@ -32,13 +38,17 @@ public record ContentPack(
 ) {
 
     public ContentPack {
-        blocks = Map.copyOf(blocks);
-        items = Map.copyOf(items);
+        blocks = ordered(blocks);
+        items = ordered(items);
         recipes = List.copyOf(recipes);
         spawns = List.copyOf(spawns);
-        aliases = Map.copyOf(aliases);
-        displayNames = Map.copyOf(displayNames);
-        texturePaths = Map.copyOf(texturePaths);
+        aliases = ordered(aliases);
+        displayNames = ordered(displayNames);
+        texturePaths = ordered(texturePaths);
+    }
+
+    private static <K, V> Map<K, V> ordered(Map<K, V> map) {
+        return Collections.unmodifiableMap(new LinkedHashMap<>(map));
     }
 
     public static ContentPack empty(String name) {

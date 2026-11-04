@@ -1,6 +1,7 @@
 package mod.xie.xm.pack;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.logging.LogUtils;
@@ -151,6 +152,12 @@ public final class XiePackEmitter {
     private final Path contentRoot;
     private final XieDataEmitter dataEmitter;
 
+    /** The pack being emitted's {@code texturePaths}, sheet alias to path. */
+    private Map<String, String> texturePaths = Map.of();
+
+    /** What the registrar made of the packs being emitted. */
+    private RegisteredContent registered;
+
     public XiePackEmitter(Path contentRoot,
                           XieDataEmitter.ItemLookup itemLookup,
                           XieDataEmitter.BlockLookup blockLookup) {
@@ -196,6 +203,7 @@ public final class XiePackEmitter {
     public void emit(List<ContentPack> packs,
                      RegisteredContent registered,
                      PackFormats formats) throws IOException {
+        this.registered = registered;
 
         deleteRecursively(outputRoot);
         Files.createDirectories(outputRoot);
@@ -210,6 +218,7 @@ public final class XiePackEmitter {
 
         for (ContentPack pack : packs) {
             Path packRoot = contentRoot.resolve(pack.name());
+            texturePaths = pack.texturePaths();
 
             for (BlockDef def : pack.blocks().values()) {
                 List<String> paths = registered.blockPaths().get(def.name());
@@ -532,6 +541,9 @@ public final class XiePackEmitter {
 
             JsonObject model = new JsonObject();
             if (box.isPresent()) {
+                // block/block for the display transforms and GUI light a cube parent
+                // would have brought; the element replaces its (absent) shape.
+                model.addProperty("parent", "minecraft:block/block");
                 model.add("elements", oneElement(cubeElement(box.get())));
             } else {
                 model.addProperty("parent", parent);
@@ -645,10 +657,21 @@ public final class XiePackEmitter {
     /**
      * A {@code textureBase} name as a texture id. Block texture names track block
      * ids closely enough in modern Minecraft that the id table does the job, and
-     * {@code sand} — the only one live content uses — is one of them.
+     * {@code sand} is one of them.
+     *
+     * <p>A block of the same pack draws with the sprite of its first model, which is
+     * its first subtype's first stage: a base that ages or splits writes no sprite
+     * under its bare name.
      */
     private String resolveTexture(ContentPack pack, String baseName) {
         if (pack.blocks().containsKey(baseName)) {
+            List<String> paths = registered.blockPaths().get(baseName);
+            if (paths != null && !paths.isEmpty()) {
+                String first = paths.get(0);
+                Stages stages = new Stages(first, registered.hasAge(first),
+                    registered.maxAges().getOrDefault(first, 0));
+                return XiesMod.MOD_ID + ":block/" + stages.modelName(0);
+            }
             return XiesMod.MOD_ID + ":block/" + ResourceNames.toPath(baseName);
         }
         return "minecraft:block/" + ResourceNames.toVanillaPath(ItemRef.parse(baseName));
@@ -956,7 +979,14 @@ public final class XiePackEmitter {
             return false;
         }
 
-        BufferedImage sheet = ImageIO.read(sheetFile.get().toFile());
+        BufferedImage sheet;
+        try {
+            sheet = ImageIO.read(sheetFile.get().toFile());
+        } catch (IOException e) {
+            // A truncated or corrupt file throws rather than answering null, and one
+            // bad sheet must cost its own sprites, not every pack's generated data.
+            sheet = null;
+        }
         if (sheet == null) {
             LOGGER.warn("{} names \"{}\" as its spritesheet, which is not readable as an image",
                 origin, sheetName.get());
@@ -1053,15 +1083,28 @@ public final class XiePackEmitter {
     }
 
     /**
-     * A spritesheet by the name a definition gives it, which is a path relative to
-     * the pack — {@code img/xieweapons.png} — or a bare filename.
+     * A spritesheet by the name a definition gives it, which is an alias the pack's
+     * {@code texturePaths} maps to a path, a path relative to the pack —
+     * {@code img/xieweapons.png} — or a bare filename.
      */
     private Optional<Path> findSheet(Path packRoot, String name) {
-        Path declared = packRoot.resolve(name.replace('\\', '/'));
+        String aliased = texturePaths.get(name);
+        if (aliased != null) {
+            String path = aliased.replace('\\', '/');
+            for (Path candidate : List.of(packRoot.resolve("textures").resolve(path),
+                    packRoot.resolve(path))) {
+                if (Files.isRegularFile(candidate)) {
+                    return Optional.of(candidate);
+                }
+            }
+        }
+
+        String normalised = name.replace('\\', '/');
+        Path declared = packRoot.resolve(normalised);
         if (Files.isRegularFile(declared)) {
             return Optional.of(declared);
         }
-        String bare = name.substring(name.lastIndexOf('/') + 1);
+        String bare = normalised.substring(normalised.lastIndexOf('/') + 1);
         return findTexture(packRoot, bare.replaceFirst("(?i)\\.png$", ""))
             .or(() -> findTexture(packRoot.resolve("textures"),
                 bare.replaceFirst("(?i)\\.png$", "")));
@@ -1181,9 +1224,10 @@ public final class XiePackEmitter {
                 Path animation = found.get().resolveSibling(found.get().getFileName() + ".mcmeta");
                 if (Files.isRegularFile(animation)) {
                     copy(animation, target, name + ".png.mcmeta");
-                    writeFirstFrame(found.get(), animation, target,
-                        stoveModelName(stages, pot, cooking, true) + ".png");
-                    copied++;
+                    if (writeFirstFrame(def, found.get(), animation, target,
+                            stoveModelName(stages, pot, cooking, true) + ".png")) {
+                        copied++;
+                    }
                 }
             }
         }
@@ -1195,20 +1239,46 @@ public final class XiePackEmitter {
      * square as wide as the strip's shorter side, unless the {@code .mcmeta} gives
      * {@code width} or {@code height}, when the other one is the whole strip's — as
      * vanilla's {@code AnimationMetadataSection.calculateFrameSize} reads it.
+     *
+     * <p>A strip or {@code .mcmeta} that cannot be read costs only this sprite, and
+     * the frozen pot then draws vanilla's, as one the content never drew would.
+     *
+     * @return whether the frame was written
      */
-    private static void writeFirstFrame(Path strip, Path animation, Path target, String fileName)
-            throws IOException {
-        BufferedImage image = ImageIO.read(strip.toFile());
-        JsonObject meta = JsonParser.parseString(Files.readString(animation)).getAsJsonObject()
-            .getAsJsonObject("animation");
-        boolean hasWidth = meta != null && meta.has("width");
-        boolean hasHeight = meta != null && meta.has("height");
-        int side = Math.min(image.getWidth(), image.getHeight());
-        int width = hasWidth ? meta.get("width").getAsInt() : hasHeight ? image.getWidth() : side;
-        int height = hasHeight ? meta.get("height").getAsInt() : hasWidth ? image.getHeight() : side;
+    private static boolean writeFirstFrame(BlockDef def, Path strip, Path animation, Path target,
+                                           String fileName) throws IOException {
+        BufferedImage image;
+        int width;
+        int height;
+        try {
+            image = ImageIO.read(strip.toFile());
+            if (image == null) {
+                LOGGER.warn("{} has an animated sprite {} that is not readable as an image",
+                    def.qualifiedName(), strip.getFileName());
+                return false;
+            }
+            JsonElement root = JsonParser.parseString(Files.readString(animation));
+            JsonElement section = root.isJsonObject() ? root.getAsJsonObject().get("animation") : null;
+            JsonObject meta = section != null && section.isJsonObject() ? section.getAsJsonObject() : null;
+            boolean hasWidth = meta != null && meta.has("width");
+            boolean hasHeight = meta != null && meta.has("height");
+            int side = Math.min(image.getWidth(), image.getHeight());
+            width = hasWidth ? meta.get("width").getAsInt() : hasHeight ? image.getWidth() : side;
+            height = hasHeight ? meta.get("height").getAsInt() : hasWidth ? image.getHeight() : side;
+        } catch (IOException | RuntimeException e) {
+            LOGGER.warn("{} has an animated sprite {} that could not be read: {}",
+                def.qualifiedName(), strip.getFileName(), e.toString());
+            return false;
+        }
         Files.createDirectories(target);
+        if (width <= 0 || height <= 0) {
+            LOGGER.warn("{} has an animated sprite {} whose frame size is not positive",
+                def.qualifiedName(), strip.getFileName());
+            return false;
+        }
         ImageIO.write(image.getSubimage(0, 0, Math.min(width, image.getWidth()),
             Math.min(height, image.getHeight())), "PNG", target.resolve(fileName).toFile());
+        return true;
     }
 
     /** Whether this pot sprite exists in the pack, which {@link #copyStoveTextures} has decided by now. */

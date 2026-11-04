@@ -96,7 +96,7 @@ public record RecipeDef(
         if (product.isEmpty()) {
             problems.add("no product");
         }
-        if (kind != Kind.SMELTING && ingredients.isEmpty()) {
+        if (ingredients.isEmpty()) {
             problems.add("no ingredients");
         }
         if (kind == Kind.SHAPED) {

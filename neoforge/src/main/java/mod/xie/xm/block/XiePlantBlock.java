@@ -59,7 +59,8 @@ public class XiePlantBlock extends VegetationBlock implements BonemealableBlock 
     public static final int GROWTH_DENOMINATOR = 25;
 
     /**
-     * Light needed to grow, matching {@code CropBlock.randomTick}.
+     * Light needed to grow when the definition declares no {@code lightLevel},
+     * matching {@code CropBlock.randomTick}.
      *
      * <p>The original went further and <em>destroyed</em> a plant standing below
      * {@code lightLevel} that could not see the sky ({@code XieBlockPlant.canBlockStay}).
@@ -80,13 +81,15 @@ public class XiePlantBlock extends VegetationBlock implements BonemealableBlock 
      *                     definition says otherwise, as {@code XieBlockPlant}'s field
      *                     was initialised
      * @param spikey       whether standing in it hurts; see {@link XieSpikes}
+     * @param growthLight  raw brightness needed to grow, 0..15
      */
     public record Config(int maxAge, int growthRate, int growthHeight,
                          Set<String> growsOn, Optional<MetaMap<Bounds>> shapes,
-                         boolean fertilisable, boolean spikey) {
+                         boolean fertilisable, boolean spikey, int growthLight) {
 
         public Config {
             maxAge = XieAges.clamp(maxAge);
+            growthLight = Math.clamp(growthLight, 0, 15);
             growthRate = Math.max(1, growthRate);
             growthHeight = Math.max(1, growthHeight);
             growsOn = Set.copyOf(growsOn);
@@ -94,7 +97,7 @@ public class XiePlantBlock extends VegetationBlock implements BonemealableBlock 
 
         /** Used only to satisfy the block codec; never placed in a world. */
         public static final Config PLACEHOLDER =
-            new Config(1, 100, 1, Set.of(), Optional.empty(), true, false);
+            new Config(1, 100, 1, Set.of(), Optional.empty(), true, false, MIN_GROWTH_LIGHT);
 
         /** Whether this block stacks, and so may stand on another of its own kind. */
         public boolean isTall() {
@@ -220,7 +223,7 @@ public class XiePlantBlock extends VegetationBlock implements BonemealableBlock 
      */
     @Override
     protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        if (level.getRawBrightness(pos, 0) < MIN_GROWTH_LIGHT) {
+        if (level.getRawBrightness(pos, 0) < config.growthLight()) {
             return;
         }
         if (random.nextInt(growthDenominator(state, level, pos)) != 0) {

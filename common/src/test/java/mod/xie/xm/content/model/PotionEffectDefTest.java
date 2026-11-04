@@ -64,6 +64,23 @@ class PotionEffectDefTest {
         assertEquals(1200, effects.get(1).durationTicks());
     }
 
+    /** Another mod's effect, which needs a duration or "minecraft:" to say it is one. */
+    @Test
+    void readsANamespacedEffect() {
+        PotionEffectDef effect = PotionEffectDef.parse("somemod:caffeinated:30:2").orElseThrow();
+        assertEquals("somemod:caffeinated", effect.effect());
+        assertEquals(600, effect.durationTicks());
+        assertEquals(1, effect.amplifier());
+        assertEquals("minecraft:speed", PotionEffectDef.parse("minecraft:speed").orElseThrow().effect());
+    }
+
+    /** A namespaced id the registry could not even parse is unreadable, not a crash. */
+    @Test
+    void refusesAMalformedNamespacedEffect() {
+        assertEquals(Optional.empty(), PotionEffectDef.parse("somemod:my effect:30"));
+        assertEquals(List.of("minecraft:sp@ed"), PotionEffectDef.unresolved("minecraft:sp@ed"));
+    }
+
     /** A malformed entry is dropped rather than throwing, and is nameable afterwards. */
     @Test
     void reportsEntriesItCouldNotRead() {

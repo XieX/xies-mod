@@ -253,9 +253,10 @@ on announces itself the moment it stops being true.
   straight to `applyBonemeal` and the same `isValidBonemealTarget` the hand path asks.
   It also self-reports, which is what makes it the right rig for a refusal: the stack
   is only consumed when the bone meal took, and `growCrop` shrinks it whether or not
-  `isBonemealSuccess` rolled true, so a control never fails by luck. Two ways to get
-  nothing — off-by-one on `facing=down` (a dispenser two above fires at the air
-  between), and building it where no player is standing, since nothing ticks there.
+  `isBonemealSuccess` rolled true, so a control never fails by luck. Three ways to
+  get nothing: a dispenser one block off fires at the air between; one above a ripe
+  stalk fills the space its next segment needs, so it fires from the side; and
+  building it where no player is standing, since nothing ticks there.
   `acceptance/checks/fertilisable.py`.
 - **A crafter is what asks whether a craft remainder works**, since no predicate can
   see one: fill its slots with `/item replace block`, pulse it, and the remainder is

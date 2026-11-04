@@ -1,5 +1,6 @@
 package mod.xie.xm.content.model;
 
+import java.text.Normalizer;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -22,14 +23,17 @@ public final class ResourceNames {
      *
      * <p>An underscore is inserted at each lower-to-upper boundary, and before the
      * final capital of a run followed by a lowercase letter, so acronym-ish names
-     * split where a reader would expect.
+     * split where a reader would expect. Accents are dropped ({@code Crème} is
+     * {@code creme}) and any other letter outside ASCII separates, because an id
+     * takes nothing else.
      */
     public static String toPath(String name) {
         if (name == null || name.isEmpty()) {
             return "unnamed";
         }
-        StringBuilder out = new StringBuilder(name.length() + 4);
-        char[] chars = name.toCharArray();
+        String plain = Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{M}+", "");
+        StringBuilder out = new StringBuilder(plain.length() + 4);
+        char[] chars = plain.toCharArray();
 
         for (int i = 0; i < chars.length; i++) {
             char c = chars[i];
@@ -39,7 +43,7 @@ public final class ResourceNames {
             if (boundary && out.length() > 0 && out.charAt(out.length() - 1) != '_') {
                 out.append('_');
             }
-            if (Character.isLetterOrDigit(c)) {
+            if (c < 128 && Character.isLetterOrDigit(c)) {
                 out.append(Character.toLowerCase(c));
             } else if (c == '.' || c == '-' || c == '_') {
                 out.append(c);

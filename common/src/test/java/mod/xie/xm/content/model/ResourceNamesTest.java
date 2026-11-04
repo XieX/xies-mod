@@ -28,6 +28,12 @@ class ResourceNamesTest {
     }
 
     @Test
+    void foldsAccentsAndDropsOtherLettersAnIdCannotHold() {
+        assertEquals("creme_brulee", ResourceNames.toPath("Crème Brûlée"));
+        assertEquals("tea", ResourceNames.toPath("tea茶"));
+    }
+
+    @Test
     void renamesVanillaNamesMojangHasChanged() {
         assertEquals("crafting_table", ResourceNames.toVanillaPath(ItemRef.parse("tile.workbench")));
         assertEquals("cooked_porkchop", ResourceNames.toVanillaPath(ItemRef.parse("porkchopCooked")));

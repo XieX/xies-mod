@@ -3,8 +3,11 @@ package mod.xie.xm.item;
 import com.mojang.logging.LogUtils;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
@@ -13,7 +16,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
@@ -71,6 +73,9 @@ public class XieStickItem extends Item {
 
     /** {@code itemstack.damageItem(1, entityplayer)} — one point per use. */
     private static final int WEAR_PER_USE = 1;
+
+    /** About what vanilla's destroy burst puts out for a plant-sized shape. */
+    private static final int DESTROY_PARTICLES = 24;
 
     /** {@code setMaxDamage(16)}, which a definition's {@code uses} overrides. */
     public static final int DEFAULT_USES = 16;
@@ -170,8 +175,13 @@ public class XieStickItem extends Item {
         // The particles are the server's to send now. Xie.addBlockDestroyEffects went
         // through the proxy and so ran only on the client that swung — the dedicated
         // server's implementation is an empty method — which meant nobody else saw
-        // it. This is the same burst, and everybody gets it.
-        level.levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, pos, Block.getId(clicked));
+        // it. This is the same burst, and everybody gets it. Sent as particles rather
+        // than LevelEvent.PARTICLES_DESTROY_BLOCK, which plays the break sound too.
+        if (level instanceof ServerLevel server) {
+            server.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, clicked),
+                pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                DESTROY_PARTICLES, 0.25, 0.25, 0.25, 0.05);
+        }
 
         spawnDrops(level, pos, harvest);
 

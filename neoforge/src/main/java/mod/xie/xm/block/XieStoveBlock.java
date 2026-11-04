@@ -19,6 +19,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemStackTemplate;
+import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -292,10 +293,10 @@ public class XieStoveBlock extends Block implements EntityBlock {
             return couldAccept(stack, state, level) ? InteractionResult.SUCCESS : InteractionResult.PASS;
         }
 
-        if (tryBase(stack, stove, player, level, pos)) {
+        if (tryBase(stack, stove, player, hand, level, pos)) {
             return InteractionResult.SUCCESS_SERVER;
         }
-        if (tryBowl(stack, stove, player, level, pos)) {
+        if (tryBowl(stack, stove, player, hand, level, pos)) {
             return InteractionResult.SUCCESS_SERVER;
         }
         if (isBowl(stack)) {
@@ -304,10 +305,10 @@ public class XieStoveBlock extends Block implements EntityBlock {
             // acceptance run's first finding: the player's bowl is never fuel.
             return InteractionResult.PASS;
         }
-        if (tryIngredient(stack, stove, player, level, pos)) {
+        if (tryIngredient(stack, stove, player, hand, level, pos)) {
             return InteractionResult.SUCCESS_SERVER;
         }
-        if (tryFuel(stack, stove, player, level, pos)) {
+        if (tryFuel(stack, stove, player, hand, level, pos)) {
             return InteractionResult.SUCCESS_SERVER;
         }
         return InteractionResult.PASS;
@@ -337,23 +338,23 @@ public class XieStoveBlock extends Block implements EntityBlock {
     }
 
     private boolean tryBase(ItemStack stack, XieStoveBlockEntity stove, Player player,
-                            Level level, BlockPos pos) {
+                            InteractionHand hand, Level level, BlockPos pos) {
         Optional<StovePot.Base> base = baseOf(stack);
         if (base.isEmpty() || !stove.setBase(base.get())) {
             return false;
         }
-        consumeOne(stack, player);
+        consumeOne(stack, player, hand);
         playSound(level, pos, SoundEvents.BUCKET_EMPTY);
         updateAppearance(level, pos, level.getBlockState(pos), stove);
         return true;
     }
 
     private boolean tryBowl(ItemStack stack, XieStoveBlockEntity stove, Player player,
-                            Level level, BlockPos pos) {
-        if (!isBowl(stack)) {
+                            InteractionHand hand, Level level, BlockPos pos) {
+        if (!isBowl(stack) || !stove.isCooked()) {
             return false;
         }
-        Optional<StovePot.Meal> meal = stove.extract();
+        Optional<StovePot.Meal> meal = stove.pot().peek();
         if (meal.isEmpty()) {
             return false;
         }
@@ -361,38 +362,37 @@ public class XieStoveBlock extends Block implements EntityBlock {
         ItemStack served = mealStack(meal.get());
         if (served.isEmpty()) {
             // The meal item is not registered, which means the content and the state
-            // machine have drifted apart. Refuse rather than eating the player's bowl.
+            // machine have drifted apart. Refuse before anything is taken, so neither
+            // the player's bowl nor the pot's serving is lost.
             return false;
         }
 
-        stack.shrink(1);
-        if (!player.getInventory().add(served)) {
-            player.drop(served, false);
-        }
+        stove.extract();
+        player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, served));
         playSound(level, pos, SoundEvents.BREWING_STAND_BREW);
         updateAppearance(level, pos, level.getBlockState(pos), stove);
         return true;
     }
 
     private boolean tryIngredient(ItemStack stack, XieStoveBlockEntity stove, Player player,
-                                  Level level, BlockPos pos) {
+                                  InteractionHand hand, Level level, BlockPos pos) {
         Optional<StovePot.Ingredient> ingredient = ingredientOf(stack);
         if (ingredient.isEmpty() || !stove.addIngredient(ingredient.get())) {
             return false;
         }
-        consumeOne(stack, player);
+        consumeOne(stack, player, hand);
         playSound(level, pos, SoundEvents.GENERIC_SPLASH);
         updateAppearance(level, pos, level.getBlockState(pos), stove);
         return true;
     }
 
     private boolean tryFuel(ItemStack stack, XieStoveBlockEntity stove, Player player,
-                            Level level, BlockPos pos) {
+                            InteractionHand hand, Level level, BlockPos pos) {
         int burn = level.fuelValues().burnDuration(stack);
         if (burn <= 0 || !stove.addFuel(burn)) {
             return false;
         }
-        consumeOne(stack, player);
+        consumeOne(stack, player, hand);
         playSound(level, pos, SoundEvents.FIRECHARGE_USE);
         updateAppearance(level, pos, level.getBlockState(pos), stove);
         return true;
@@ -443,17 +443,21 @@ public class XieStoveBlock extends Block implements EntityBlock {
     /**
      * Take one from the stack and hand back whatever the item leaves behind, so a
      * water bucket comes back as an empty bucket rather than vanishing.
+     *
+     * <p>A creative player keeps the stack, as with a cauldron:
+     * {@code ServerPlayerGameMode} restores the count only around an item's own
+     * {@code useOn}, never around a block's {@code useItemOn}, so the block has to.
+     * {@link ItemUtils#createFilledResult} is the cauldron's way of doing both, and
+     * of putting the leftover in the hand the stack emptied out of.
      */
-    private static void consumeOne(ItemStack stack, Player player) {
+    private static void consumeOne(ItemStack stack, Player player, InteractionHand hand) {
         ItemStackTemplate leftOver = stack.getItem().getCraftingRemainder();
-        stack.shrink(1);
-        if (leftOver == null) {
+        ItemStack remainder = leftOver == null ? ItemStack.EMPTY : leftOver.create();
+        if (remainder.isEmpty()) {
+            stack.consume(1, player);
             return;
         }
-        ItemStack remainder = leftOver.create();
-        if (!remainder.isEmpty() && !player.getInventory().add(remainder)) {
-            player.drop(remainder, false);
-        }
+        player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, remainder));
     }
 
     private static void playSound(Level level, BlockPos pos, SoundEvent sound) {
