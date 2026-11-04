@@ -59,7 +59,7 @@
     }
   },
   "recipes": {
-    "milk": "soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,bucketWater",
+    "milk": "soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,bucket",
     "tofu": "soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans,soyBeans"
   }
 }
