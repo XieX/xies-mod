@@ -12,15 +12,10 @@
         "onion": {
           "chance": {
             "0-1": 0,
-            "2+": 100
-          }
-        },
-        "onionSeeds": {
-          "chance": {
-            "0": 0,
-            "1+": 40
+            "2+": 57
           },
-          "amount": 3
+          "amount": 4,
+          "min": 1
         }
       },
       "blockBounds": {
@@ -30,17 +25,19 @@
     }
   },
   "items": {
-    "onion": {
-      "name": "Onion",
-      "texFile": "xie_crops.png",
-      "icon": 105
-    },
     "onionSeeds": {
       "name": "Onion Seeds",
       "type": "seeds",
       "growsInto": "onionPlant",
       "texFile": "xie_crops.png",
       "icon": 104
+    },
+    "onion": {
+      "name": "Onion",
+      "type": "seeds",
+      "growsInto": "onionPlant",
+      "texFile": "xie_crops.png",
+      "icon": 105
     }
   }
 }

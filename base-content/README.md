@@ -36,7 +36,7 @@ occasionally more hybrid seeds.
 You can also find most crops growing wild:
 
 - **Shrubs** grow in plains, hills, swamps and savannas. Breaking one sometimes
-  gives lettuce seeds.
+  gives lettuce or onion seeds.
 - **Wild corn** grows in plains, meadows and savannas, and sometimes drops a corn
   cob.
 - **Wild tomatoes** grow in forests, swamps and hills, and drop a tomato.
@@ -57,8 +57,9 @@ Crops come in three kinds, and the kind decides how you harvest them.
 - **Crops are reaped.** Corn and hybrid wheat are broken when ripe and replanted.
   They grow several times faster in a tended field, beside other crops on
   farmland, than alone. Corn is three blocks tall when fully grown.
-- **Plants are pulled.** Lettuce and onion are broken when grown, giving the
-  vegetable and a chance of seeds.
+- **Plants are pulled.** Lettuce and onion are broken when grown. Lettuce gives a
+  head and a chance of seeds. Onion seeds grow your first onion, and from then on
+  you replant the onions themselves, which come up one to four at a time.
 
 Everything plants on farmland. Tomatoes, roses and dandelions also grow on dirt
 and grass. Bone meal works on all of them.

@@ -28,7 +28,13 @@
         },
         "lettuceSeeds": {
           "chance": {
-            "0": 14,
+            "0": 7,
+            "1+": 0
+          }
+        },
+        "onionSeeds": {
+          "chance": {
+            "0": 7,
             "1+": 0
           }
         },
