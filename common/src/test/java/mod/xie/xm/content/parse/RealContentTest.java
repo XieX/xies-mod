@@ -183,11 +183,7 @@ class RealContentTest {
         var expected = java.util.Map.of(
             "tomatoBush", 4,     // 0-1, 2, 3, 4
             "teaBush", 8,        // 0-2, 3-4, 5-7, 8+
-            "roseBush", 4,       // 0-1, 2, 3, 4+
-            "cottonPlant", 5,    // 0-1, 2-3, 4, 5+
-            // Written with closed ranges up to "14-15", so it really does use the
-            // full metadata range — unlike its siblings, which stop at "n+".
-            "dandelionBush", 15
+            "cottonPlant", 5     // 0-1, 2-3, 4, 5+
         );
         expected.forEach((name, maxAge) -> {
             BlockDef block = result.pack().blocks().get(name);
@@ -279,28 +275,6 @@ class RealContentTest {
             .anyMatch(block -> block.origin().path().contains("_wip")
                 || block.origin().path().contains("_plox_update"));
         assertFalse(fromSkipped, "work-in-progress directories should not be loaded");
-    }
-
-    /**
-     * The two live {@code cull} entries, pinned because the shape of what they name
-     * is easy to misread. {@code redDye:2} is a two-part reference, which
-     * {@code Xie.parseItemStack} read as name and <em>count</em> — so it is two red
-     * dye, not dye subtype two, and the item is decided by the name alone. Anything
-     * that treated the second field as metadata would cull the wrong item entirely.
-     */
-    @Test
-    void parsesCullsAsAnOutputStackWithACount() {
-        List<RecipeDef> culls = result.pack().recipes().stream()
-            .filter(recipe -> recipe.kind() == RecipeDef.Kind.CULL)
-            .toList();
-        assertEquals(2, culls.size(), "flowerbushes.json declares both live culls");
-
-        List<ItemRef> targets = culls.stream().flatMap(cull -> cull.culls().stream()).toList();
-        assertEquals(List.of("redDye", "yellowDye"), targets.stream().map(ItemRef::name).toList());
-        for (ItemRef target : targets) {
-            assertEquals(2, target.count(), () -> target + " names a stack of two");
-            assertFalse(target.hasMeta(), () -> target + " has no metadata value");
-        }
     }
 
     /**

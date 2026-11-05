@@ -12,10 +12,15 @@ live one unlocks. It needs a real player — with nobody online the target check
 fails first and both cases answer "No player was found", which reads like a
 result and is not one.
 
+The live content culls nothing, so the cull comes from
+``acceptance/packs/cull_fixture/``, which the run copies in: the shape of the
+2013 SurvivalTweaks pack, culling vanilla's stone sword and adding one of its
+own made of flint.
+
 Three probes rather than one, because "the recipe is missing" and "the probe is
-broken" look the same: the poppy recipe the live content culls, a vanilla recipe
-nothing culls, and this mod's own red dye, which is what the cull was written to
-make reachable and which the culler spares by namespace.
+broken" look the same: the stone sword recipe the fixture culls, a vanilla
+recipe nothing culls, and the fixture's own stone sword, which is what the cull
+was written to make room for and which, not being vanilla's, no cull can reach.
 """
 
 #: Not for a click: ``/recipe give`` needs a player to give to, and with nobody
@@ -25,13 +30,12 @@ make reachable and which the culler spares by namespace.
 NEEDS_CLIENT = True
 
 CULLED = [
-    ("minecraft:red_dye_from_poppy", "the poppy recipe flowerbushes.json culls"),
-    ("minecraft:yellow_dye_from_dandelion", "and the dandelion one beside it"),
+    ("minecraft:stone_sword", "the stone sword recipe the fixture culls"),
 ]
 
 LIVE = [
     ("minecraft:stick", "a vanilla recipe nothing culls"),
-    ("xiesmod:red_dye", "this mod's own red dye, which the culler spares"),
+    ("xiesmod:stone_sword", "the fixture's own stone sword, which no cull reaches"),
 ]
 
 

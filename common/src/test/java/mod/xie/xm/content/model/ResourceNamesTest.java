@@ -65,7 +65,7 @@ class ResourceNamesTest {
 
     /**
      * 1.6 had two flowers named for their colours, and the bare name meant the
-     * yellow one. Getting these wrong silently drops the flower bush recipes.
+     * yellow one. Getting these wrong silently drops any recipe that names them.
      */
     @Test
     void mapsTheTwoLegacyFlowers() {
@@ -145,8 +145,8 @@ class ResourceNamesTest {
 
     /**
      * A dye written by its own name needs no subtype table: {@code redDye} is already
-     * the modern id in camelCase. {@code flowerbushes.json} writes its culls that way,
-     * with a count rather than a metadata value — {@code redDye:2} is two red dye —
+     * the modern id in camelCase. A cull can be written that way, with a count
+     * rather than a metadata value — {@code redDye:2} is two red dye —
      * so the count must not be mistaken for a subtype and change which item is meant.
      */
     @Test

@@ -1,0 +1,9 @@
+{
+  "$schema": "../../../common/src/main/resources/xie-content.schema.json",
+  "recipes": {
+    "cullStoneSword": {
+      "cull": "stoneSword"
+    },
+    "stoneSword": "flint,flint,stick"
+  }
+}

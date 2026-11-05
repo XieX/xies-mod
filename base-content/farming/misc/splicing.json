@@ -2,16 +2,15 @@
   "$schema": "../../../common/src/main/resources/xie-content.schema.json",
   "recipes": {
     "hybridSeeds": "seeds,redstone",
-    "appleSeeds": "hybridSeeds,roseSeeds",
-    "lemonSeeds": "hybridSeeds,dandelionSeeds",
+    "lemonSeeds": "hybridSeeds,dandelion",
     "orangeSeeds": "hybridSeeds,pumpkinSeeds",
     "avocadoSeed": "hybridSeeds,melonSeeds",
     "tomatoSeeds": "hybridSeeds,appleSeeds",
     "cornKernels": "hybridSeeds,lemonSeeds",
     "cottonSeeds": "hybridSeeds,orangeSeeds",
     "lettuceSeeds": "hybridSeeds,avocadoSeed",
-    "onionSeeds": "cornKernels,dandelionSeeds",
-    "teaLeaves": "cornKernels,melonSeeds",
-    "soyBeans": "cornKernels,pumpkinSeeds"
+    "onionSeeds": "hybridSeeds,potato",
+    "teaLeaves": "hybridSeeds,kelp",
+    "soyBeans": "hybridSeeds,beetrootSeeds"
   }
 }

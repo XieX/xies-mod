@@ -279,6 +279,23 @@ class XieFileReaderTest {
         assertEquals(4, replacement.product().orElseThrow().count());
     }
 
+    /**
+     * {@code redDye:2} is a two-part reference, which {@code Xie.parseItemStack} read
+     * as name and <em>count</em> — so it is two red dye, not dye subtype two, and the
+     * item is decided by the name alone. Anything that treated the second field as
+     * metadata would cull the wrong item entirely.
+     */
+    @Test
+    void readsACullsSecondFieldAsACount() {
+        XieFileReader.Result result = read("""
+            { "recipes": { "roseCull": { "cull": "redDye:2" } } }
+            """);
+        ItemRef target = result.recipes().get(0).culls().get(0);
+        assertEquals("redDye", target.name());
+        assertEquals(2, target.count());
+        assertFalse(target.hasMeta());
+    }
+
     /** The original accepted this misspelling, and shipped content relies on it. */
     @Test
     void acceptsMisspelledOverride() {

@@ -6,7 +6,9 @@ the run has to be able to happen on a working tree somebody else is using:
 * **content packs** — the run needs a known set, and a deferred directory is
   exercised by copying it into ``xiecontent/`` as a pack of its own, since the
   leading ``_`` is what skips it and the content should not be edited to
-  run a test. Anything else already in there is moved aside and moved back.
+  run a test. So is a fixture from ``acceptance/packs/``, for a feature the
+  live content does not use. Anything else already in there is moved aside
+  and moved back.
 * **``options.txt``** — ``pauseOnLostFocus`` has to be off, or the game menu
   opens the moment the driving process hands the window back and the click
   that follows is swallowed. It has to be changed while the client is *not*
@@ -35,6 +37,10 @@ DEFERRED_PACKS = {
     "nether_crops": "_plox_update/nether_crops",
     "steel": "_wip/steel",
 }
+
+#: Packs that exist only for a check, each a directory of ``acceptance/packs/``.
+#: The live content has no ``cull`` of its own.
+FIXTURE_PACKS = ("cull_fixture",)
 
 #: Not a pack: the live content, and the pack this run generates.
 NOT_A_PACK = {"base-content", "_generated"}
@@ -152,13 +158,16 @@ class Session:
             say("no base-content in %s; the server will install the bundled copy"
                 % self.content_dir)
 
-        for pack, source in DEFERRED_PACKS.items():
+        sources = [(pack, os.path.join(content_repo, *source.split("/")))
+                   for pack, source in DEFERRED_PACKS.items()]
+        sources += [(pack, os.path.join(self.repo, "acceptance", "packs", pack))
+                    for pack in FIXTURE_PACKS]
+        for pack, origin in sources:
             target = os.path.join(self.content_dir, pack)
             if os.path.isdir(target):
                 continue
-            origin = os.path.join(content_repo, *source.split("/"))
             if not os.path.isdir(origin):
-                raise SessionError("deferred pack %s is not at %s" % (pack, origin))
+                raise SessionError("pack %s is not at %s" % (pack, origin))
             shutil.copytree(origin, target)
             self._added_packs.append(target)
 
@@ -169,6 +178,7 @@ class Session:
         extra = [
             entry for entry in sorted(os.listdir(self.content_dir))
             if entry not in NOT_A_PACK and entry not in DEFERRED_PACKS
+            and entry not in FIXTURE_PACKS
             and os.path.isdir(os.path.join(self.content_dir, entry))
         ]
         if extra:

@@ -12,9 +12,9 @@ Three bushes, on grass: a ripe tomato and a ripe cotton plant picked, and a
 tomato one stage short of ripe clicked for the null. The break is
 ``/loot give ... mine``, which runs the block's own table at its current state
 and hands the result over, so it is counted in the player's hands as the pick
-is. Its seed is asserted on the rose bush, whose ripe chance is 99, because the
-tomato's three rolls at 60 come up empty one time in sixteen; the tomato is
-asserted to give no tomato, which is certain.
+is. Its seed is asserted on a soy crop, whose three rolls at 90 come up empty
+one time in a thousand, because the tomato's three rolls at 60 come up empty
+one time in sixteen; the tomato is asserted to give no tomato, which is certain.
 """
 
 import time
@@ -25,7 +25,7 @@ NEEDS_CLIENT = True
 
 TOMATO = "xiesmod:tomato_bush"
 COTTON = "xiesmod:cotton_plant"
-ROSE = "xiesmod:rose_bush"
+SOY = "xiesmod:soy_crop"
 APART = 3
 
 
@@ -40,13 +40,13 @@ def run(game, expect):
     tomato = (x0, Y, z0)
     cotton = (x0 + APART, Y, z0)
     green = (x0 + 2 * APART, Y, z0)
-    rose = (x0 + 3 * APART, Y, z0)
+    soy = (x0 + 3 * APART, Y, z0)
     for pos, state in ((tomato, TOMATO + "[age=4]"), (cotton, COTTON + "[age=5]"),
-                       (green, TOMATO + "[age=3]"), (rose, ROSE + "[age=4]")):
+                       (green, TOMATO + "[age=3]"), (soy, SOY + "[age=4]")):
         game.setblock(pos, state)
 
     standing = all(game.block_is(pos, block) for pos, block in
-                   ((tomato, TOMATO), (cotton, COTTON), (green, TOMATO), (rose, ROSE)))
+                   ((tomato, TOMATO), (cotton, COTTON), (green, TOMATO), (soy, SOY)))
     if not expect.that("four bushes stand on grass", standing,
                        "nothing below can mean anything without them"):
         return
@@ -87,10 +87,10 @@ def run(game, expect):
                 game.count_items("xiesmod:tomato") == tomatoes,
                 "%d tomatoes in hand, %d before" % (game.count_items("xiesmod:tomato"), tomatoes))
 
-    game.cmd("loot give %s mine %d %d %d" % ((game.player,) + rose))
-    got = game.count_items("xiesmod:rose_seeds")
-    expect.that("and a ripe rose bush leaves its seed to replant", got >= 1,
-                "%d rose seeds in hand" % got)
+    game.cmd("loot give %s mine %d %d %d" % ((game.player,) + soy))
+    got = game.count_items("xiesmod:soy_beans")
+    expect.that("and a ripe soy crop leaves its seed to replant", got >= 1,
+                "%d soy beans in hand" % got)
 
 
 def _age(game, pos, block):

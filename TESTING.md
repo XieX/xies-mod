@@ -47,7 +47,7 @@ It needs Python 3 and a Windows desktop whose foreground it can take, because a
 | `counts` | Every number in the emission summary, against the fixed baseline in `acceptance/checks/counts.py`. The one check that needs no world at all. |
 | `stem` | A ripe `zombiePigmelonStem` fruits into `zombiePigmelon`, the fruit lands on the stem's own soil, and the stem becomes an attached stem *facing it*. Plus the null: a stem whose neighbours have stone under them ripens forever. |
 | `fruit` | A right-click on a ripe leaf hands over its apple and leaves the leaf standing and bare, and gives nothing on a bare one; bone meal ripens a bare leaf and is refused by a `persistent` one; a leaf open to the air ripens on its own under random ticks while, over the same window, the persistent one stays bare and so does a bare leaf with a ripe one beside it. |
-| `bush` | A right-click on a ripe tomato bush and a ripe cotton plant drops each back three stages and hands over one or two of its crop — never none, which is what `min` is for — and no seed; a tomato one stage short of ripe gives nothing to the same click. Breaking, through `/loot give ... mine`, gives a ripe tomato bush's seed and not its tomato, and a ripe rose bush's seed. |
+| `bush` | A right-click on a ripe tomato bush and a ripe cotton plant drops each back three stages and hands over one or two of its crop — never none, which is what `min` is for — and no seed; a tomato one stage short of ripe gives nothing to the same click. Breaking, through `/loot give ... mine`, gives a ripe tomato bush's seed and not its tomato, and a ripe soy crop's seed. |
 | `sapling` | Bone meal grows a sapling into its tree, and both that tree and the same tree placed as a *feature* come up with a few leaves already ripe — every tree bears, which is the 2013 keystone's asymmetry dropped on purpose and read as a count over the canopy. |
 | `decay` | A canopy beside a `blazeLog` measures one block from it and is still there after four hundred ticks of ticking; the same canopy on stone measures seven and dies. `XieTreeBlock` *is* a `LeavesBlock`, so this is the one generated tag entry that every fruit tree in the game stands on. |
 | `spikey` | Walking into `blazeTree` costs health, and the stop position is `wall + 0.1 - 0.3` — the inset canopy — where the same walk into leaves that are not spikey stops at `wall - 0.3` and costs nothing. |
@@ -59,7 +59,7 @@ It needs Python 3 and a Windows desktop whose foreground it can take, because a
 | `cookpot` | Water starts an empty pot and is refused by one with a base; a carrot in an unfuelled pot is still raw after `cookTime`, and coal cooks it in exactly that; the pot shows the meal its next bowl will be from the moment the carrot goes in, with `cooking` saying whether it is ready, and a bowl ladles the meal the tier predicts — one food a Weak Soup, one food and salt a Soup, a food, a porkchop and salt a Stew — and on an empty or unfinished pot serves nothing and is kept; rotten flesh, a food the pot leaves out on purpose and no fuel, moves nothing. |
 | `ripen` | Six fresh cheese blocks, in the dark and on stone, all ripen into cheese blocks — which a plant's light rule would stall for ever. Bone meal from a dispenser does nothing to one and is kept, beside a vanilla sapling that takes it; broken before it ripens it yields nothing, beside a cheese block that drops itself. |
 | `blocks` | A shrub comes away with its soil and a salt deposit with its sand, while a salt block, which is terrain, stays where it was put. |
-| `cull` | The poppy and dandelion dye recipes are gone from the recipe registry, and a vanilla recipe nothing culls and this mod's own red dye are still in it. |
+| `cull` | Vanilla's stone sword recipe, which the `cull_fixture` pack culls, is gone from the recipe registry, and a vanilla recipe nothing culls and the fixture's own stone sword are still in it. |
 
 **Three rules the checks follow**, which are the difference between a suite that
 tells you something and one that agrees with you:
@@ -80,8 +80,9 @@ tells you something and one that agrees with you:
 
 **What it arranges, and puts back.** The run has to be able to happen on a working
 tree somebody else is using, so `acceptance/rig/session.py` restores every one of
-these afterwards: the four deferred packs are copied into `xiecontent/` and anything
-else in there is moved aside, since a fifth pack would move the counts;
+these afterwards: the four deferred packs and the fixture packs in
+`acceptance/packs/` are copied into `xiecontent/` and anything else in there is moved
+aside, since another pack would move the counts;
 `server.properties` gets rcon and a flat world of its own called `acceptance-world`,
 so an arena is a fill rather than a landscape and no manual test world is disturbed;
 and `options.txt` gets `pauseOnLostFocus:false`, written while the client is not
@@ -115,8 +116,8 @@ running because a clean exit rewrites the file.
 on the client's screen — the client is present because the server needs a player, not
 because the run looks at it. The screenshot on failure is evidence for a human, not an
 assertion. `SurvivalTweaks/` is not among the four packs, so the two pickaxe overrides
-and the wheat loot table are still verified by hand; the culls it declares are not the
-ones the `cull` check uses, which are the live content's own. The client and server
+and the wheat loot table are still verified by hand; the `cull` check uses a fixture
+in its shape rather than its culls. The client and server
 share `neoforge/run/xiecontent/`, so the run cannot show `XieContentCheck` refusing a
 client whose content differs. That is checked by hand: start the server, add a
 throwaway pack, start the client, and the join fails on the mod mismatch screen

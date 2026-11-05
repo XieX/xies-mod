@@ -15,23 +15,21 @@ Getting started
 ---------------
 
 The quickest way in is **seed splicing**. Craft wheat seeds with redstone to make
-**Hybrid Seeds**, then craft a hybrid seed with another seed to make a new one:
+**Hybrid Seeds**, then craft a hybrid seed with another seed or plant to make a new
+one:
 
-| hybrid seeds + | makes | | corn kernels + | makes |
+| hybrid seeds + | makes | | hybrid seeds + | makes |
 |---|---|---|---|---|
-| rose seeds | apple seeds | | dandelion seeds | onion seeds |
-| dandelion seeds | lemon seeds | | melon seeds | tea leaves |
-| pumpkin seeds | orange seeds | | pumpkin seeds | soy beans |
-| melon seeds | avocado seed | | | |
-| apple seeds | tomato seeds | | | |
-| lemon seeds | corn kernels | | | |
-| orange seeds | cotton seeds | | | |
-| avocado seed | lettuce seeds | | | |
+| dandelion | lemon seeds | | lemon seeds | corn kernels |
+| pumpkin seeds | orange seeds | | orange seeds | cotton seeds |
+| melon seeds | avocado seed | | avocado seed | lettuce seeds |
+| apple seeds | tomato seeds | | potato | onion seeds |
+| beetroot seeds | soy beans | | kelp | tea leaves |
 
-Rose and dandelion seeds come from crafting a poppy or a dandelion, so between
-them and the vanilla seeds every crop and tree in the mod can be started from
-scratch. Hybrid seeds also grow into **Hybrid Wheat**, which drops wheat and
-occasionally more hybrid seeds.
+Apple seeds come from crafting an apple, so between them and vanilla's seeds and
+plants every crop and tree in the mod can be started from scratch. Hybrid seeds
+also grow into **Hybrid Wheat**, which drops wheat and occasionally more hybrid
+seeds.
 
 You can also find most crops growing wild:
 
@@ -51,7 +49,7 @@ Crops
 
 Crops come in three kinds, and the kind decides how you harvest them.
 
-- **Bushes are picked.** Tomato, cotton, soy, tea, rose and dandelion bushes ripen,
+- **Bushes are picked.** Tomato, cotton, soy and tea bushes ripen,
   and a right-click on a ripe bush picks its crop and sets it back a few stages to
   grow again. Breaking a bush gives you its seeds instead, more the riper it was.
 - **Crops are reaped.** Corn and hybrid wheat are broken when ripe and replanted.
@@ -61,8 +59,8 @@ Crops come in three kinds, and the kind decides how you harvest them.
   head and a chance of seeds. Onion seeds grow your first onion, and from then on
   you replant the onions themselves, which come up one to four at a time.
 
-Everything plants on farmland. Tomatoes, roses and dandelions also grow on dirt
-and grass. Bone meal works on all of them.
+Everything plants on farmland. Tomatoes also grow on dirt and grass. Bone meal
+works on all of them.
 
 Fruit trees
 -----------
@@ -166,8 +164,6 @@ goes into a recipe.
   makes six.
 - **Milk:** six soy beans and a water bucket make a milk bucket.
 - **String:** two cotton, one above the other, make two string.
-- **Dyes:** a poppy crafts into rose seeds rather than red dye, and red dye now
-  comes only from rose seeds. Dandelions and yellow dye work the same way.
 
 The cookpot
 -----------
