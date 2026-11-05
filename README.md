@@ -220,6 +220,20 @@ Platform versions live in `gradle.properties`; bump `minecraft_version`,
 `minecraft_version_range` and `neo_version` together. [TODO.md](TODO.md) lists
 unfinished work, and [AGENTS.md](AGENTS.md) is for coding agents.
 
+Releasing
+---------
+
+Every push to `main` or an `mc/*` branch builds and tests on GitHub Actions, and
+the jar is kept as the run's artifact. `main` follows the newest Minecraft line the
+mod supports, and the line before it gets fixes on a branch named for it, such as
+`mc/26.1`. A release goes out by setting `mod_version` in `gradle.properties`,
+pushing, and publishing a GitHub release tagged `v<mod_version>`: the release
+workflow refuses a tag that does not match, then builds, attaches the jar to the
+release, and uploads it to Modrinth with the release's title and notes as the
+version's name and changelog. Ticking "Set as a pre-release" puts it on Modrinth's
+beta channel. The Modrinth step needs the `MODRINTH_TOKEN` repository secret, and
+since the jar is attached first, a failed upload can be fixed and the job re-run.
+
 History
 -------
 

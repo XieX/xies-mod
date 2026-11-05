@@ -1,0 +1,64 @@
+name: Release
+
+# Publishing a GitHub release with a tag of v<mod_version> builds the jar, attaches
+# it to that release, and uploads it to Modrinth. The release's title and notes
+# become the Modrinth version's name and changelog, and a pre-release goes out on
+# Modrinth's beta channel.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Read versions from gradle.properties
+        id: props
+        run: |
+          echo "mod=$(sed -n 's/^mod_version=//p' gradle.properties)" >> "$GITHUB_OUTPUT"
+          echo "minecraft=$(sed -n 's/^minecraft_version=//p' gradle.properties)" >> "$GITHUB_OUTPUT"
+
+      - name: Check the tag matches mod_version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+          MOD_VERSION: ${{ steps.props.outputs.mod }}
+        run: |
+          if [ "$TAG" != "v$MOD_VERSION" ]; then
+            echo "::error::Release tag $TAG does not match mod_version=$MOD_VERSION in gradle.properties; expected v$MOD_VERSION"
+            exit 1
+          fi
+
+      - run: ./gradlew :common:test :neoforge:build
+
+      # Attached first and on its own, so a failed Modrinth upload still leaves the
+      # jar on the release and the job can simply be re-run.
+      - name: Attach the jar to the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+          JAR: neoforge/build/libs/xiesmod-${{ steps.props.outputs.mod }}.jar
+        run: gh release upload "$TAG" "$JAR" --clobber
+
+      - name: Upload to Modrinth
+        uses: Kir-Antipov/mc-publish@c23376546a97f5ba7984e94445da359459b14419 # v3.3.2
+        with:
+          modrinth-id: H6nqocCE
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: neoforge/build/libs/xiesmod-${{ steps.props.outputs.mod }}.jar
+          version: ${{ steps.props.outputs.mod }}
+          version-type: ${{ github.event.release.prerelease && 'beta' || 'release' }}
+          loaders: neoforge
+          game-versions: ${{ steps.props.outputs.minecraft }}
+          java: 25

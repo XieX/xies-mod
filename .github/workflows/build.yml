@@ -1,0 +1,33 @@
+name: Build
+
+on:
+  push:
+    # An mc/<line> branch carries fixes for an earlier Minecraft line.
+    branches: [main, 'mc/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # The mod compiles on 25. ModDevGradle's own tooling wants a 21, which the
+      # foojay resolver in settings.gradle.kts fetches if the runner lacks one.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - run: ./gradlew :common:test :neoforge:build
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: xiesmod
+          path: neoforge/build/libs/xiesmod-*.jar
+          if-no-files-found: error
