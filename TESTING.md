@@ -152,7 +152,7 @@ on announces itself the moment it stops being true.
   `Game.stand_on`, `Game.stand_under` and `acceptance/rig/winput.py`, where three
   things have to be right or the click vanishes without a word — each one an hour to
   find, and all three now asserted in code rather than remembered:
-  - **`PostMessage` is not enough.** The game reads the mouse through GLFW, which
+  - **`PostMessage` is not enough.** The game reads the mouse through SDL, which
     takes raw input on Windows, so it has to be `SendInput` — and the window has to
     genuinely hold focus, which a background process only gets by attaching its input
     queue to the foreground thread first (`AttachThreadInput`). `SetForegroundWindow`

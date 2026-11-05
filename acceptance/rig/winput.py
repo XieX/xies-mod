@@ -1,7 +1,7 @@
 """Synthetic keyboard and mouse for the game window.
 
 No command right-clicks a block, so a ``useOn`` needs a real click, and the
-game reads its input through GLFW, which takes raw input on Windows. Three
+game reads its input through SDL, which takes raw input on Windows. Three
 things have to be right or a click vanishes without a word:
 
 * it has to be ``SendInput``. ``PostMessage`` is not enough.
@@ -109,7 +109,7 @@ class InputError(Exception):
 
 
 def find_game_window(title_hint="Minecraft", attempts=1, pause=1.0):
-    """The client's GLFW window, as ``(hwnd, pid)``, or ``(None, None)``."""
+    """The client's SDL window, as ``(hwnd, pid)``, or ``(None, None)``."""
     for attempt in range(attempts):
         found = []
 
@@ -124,7 +124,7 @@ def find_game_window(title_hint="Minecraft", attempts=1, pause=1.0):
             user32.GetWindowTextW(hwnd, title, length + 1)
             class_name = ctypes.create_unicode_buffer(64)
             user32.GetClassNameW(hwnd, class_name, 64)
-            if title_hint.lower() in title.value.lower() and class_name.value.startswith("GLFW"):
+            if title_hint.lower() in title.value.lower() and class_name.value.startswith("SDL"):
                 pid = wintypes.DWORD()
                 user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
                 found.append((hwnd, pid.value, title.value))

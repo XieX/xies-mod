@@ -85,7 +85,7 @@ def main(argv=None):
         session.start()
     except SessionError as failure:
         print("could not start: %s" % failure)
-        session.restore()
+        session.stop()
         return 2
 
     try:
