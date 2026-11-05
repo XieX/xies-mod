@@ -1,7 +1,5 @@
 package mod.xie.xm.block;
 
-import com.mojang.serialization.MapCodec;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -45,9 +43,6 @@ public class XieSaplingBlock extends XiePlantBlock {
      */
     public static final int SAPLING_GROWTH_DENOMINATOR = 7;
 
-    public static final MapCodec<XieSaplingBlock> CODEC =
-        simpleCodec(properties -> new XieSaplingBlock(properties, Config.PLACEHOLDER, Optional.empty()));
-
     /** Absent when {@code growsInto} names a block this build could not register. */
     private final Optional<TreeGrower> grower;
 
@@ -55,11 +50,6 @@ public class XieSaplingBlock extends XiePlantBlock {
                            Optional<TreeGrower> grower) {
         super(properties, config);
         this.grower = grower;
-    }
-
-    @Override
-    protected MapCodec<? extends XieSaplingBlock> codec() {
-        return CODEC;
     }
 
     @Override

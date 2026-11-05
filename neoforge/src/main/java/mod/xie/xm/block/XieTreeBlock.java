@@ -1,7 +1,5 @@
 package mod.xie.xm.block;
 
-import com.mojang.serialization.MapCodec;
-
 import mod.xie.xm.content.model.Bounds;
 
 import net.minecraft.core.BlockPos;
@@ -22,8 +20,10 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BonemealSource;
 import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.sounds.AmbientLeavesBlockSoundPlayer;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -93,10 +93,6 @@ public class XieTreeBlock extends LeavesBlock implements BonemealableBlock {
     public record Config(int maxAge, int growthRate, boolean fertilisable, boolean spikey,
                          Optional<Bounds> shape) {
 
-        /** Used only to satisfy the block codec; never placed in a world. */
-        public static final Config PLACEHOLDER =
-            new Config(0, 100, false, false, Optional.empty());
-
         public boolean bearsFruit() {
             return maxAge > 0;
         }
@@ -111,15 +107,9 @@ public class XieTreeBlock extends LeavesBlock implements BonemealableBlock {
      */
     public static final String HARVEST_PREFIX = "harvest/";
 
-    /** Leaves are not a Mojang particle source here; the 2013 block had none. */
-    private static final float NO_LEAF_PARTICLES = 0f;
-
     /** {@code Xie.setFlammability(leafID, 30, 60)}, which is vanilla's for leaves. */
     private static final int LEAF_IGNITE_ODDS = 30;
     private static final int LEAF_BURN_ODDS = 60;
-
-    public static final MapCodec<XieTreeBlock> CODEC =
-        simpleCodec(properties -> new XieTreeBlock(properties, Config.PLACEHOLDER));
 
     private final Config config;
 
@@ -134,7 +124,7 @@ public class XieTreeBlock extends LeavesBlock implements BonemealableBlock {
 
     /** The age property is built before this constructor's body runs; see {@link XieAges}. */
     public XieTreeBlock(BlockBehaviour.Properties properties, Config config) {
-        super(NO_LEAF_PARTICLES, XieAges.primeOptional(properties, config.maxAge()));
+        super(AmbientLeavesBlockSoundPlayer.noAmbientSound(), XieAges.primeOptional(properties, config.maxAge()));
         XieAges.clear();
 
         this.config = config;
@@ -167,11 +157,6 @@ public class XieTreeBlock extends LeavesBlock implements BonemealableBlock {
         return config;
     }
 
-    @Override
-    public MapCodec<? extends XieTreeBlock> codec() {
-        return CODEC;
-    }
-
     /**
      * {@code distance}, {@code persistent} and {@code waterlogged} from
      * {@link LeavesBlock}, plus {@code age} for a tree that bears fruit. A tree that
@@ -182,16 +167,6 @@ public class XieTreeBlock extends LeavesBlock implements BonemealableBlock {
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         XieAges.pendingOptional().ifPresent(builder::add);
-    }
-
-    /**
-     * The 2013 block drew no falling-leaf particles, because they did not exist.
-     * With {@link #NO_LEAF_PARTICLES} as the chance {@code LeavesBlock} never asks,
-     * so this is unreachable rather than empty by choice.
-     */
-    @Override
-    protected void spawnFallingLeavesParticle(Level level, BlockPos pos, RandomSource random) {
-        // Nothing to draw.
     }
 
     /**
@@ -338,7 +313,7 @@ public class XieTreeBlock extends LeavesBlock implements BonemealableBlock {
         }
 
         if (level instanceof ServerLevel serverLevel) {
-            Block.dropFromBlockInteractLootTable(serverLevel, harvestTable(), state, null, null,
+            Block.dropFromBlockInteractLootTable(serverLevel, harvestTable(), pos, state, null, null,
                 player, (where, stack) -> Block.popResourceFromFace(where, pos,
                     hitResult.getDirection(), stack));
 
@@ -366,17 +341,17 @@ public class XieTreeBlock extends LeavesBlock implements BonemealableBlock {
 
     /** Bone meal ripens a leaf one stage, as it puts the berries on a cave vine. */
     @Override
-    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state) {
+    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state, BonemealSource source) {
         return config.fertilisable() && canRipen(state);
     }
 
     @Override
-    public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state) {
+    public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
         return true;
     }
 
     @Override
-    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state) {
+    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
         ripen(level, pos, state, state.getValue(ageProperty) + 1);
     }
 

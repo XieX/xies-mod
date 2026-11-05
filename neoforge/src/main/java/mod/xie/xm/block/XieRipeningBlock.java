@@ -1,7 +1,5 @@
 package mod.xie.xm.block;
 
-import com.mojang.serialization.MapCodec;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -55,13 +53,7 @@ public class XieRipeningBlock extends Block {
             maxAge = XieAges.clamp(maxAge);
             growthRate = Math.max(1, growthRate);
         }
-
-        /** Used only to satisfy the block codec; never placed in a world. */
-        public static final Config PLACEHOLDER = new Config(1, 100, Optional.empty());
     }
-
-    public static final MapCodec<XieRipeningBlock> CODEC =
-        simpleCodec(properties -> new XieRipeningBlock(properties, Config.PLACEHOLDER));
 
     private final Config config;
     private final IntegerProperty ageProperty;
@@ -93,11 +85,6 @@ public class XieRipeningBlock extends Block {
 
     public boolean isRipe(BlockState state) {
         return age(state) >= config.maxAge();
-    }
-
-    @Override
-    protected MapCodec<? extends XieRipeningBlock> codec() {
-        return CODEC;
     }
 
     @Override

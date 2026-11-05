@@ -115,7 +115,7 @@ public record RegisteredContent(
      *
      * <p>Only the growing archetypes do. It decides both how many blockstate
      * variants the block needs and whether a loot pool may name {@code age} in a
-     * {@code block_state_property} condition — naming a property a block does not
+     * {@code match_block} condition — naming a property a block does not
      * have is a datapack load error, not a no-op.
      */
     public boolean hasAge(String path) {

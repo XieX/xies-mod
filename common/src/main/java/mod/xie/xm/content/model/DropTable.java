@@ -19,7 +19,7 @@ import java.util.Optional;
  * </pre>
  *
  * <p>Chance is a percentage, per metadata value. The registrar turns each entry
- * into a loot table pool with a {@code block_state_property} condition on age.
+ * into a loot table pool with a {@code match_block} condition on age.
  */
 public record DropTable(List<Drop> drops) {
 

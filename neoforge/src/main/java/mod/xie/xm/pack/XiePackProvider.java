@@ -4,14 +4,13 @@ import com.mojang.logging.LogUtils;
 
 import mod.xie.xm.XiesMod;
 import mod.xie.xm.content.parse.XieParser;
-import mod.xie.xm.recipe.XieRecipeCuller;
+import mod.xie.xm.reg.XieFuels;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackLocationInfo;
-import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackSelectionConfig;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.PathPackResources;
@@ -112,17 +111,7 @@ public final class XiePackProvider {
             PackSource.BUILT_IN,
             Optional.empty());
 
-        Pack.ResourcesSupplier resources = new Pack.ResourcesSupplier() {
-            @Override
-            public PackResources openPrimary(PackLocationInfo info) {
-                return new PathPackResources(info, root);
-            }
-
-            @Override
-            public PackResources openFull(PackLocationInfo info, Pack.Metadata metadata) {
-                return new PathPackResources(info, root);
-            }
-        };
+        Pack.ResourcesSupplier resources = new PathPackResources.PathResourcesSupplier(root);
 
         Pack pack = Pack.readMetaAndCreate(
             location, resources, type, new PackSelectionConfig(required, position, false));
@@ -161,11 +150,10 @@ public final class XiePackProvider {
                 return null;
             }
 
-            // Nothing on disk carries a cull, so it is handed over directly. This
-            // runs before any datapack is read, on either side, which is what the
-            // culler needs — it acts on the recipes of the first load as well as of
-            // every later /reload.
-            XieRecipeCuller.targets(emitter.culledItems());
+            // A component is not a file, so the burn times are handed over directly.
+            // This runs before any datapack is read, on either side, which is when
+            // XieFuels applies them.
+            XieFuels.burnTimes(emitter.fuels());
 
             overrideRoot = emitter.overrideRoot();
             worldgenRoot = emitter.worldgenRoot();

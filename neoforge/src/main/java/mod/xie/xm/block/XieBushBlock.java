@@ -1,7 +1,5 @@
 package mod.xie.xm.block;
 
-import com.mojang.serialization.MapCodec;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -51,9 +49,6 @@ public class XieBushBlock extends XiePlantBlock {
      */
     public static final int REGROW_SETBACK = 3;
 
-    public static final MapCodec<XieBushBlock> CODEC =
-        simpleCodec(properties -> new XieBushBlock(properties, Config.PLACEHOLDER, false));
-
     private final boolean bears;
     private ResourceKey<LootTable> harvestTable;
 
@@ -61,11 +56,6 @@ public class XieBushBlock extends XiePlantBlock {
     public XieBushBlock(BlockBehaviour.Properties properties, Config config, boolean bears) {
         super(properties, config);
         this.bears = bears;
-    }
-
-    @Override
-    protected MapCodec<? extends XieBushBlock> codec() {
-        return CODEC;
     }
 
     /** The stage a harvested bush falls back to. */
@@ -100,7 +90,7 @@ public class XieBushBlock extends XiePlantBlock {
 
         if (level instanceof ServerLevel serverLevel) {
             // A bush is hollow, so the fruit drops where it hangs, as berries do.
-            Block.dropFromBlockInteractLootTable(serverLevel, harvestTable(), state, null, null,
+            Block.dropFromBlockInteractLootTable(serverLevel, harvestTable(), pos, state, null, null,
                 player, (where, stack) -> Block.popResource(where, pos, stack));
 
             serverLevel.playSound(null, pos, SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES,

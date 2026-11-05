@@ -1,6 +1,6 @@
 plugins {
     `java-library`
-    id("net.neoforged.moddev") version "2.0.143"
+    id("net.neoforged.moddev") version "2.0.148"
 }
 
 repositories {

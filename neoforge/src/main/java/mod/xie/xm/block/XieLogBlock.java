@@ -1,7 +1,5 @@
 package mod.xie.xm.block;
 
-import com.mojang.serialization.MapCodec;
-
 import mod.xie.xm.content.model.Bounds;
 
 import net.minecraft.core.BlockPos;
@@ -58,14 +56,7 @@ public class XieLogBlock extends RotatedPillarBlock {
      */
     public record Config(Optional<String> becomesWhenDestroyed, Optional<Bounds> shape,
                          boolean spikey) {
-
-        /** Used only to satisfy the block codec; never placed in a world. */
-        public static final Config PLACEHOLDER =
-            new Config(Optional.empty(), Optional.empty(), false);
     }
-
-    public static final MapCodec<XieLogBlock> CODEC =
-        simpleCodec(properties -> new XieLogBlock(properties, Config.PLACEHOLDER));
 
     private final Config config;
     private final XieBecomes becomes;
@@ -82,11 +73,6 @@ public class XieLogBlock extends RotatedPillarBlock {
 
     public Config config() {
         return config;
-    }
-
-    @Override
-    public MapCodec<? extends XieLogBlock> codec() {
-        return CODEC;
     }
 
     /**

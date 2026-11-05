@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -301,14 +300,11 @@ public final class XiePackEmitter {
     }
 
     /**
-     * The items the content's {@code cull} entries named, once {@link #emit} has run.
-     *
-     * <p>The one thing a definition file asks for that no generated file can carry:
-     * it removes recipes rather than adding any, so it leaves the pack by this route
-     * instead. See {@link mod.xie.xm.recipe.XieRecipeCuller}.
+     * Item id to the burn time provider its {@code cooking_fuel} names, once {@link #emit}
+     * has run. See {@link mod.xie.xm.reg.XieFuels}.
      */
-    public Set<String> culledItems() {
-        return dataEmitter.culledItems();
+    public Map<String, String> fuels() {
+        return dataEmitter.fuels();
     }
 
     // ------------------------------------------------------------- pack meta

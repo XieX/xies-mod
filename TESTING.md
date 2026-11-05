@@ -181,7 +181,7 @@ on announces itself the moment it stops being true.
   not still a sapling — and only ever the first action in a lane. Three explanations
   are out, so that nobody spends the hour on them again:
   - **`TreeGrower.growTree` cannot leave air.** It clears the sapling, places the
-    configured feature and puts the sapling back when the feature refuses. The emitted
+    feature and puts the sapling back when the feature refuses. The emitted
     `two_layers_feature_size` carries no `min_clipped_height`, so `TreeFeature.doPlace`
     refuses anything short of the full height rather than placing a clipped tree, and
     `StraightTrunkPlacer` always writes a log at the origin. A `true` return means a

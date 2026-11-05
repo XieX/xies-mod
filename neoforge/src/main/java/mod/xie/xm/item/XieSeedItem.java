@@ -1,5 +1,6 @@
 package mod.xie.xm.item;
 
+import net.minecraft.util.Prediction;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
@@ -76,7 +77,7 @@ public class XieSeedItem extends BlockItem {
         if (context.getItemInHand().isEmpty()) {
             player.setItemInHand(context.getHand(), emptied);
         } else if (!player.getInventory().add(emptied)) {
-            player.drop(emptied, false);
+            player.drop(emptied, false, Prediction.PREDICTED);
         }
         return placed;
     }

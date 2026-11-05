@@ -1,7 +1,5 @@
 package mod.xie.xm.block;
 
-import com.mojang.serialization.MapCodec;
-
 import mod.xie.xm.content.model.Bounds;
 
 import net.minecraft.core.BlockPos;
@@ -64,14 +62,7 @@ public class XieBasicBlock extends Block {
         public Config {
             growsOn = Set.copyOf(growsOn);
         }
-
-        /** Used only to satisfy the block codec; never placed in a world. */
-        public static final Config PLACEHOLDER =
-            new Config(Optional.empty(), Optional.empty(), false, Set.of(), false);
     }
-
-    public static final MapCodec<XieBasicBlock> CODEC =
-        simpleCodec(properties -> new XieBasicBlock(properties, Config.PLACEHOLDER));
 
     private final Config config;
     private final VoxelShape shape;
@@ -89,11 +80,6 @@ public class XieBasicBlock extends Block {
 
     public Config config() {
         return config;
-    }
-
-    @Override
-    protected MapCodec<? extends XieBasicBlock> codec() {
-        return CODEC;
     }
 
     @Override

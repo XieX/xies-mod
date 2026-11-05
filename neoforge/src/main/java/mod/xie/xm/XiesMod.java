@@ -8,14 +8,13 @@ import mod.xie.xm.content.parse.Diagnostic;
 import mod.xie.xm.content.parse.XieParser;
 import mod.xie.xm.net.XieContentCheck;
 import mod.xie.xm.pack.XiePackProvider;
-import mod.xie.xm.recipe.XieRecipeCuller;
+import mod.xie.xm.reg.XieFuels;
 import mod.xie.xm.reg.XieRegistrar;
 
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLPaths;
-import net.neoforged.neoforge.common.NeoForge;
 
 import org.slf4j.Logger;
 
@@ -63,11 +62,7 @@ public class XiesMod {
         // Fires once for resources and once for data; the same generated directory
         // is registered as both a resource pack and a datapack.
         modEventBus.addListener(XiePackProvider::addPackFinders);
-
-        // "cull" is the one thing content asks for that no generated file can carry,
-        // so it is applied to the recipes as they load instead. On the game bus
-        // rather than the mod bus: it fires on every datapack load, not once.
-        NeoForge.EVENT_BUS.addListener(XieRecipeCuller::onModifyRecipeJsons);
+        modEventBus.addListener(XieFuels::onModifyDefaultComponents);
     }
 
     public static XieRegistrar registrar() {

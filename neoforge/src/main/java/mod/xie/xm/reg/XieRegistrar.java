@@ -39,6 +39,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.random.WeightedList;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.food.FoodProperties;
@@ -54,6 +55,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.grower.TreeGrower;
+import net.minecraft.world.level.levelgen.feature.Feature;
 
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -722,13 +724,14 @@ public final class XieRegistrar {
 
         // The name is the grower's identity in TreeGrower's own registry, so it has
         // to be unique across every sapling in every pack. The block's id is.
+        ResourceKey<Feature> tree = ResourceKey.create(Registries.FEATURE,
+            Identifier.fromNamespaceAndPath(XiesMod.MOD_ID, RegisteredContent.treeFeaturePath(leaves)));
         return Optional.of(new TreeGrower(
             XiesMod.MOD_ID + ":" + path,
-            Optional.empty(),
-            Optional.of(ResourceKey.create(Registries.CONFIGURED_FEATURE,
-                Identifier.fromNamespaceAndPath(XiesMod.MOD_ID,
-                    RegisteredContent.treeFeaturePath(leaves)))),
-            Optional.empty()));
+            WeightedList.of(tree),
+            WeightedList.of(),
+            WeightedList.of(),
+            tree));
     }
 
     /** The blocks a definition's {@code growsOn} names, as namespaced ids. */

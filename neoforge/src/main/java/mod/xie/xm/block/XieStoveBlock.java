@@ -1,13 +1,13 @@
 package mod.xie.xm.block;
 
-import com.mojang.serialization.MapCodec;
-
 import mod.xie.xm.cook.StovePot;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -21,6 +21,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.CookingFuel;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -33,7 +34,13 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.level.storage.loot.providers.number.ints.ResolvableInt;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -147,13 +154,10 @@ public class XieStoveBlock extends Block implements EntityBlock {
             waterItems = Set.copyOf(waterItems);
         }
 
-        /** Used only to satisfy the block codec; never placed in a world. */
+        /** What {@link XieStoveBlock#configOf} answers for a state that is not a stove. */
         public static final Config PLACEHOLDER = new Config(
             200, 6000, 8, 4, 4, Optional.empty(), Optional.empty(), Optional.empty(), Set.of());
     }
-
-    public static final MapCodec<XieStoveBlock> CODEC =
-        simpleCodec(properties -> new XieStoveBlock(properties, Config.PLACEHOLDER));
 
     private final Config config;
 
@@ -173,11 +177,6 @@ public class XieStoveBlock extends Block implements EntityBlock {
     /** The config of whatever stove a state belongs to, for the block entity to read. */
     public static Config configOf(BlockState state) {
         return state.getBlock() instanceof XieStoveBlock stove ? stove.config() : Config.PLACEHOLDER;
-    }
-
-    @Override
-    protected MapCodec<? extends XieStoveBlock> codec() {
-        return CODEC;
     }
 
     @Override
@@ -290,7 +289,7 @@ public class XieStoveBlock extends Block implements EntityBlock {
         if (level.isClientSide()) {
             // Whether the click will land is decided server-side; the client swings
             // for anything the stove could plausibly take so the two do not disagree.
-            return couldAccept(stack, state, level) ? InteractionResult.SUCCESS : InteractionResult.PASS;
+            return couldAccept(stack, state) ? InteractionResult.SUCCESS : InteractionResult.PASS;
         }
 
         if (tryBase(stack, stove, player, hand, level, pos)) {
@@ -323,7 +322,7 @@ public class XieStoveBlock extends Block implements EntityBlock {
      * ignores, which looks like it went in. A water bucket is always claimed, so one
      * the pot refuses is kept rather than poured out beside it.
      */
-    private boolean couldAccept(ItemStack stack, BlockState state, Level level) {
+    private boolean couldAccept(ItemStack stack, BlockState state) {
         int pot = state.getValue(POT);
         if (baseOf(stack).isPresent()) {
             return true;
@@ -334,7 +333,7 @@ public class XieStoveBlock extends Block implements EntityBlock {
         if (ingredientOf(stack).isPresent() && pot != POT_EMPTY) {
             return true;
         }
-        return level.fuelValues().isFuel(stack);
+        return stack.has(DataComponents.COOKING_FUEL);
     }
 
     private boolean tryBase(ItemStack stack, XieStoveBlockEntity stove, Player player,
@@ -388,7 +387,7 @@ public class XieStoveBlock extends Block implements EntityBlock {
 
     private boolean tryFuel(ItemStack stack, XieStoveBlockEntity stove, Player player,
                             InteractionHand hand, Level level, BlockPos pos) {
-        int burn = level.fuelValues().burnDuration(stack);
+        int burn = burnTime((ServerLevel) level, pos, player, stack);
         if (burn <= 0 || !stove.addFuel(burn)) {
             return false;
         }
@@ -396,6 +395,21 @@ public class XieStoveBlock extends Block implements EntityBlock {
         playSound(level, pos, SoundEvents.FIRECHARGE_USE);
         updateAppearance(level, pos, level.getBlockState(pos), stove);
         return true;
+    }
+
+    /**
+     * The fuel's {@code cooking_fuel} burn time, resolved as a furnace resolves it. The
+     * time is a context provider that halves itself in a smoker or a blast furnace, so
+     * it is asked with this stove as the block, which counts as an ordinary furnace.
+     */
+    private static int burnTime(ServerLevel level, BlockPos pos, Player player, ItemStack stack) {
+        LootContext context = new LootContext.Builder(new LootParams.Builder(level)
+                .withParameter(LootContextParams.THIS_ENTITY, player)
+                .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
+                .withParameter(LootContextParams.BLOCK_STATE, level.getBlockState(pos))
+                .create(LootContextParamSets.BLOCK_USE))
+            .create(Optional.empty());
+        return ResolvableInt.getFromItem(stack, DataComponents.COOKING_FUEL, CookingFuel::burnTime, context, 0);
     }
 
     // -- item classification --------------------------------------------------

@@ -1,7 +1,5 @@
 package mod.xie.xm.block;
 
-import com.mojang.serialization.MapCodec;
-
 import mod.xie.xm.content.model.Bounds;
 import mod.xie.xm.content.model.MetaMap;
 
@@ -16,6 +14,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BonemealSource;
 import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.VegetationBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -95,18 +94,11 @@ public class XiePlantBlock extends VegetationBlock implements BonemealableBlock 
             growsOn = Set.copyOf(growsOn);
         }
 
-        /** Used only to satisfy the block codec; never placed in a world. */
-        public static final Config PLACEHOLDER =
-            new Config(1, 100, 1, Set.of(), Optional.empty(), true, false, MIN_GROWTH_LIGHT);
-
         /** Whether this block stacks, and so may stand on another of its own kind. */
         public boolean isTall() {
             return growthHeight > 1;
         }
     }
-
-    public static final MapCodec<XiePlantBlock> CODEC =
-        simpleCodec(properties -> new XiePlantBlock(properties, Config.PLACEHOLDER));
 
     private final Config config;
     private final IntegerProperty ageProperty;
@@ -155,11 +147,6 @@ public class XiePlantBlock extends VegetationBlock implements BonemealableBlock 
 
     public boolean isRipe(BlockState state) {
         return age(state) >= config.maxAge();
-    }
-
-    @Override
-    protected MapCodec<? extends XiePlantBlock> codec() {
-        return CODEC;
     }
 
     @Override
@@ -295,7 +282,7 @@ public class XiePlantBlock extends VegetationBlock implements BonemealableBlock 
      * and any growth left over after ripening goes into a new segment on top.
      */
     @Override
-    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state) {
+    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state, BonemealSource source) {
         if (!config.fertilisable()) {
             return false;
         }
@@ -303,12 +290,12 @@ public class XiePlantBlock extends VegetationBlock implements BonemealableBlock 
     }
 
     @Override
-    public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state) {
+    public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
         return true;
     }
 
     @Override
-    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state) {
+    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
         if (isRipe(state)) {
             growWhenRipe(level, pos, state, random);
             return;

@@ -2,7 +2,7 @@ package mod.xie.xm.reg;
 
 import mod.xie.xm.content.model.BlockDef;
 
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -56,7 +56,7 @@ public final class XieBlockProperties {
             .sound(soundFor(def))
             .noCollision()
             .randomTicks()
-            .pushReaction(PushReaction.DESTROY);
+            .pushReaction(PushReaction.POPPED);
 
         return common(def, properties, 0f);
     }
@@ -82,7 +82,7 @@ public final class XieBlockProperties {
             .sound(soundFor(def));
 
         if (def.props().getBoolean("walkthroughable", false)) {
-            properties = properties.noCollision().pushReaction(PushReaction.DESTROY);
+            properties = properties.noCollision().pushReaction(PushReaction.POPPED);
         }
         if (!fillsItsCube(def)) {
             // XieBlock.setBlockBounds called setIsOpaque(false) whenever the box was
@@ -149,7 +149,7 @@ public final class XieBlockProperties {
             .noCollision()
             .randomTicks()
             .sound(SoundType.HARD_CROP)
-            .pushReaction(PushReaction.DESTROY);
+            .pushReaction(PushReaction.POPPED);
 
         return common(def, properties, 0f);
     }
@@ -170,7 +170,7 @@ public final class XieBlockProperties {
             .noCollision()
             .instabreak()
             .sound(SoundType.WOOD)
-            .pushReaction(PushReaction.DESTROY);
+            .pushReaction(PushReaction.POPPED);
     }
 
     /**
@@ -209,14 +209,13 @@ public final class XieBlockProperties {
             .randomTicks()
             .noOcclusion()
             .isSuffocating((state, level, pos) -> false)
-            .isViewBlocking((state, level, pos) -> false)
             .isRedstoneConductor((state, level, pos) -> false)
             // A full cube would otherwise be somewhere mobs spawn; vanilla leaves
             // admit the two that live in trees and nothing else.
             .isValidSpawn((state, level, pos, type) ->
-                type == EntityType.OCELOT || type == EntityType.PARROT)
+                type == EntityTypes.OCELOT || type == EntityTypes.PARROT)
             .ignitedByLava()
-            .pushReaction(PushReaction.DESTROY);
+            .pushReaction(PushReaction.POPPED);
 
         return common(def, properties, LEAF_HARDNESS);
     }

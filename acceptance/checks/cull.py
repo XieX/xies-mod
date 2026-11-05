@@ -1,10 +1,10 @@
 """``cull``, the only thing the format asks for that removes rather than adds.
 
-It is also the only one that leaves no trace in the generated pack: there is no
-recipe list to mutate any more, so ``XieRecipeCuller`` runs off
-``ModifyRecipeJsonsEvent`` and drops entries from the map of everything that
-loaded. A datapack cannot say it and a file on disk cannot show it, so the only
-place the answer exists is the running server's recipe registry.
+``XieRecipeCuller`` reads vanilla's recipes at generation and writes a
+``neoforge:never`` file over each one a cull names, and over its recipe-book
+advancement, into ``_generated/_overrides/``. A file there shows what was
+asked for; whether the registry actually lost the recipe only shows on the
+running server.
 
 ``/recipe give <player> <id>`` is that probe: the argument resolves against the
 recipes that actually loaded, so a culled one answers "Unknown recipe" while a

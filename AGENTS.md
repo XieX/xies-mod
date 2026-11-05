@@ -64,15 +64,17 @@ The run directory
 - The Grep tool skips gitignored paths, `neoforge/run/` among them. Search there
   explicitly.
 
-Minecraft 26.1 and NeoForge
+Minecraft 26.3 and NeoForge
 ---------------------------
 
 - **Read the decompiled sources before writing an API call.** Minecraft's are in
   `neoforge/build/moddev/artifacts/minecraft-patched-<version>-sources.jar`, and
   NeoForge's sources jar is in `~/.gradle/caches/modules-2/`. Renames that cost time:
   `ResourceLocation` is `Identifier`, `ResourceKey.location()` is `identifier()`,
-  `noCollission` is `noCollision`, plants extend `VegetationBlock`, and the arrows
-  live in `net.minecraft.world.entity.projectile.arrow`.
+  `noCollission` is `noCollision`, plants extend `VegetationBlock`, the arrows
+  live in `net.minecraft.world.entity.projectile.arrow`, `EntityType` constants are
+  on `EntityTypes`, and `PushReaction.DESTROY` is `POPPED`. Blocks have no codec in
+  26.3, and ModDevGradle before 2.0.148 cannot recompile it.
 - **Copy vanilla's JSON, don't recall it.** Extract examples from the merged jar's
   `assets/minecraft/` and `data/minecraft/`. An item needs two files:
   `models/item/x.json` and `items/x.json`.
@@ -81,6 +83,9 @@ Minecraft 26.1 and NeoForge
 - **A block with no `age` needs the empty variant key**, `{"variants": {"": ...}}`.
   Naming a property a block doesn't have, in a blockstate or a loot condition, is a
   load error.
+- **A loot table takes one `condition` and one `modifier`, not lists.** Both are
+  keyed by `type`, and a block's age is tested with `match_block`, its `blocks` and
+  `state`. A recipe-book advancement says `recipes`, not `recipe`.
 - **A block model needs no `render_type`.** The chunk layer comes from the sprite's
   alpha. `minecraft:block/leaves` tints every face and needs a registered block
   colour; `cube_all` does not.
@@ -100,21 +105,34 @@ Minecraft 26.1 and NeoForge
   `_generated/_overrides/`, a separate pack at the top. Tags merge rather than
   override, so a `#minecraft:` tag needs no such move. Test an override where it
   differs most from vanilla, so a lucky roll can't pass for it working.
-- **`ModifyDefaultComponentsEvent` fires at datapack load**, not registration. Tags
-  resolve there, and the bootstrap registration lookup throws. `DataComponentMap.Builder.set`
-  replaces a component; it does not append to it.
+- **`ModifyDefaultComponentsEvent` fires once, but its patches run at every datapack
+  load**, and a `modifyMatching` predicate is asked then too. Tags resolve there, and
+  the bootstrap registration lookup throws. `DataComponentMap.Builder.set` replaces a
+  component; it does not append to it.
 - **Registries are unfrozen while items register**, so an item can name a block tag
   nothing has defined yet, as vanilla's `ToolMaterial` does.
-- **Burn time is a data map**, `data/neoforge/data_maps/item/furnace_fuels.json`. The
-  directory names the map, so the file cannot go under this mod's namespace. A
-  smoker shows half the burn time a furnace does.
+- **Burn time is the `minecraft:cooking_fuel` component**, which names a
+  `context_int_provider` that halves itself in a smoker or a blast furnace, as
+  `cooking/time_coal` does. NeoForge's `furnace_fuels` data map is gone. A smoker
+  recipe gives the furnace's cooking time and the smoker halves it.
 - **A file is disabled with `"neoforge:conditions": [{"type": "neoforge:never"}]`.**
+- **Recipes are a datapack registry**, with no hook between reading a file and
+  registering it, so a recipe is removed by overriding its id with a disabled file.
+  Anything still naming it, such as its recipe-book advancement, fails the whole
+  datapack and has to go too.
 - **A `HolderSet` is one tag or a list of ids, never a list of tags.** A list
   containing a `#tag` fails with "Not a JSON object", so several tags need a tag file
   of their own.
 - **Write a patch the way `patch_pumpkin` does.** Vanilla no longer uses
-  `random_patch`: a `simple_block` feature, placed with `count`, `random_offset` and
+  `random_patch`: a `simple_block` feature, placed with `count`, `offset` and
   `block_predicate_filter`.
+- **Features live in `worldgen/feature/`** and keep their fields beside `type`, with
+  no `config`. A block state is `{"id", "properties"}`, or a bare id, and stands for
+  a provider wherever one is asked for.
+- **A tag inside a composite holder set must not be shared with another file.**
+  Registry files load in parallel, and `neoforge:and`/`or`/`not` each add a listener
+  to a shared, unsynchronised list on the tag, which fails the load at random. The
+  emitter gives each biome modifier its own tags that hold the shared ones.
 - **Prefer `c:` biome tags.** Vanilla has no `is_plains`, `is_swamp` or `is_desert`,
   and other mods tag their biomes into `c:`.
 - **There is no "within n blocks" block predicate.** It is one offset test per

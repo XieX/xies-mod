@@ -1,7 +1,5 @@
 package mod.xie.xm.block;
 
-import com.mojang.serialization.MapCodec;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -36,16 +34,8 @@ import net.minecraft.world.level.block.state.BlockState;
  */
 public class XieCropBlock extends XiePlantBlock {
 
-    public static final MapCodec<XieCropBlock> CODEC =
-        simpleCodec(properties -> new XieCropBlock(properties, Config.PLACEHOLDER));
-
     public XieCropBlock(BlockBehaviour.Properties properties, Config config) {
         super(properties, config);
-    }
-
-    @Override
-    protected MapCodec<? extends XieCropBlock> codec() {
-        return CODEC;
     }
 
     /**

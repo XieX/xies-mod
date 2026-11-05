@@ -50,7 +50,7 @@ import java.util.Set;
  *   <li>picking a column and taking the surface height is {@code in_square} then
  *       {@code heightmap};</li>
  *   <li>{@code clusterSize} scattered around that point is {@code count} then
- *       {@code random_offset}, which is how vanilla's own pumpkin patch is built;</li>
+ *       {@code offset}, which is how vanilla's own pumpkin patch is built;</li>
  *   <li>{@code spawnsOn}, {@code spawnsIn}, {@code spawnsUnder} and {@code spawnsNear}
  *       are one {@code block_predicate_filter} of offset block tests.</li>
  * </ul>
@@ -170,7 +170,7 @@ public final class XieWorldgenEmitter {
 
             String path = RegisteredContent.treeFeaturePath(tree.getKey());
             usedIds.add(path);
-            PackJson.write(dataRoot.resolve("worldgen").resolve("configured_feature")
+            PackJson.write(dataRoot.resolve("worldgen").resolve("feature")
                     .resolve(path + ".json"),
                 treeFeature(XiesMod.MOD_ID + ":" + tree.getKey(), tree.getValue()));
         }
@@ -290,7 +290,7 @@ public final class XieWorldgenEmitter {
                 }
             }
             featureId = XiesMod.MOD_ID + ":" + id;
-            PackJson.write(spawnRoot.resolve("worldgen").resolve("configured_feature")
+            PackJson.write(spawnRoot.resolve("worldgen").resolve("feature")
                 .resolve(id + ".json"), feature);
         }
 
@@ -300,7 +300,7 @@ public final class XieWorldgenEmitter {
 
         JsonObject modifier = new JsonObject();
         modifier.addProperty("type", "neoforge:add_features");
-        modifier.add("biomes", biomeHolder(id, spawn));
+        modifier.add("biomes", ownTags(id, biomeHolder(id, spawn)));
         modifier.addProperty("features", XiesMod.MOD_ID + ":" + id);
         modifier.addProperty("step", intoAir ? STEP_IN_AIR : STEP_IN_TERRAIN);
 
@@ -442,6 +442,52 @@ public final class XieWorldgenEmitter {
             holder = or;
         }
         return leftOut.isEmpty() ? holder : excluding(List.of(holder), leftOut);
+    }
+
+    /**
+     * {@code holder} with every tag inside a composite holder set swapped for a tag of
+     * this modifier's own, holding just that tag.
+     *
+     * <p>A composite set registers a listener on each tag set it holds, and NeoForge
+     * keeps those listeners in a plain list on the tag set, which every file naming the
+     * tag shares. 26.3 parses registry files in parallel, so two modifiers that both
+     * leave out {@code #c:is_snowy} can corrupt that list and fail the datapack. A tag
+     * named by one file only is never shared.
+     */
+    private JsonElement ownTags(String id, JsonElement holder) throws IOException {
+        if (!(holder instanceof JsonObject composite)) {
+            return holder;
+        }
+        JsonObject copy = new JsonObject();
+        for (Map.Entry<String, JsonElement> field : composite.entrySet()) {
+            JsonElement value = field.getValue();
+            if (value instanceof JsonArray parts) {
+                JsonArray swapped = new JsonArray();
+                for (JsonElement part : parts) {
+                    swapped.add(ownTag(id, part));
+                }
+                value = swapped;
+            } else if (!field.getKey().equals("type")) {
+                value = ownTag(id, value);
+            }
+            copy.add(field.getKey(), value);
+        }
+        return copy;
+    }
+
+    private JsonElement ownTag(String id, JsonElement part) throws IOException {
+        if (!part.isJsonPrimitive() || !part.getAsString().startsWith("#")) {
+            return ownTags(id, part);
+        }
+        Identifier tag = Identifier.parse(part.getAsString().substring(1));
+        String path = "biome_modifier/" + id + "/" + tag.getNamespace() + "/" + tag.getPath();
+        JsonArray values = new JsonArray();
+        values.add(part);
+        JsonObject file = new JsonObject();
+        file.add("values", values);
+        PackJson.write(spawnRoot.resolve("tags").resolve("worldgen").resolve("biome")
+            .resolve(path + ".json"), file);
+        return new JsonPrimitive("#" + XiesMod.MOD_ID + ":" + path);
     }
 
     /** {@code neoforge:and} of every holder set in {@code base} and not each of {@code out}. */
@@ -620,26 +666,18 @@ public final class XieWorldgenEmitter {
     // ---------------------------------------------------------------- features
 
     private static JsonObject simpleBlock(String blockId) {
-        JsonObject config = new JsonObject();
-        config.add("to_place", stateProvider(blockId));
-
-        JsonObject feature = new JsonObject();
-        feature.addProperty("type", "minecraft:simple_block");
-        feature.add("config", config);
+        JsonObject feature = typed("minecraft:simple_block");
+        feature.add("to_place", blockState(blockId));
         return feature;
     }
 
     private static JsonObject disk(String blockId, JsonObject target, int radius) {
-        JsonObject config = new JsonObject();
-        config.add("state_provider", stateProvider(blockId));
-        config.add("target", target);
-        config.addProperty("radius", radius);
+        JsonObject feature = typed("minecraft:disk");
+        feature.add("state_provider", blockState(blockId));
+        feature.add("target", target);
+        feature.addProperty("radius", radius);
         // One layer. A clump was flat: it grew outwards in x and z from one point.
-        config.addProperty("half_height", 0);
-
-        JsonObject feature = new JsonObject();
-        feature.addProperty("type", "minecraft:disk");
-        feature.add("config", config);
+        feature.addProperty("half_height", 0);
         return feature;
     }
 
@@ -669,7 +707,7 @@ public final class XieWorldgenEmitter {
      * {@code TreeFeature} does the placing.
      *
      * <p>The numbers are read straight off {@code data/minecraft/worldgen/
-     * configured_feature/{oak,spruce,pine}.json} rather than translated from the 2013
+     * feature/{oak,spruce,pine}.json} rather than translated from the 2013
      * code, because the 2013 code <em>is</em> those trees: {@code generateOak} rolls
      * {@code nextInt(3) + 4} for its trunk and {@code straight_trunk_placer} with a
      * base of 4 and a random of 2 rolls exactly the same 4 to 6.
@@ -681,61 +719,57 @@ public final class XieWorldgenEmitter {
      * dirt, which would take the soul sand from under a tree planted on it.
      */
     private static JsonObject treeFeature(String leavesId, RegisteredContent.Tree tree) {
-        JsonObject config = new JsonObject();
-        config.add("trunk_provider", axisProvider(tree.trunkId()));
-        config.add("foliage_provider", tree.fruitAges() > 0
+        JsonObject feature = typed("minecraft:tree");
+        feature.add("trunk_provider", uprightLog(tree.trunkId()));
+        feature.add("foliage_provider", tree.fruitAges() > 0
             ? fruitingFoliage(leavesId, tree.fruitAges())
-            : stateProvider(leavesId));
-        config.add("decorators", new JsonArray());
-        config.addProperty("ignore_vines", true);
-        config.add("below_trunk_provider", grassToDirt());
+            : blockState(leavesId));
+        feature.add("decorators", new JsonArray());
+        feature.addProperty("ignore_vines", true);
+        feature.add("below_trunk_provider", grassToDirt());
 
         switch (tree.shape()) {
             case CONIFER -> {
-                config.add("trunk_placer", straightTrunk(5, 2, 1));
+                feature.add("trunk_placer", straightTrunk(5, 2, 1));
                 JsonObject foliage = typed("minecraft:spruce_foliage_placer");
                 foliage.add("trunk_height", uniform(1, 2));
                 foliage.add("radius", uniform(2, 3));
                 foliage.add("offset", uniform(0, 2));
-                config.add("foliage_placer", foliage);
-                config.add("minimum_size", twoLayers(2, 0, 2));
+                feature.add("foliage_placer", foliage);
+                feature.add("minimum_size", twoLayers(2, 0, 2));
             }
             case TALL -> {
-                config.add("trunk_placer", straightTrunk(6, 4, 0));
+                feature.add("trunk_placer", straightTrunk(6, 4, 0));
                 JsonObject foliage = typed("minecraft:pine_foliage_placer");
                 foliage.add("height", uniform(3, 4));
                 foliage.addProperty("offset", 1);
                 foliage.addProperty("radius", 1);
-                config.add("foliage_placer", foliage);
-                config.add("minimum_size", twoLayers(2, 0, 2));
+                feature.add("foliage_placer", foliage);
+                feature.add("minimum_size", twoLayers(2, 0, 2));
             }
             default -> {
-                config.add("trunk_placer", straightTrunk(4, 2, 0));
+                feature.add("trunk_placer", straightTrunk(4, 2, 0));
                 JsonObject foliage = typed("minecraft:blob_foliage_placer");
                 foliage.addProperty("radius", 2);
                 foliage.addProperty("offset", 0);
                 foliage.addProperty("height", 3);
-                config.add("foliage_placer", foliage);
-                config.add("minimum_size", twoLayers(1, 0, 1));
+                feature.add("foliage_placer", foliage);
+                feature.add("minimum_size", twoLayers(1, 0, 1));
             }
         }
-
-        JsonObject feature = new JsonObject();
-        feature.addProperty("type", "minecraft:tree");
-        feature.add("config", config);
         return feature;
     }
 
-    /** A {@code rule_based_state_provider} that answers dirt on grass and nothing elsewhere. */
+    /** A {@code rule_based} provider that answers dirt on grass and nothing elsewhere. */
     private static JsonObject grassToDirt() {
         JsonObject onGrass = typed("minecraft:matching_blocks");
         onGrass.addProperty("blocks", "minecraft:grass_block");
         JsonObject rule = new JsonObject();
         rule.add("if_true", onGrass);
-        rule.add("then", stateProvider("minecraft:dirt"));
+        rule.add("then", blockState("minecraft:dirt"));
         JsonArray rules = new JsonArray();
         rules.add(rule);
-        JsonObject provider = typed("minecraft:rule_based_state_provider");
+        JsonObject provider = typed("minecraft:rule_based");
         provider.add("rules", rules);
         return provider;
     }
@@ -778,42 +812,35 @@ public final class XieWorldgenEmitter {
             JsonObject properties = new JsonObject();
             properties.addProperty("age", String.valueOf(age));
             JsonObject state = blockState(leavesId);
-            state.add("Properties", properties);
+            state.add("properties", properties);
 
             JsonObject entry = new JsonObject();
             entry.addProperty("weight", age == 0 ? BARE_LEAVES_PER_RIPE : 1);
             entry.add("data", state);
             entries.add(entry);
         }
-        JsonObject provider = typed("minecraft:weighted_state_provider");
+        JsonObject provider = typed("minecraft:weighted");
         provider.add("entries", entries);
         return provider;
     }
 
     /** A log, which unlike a leaf has to say which way up it is. */
-    private static JsonObject axisProvider(String blockId) {
+    private static JsonObject uprightLog(String blockId) {
         JsonObject properties = new JsonObject();
         properties.addProperty("axis", "y");
 
         JsonObject state = blockState(blockId);
-        state.add("Properties", properties);
-
-        JsonObject provider = new JsonObject();
-        provider.addProperty("type", "minecraft:simple_state_provider");
-        provider.add("state", state);
-        return provider;
+        state.add("properties", properties);
+        return state;
     }
 
-    private static JsonObject stateProvider(String blockId) {
-        JsonObject provider = new JsonObject();
-        provider.addProperty("type", "minecraft:simple_state_provider");
-        provider.add("state", blockState(blockId));
-        return provider;
-    }
-
+    /**
+     * A block's default state. Wherever a provider is asked for, a state stands for
+     * the provider that always places it, as vanilla's own features write it.
+     */
     private static JsonObject blockState(String blockId) {
         JsonObject state = new JsonObject();
-        state.addProperty("Name", blockId);
+        state.addProperty("id", blockId);
         return state;
     }
 
@@ -849,16 +876,18 @@ public final class XieWorldgenEmitter {
      * than the trapezoid vanilla's own patches favour.
      */
     private static JsonObject randomOffset(int xzSpread, int ySpread, int yShift) {
-        JsonObject modifier = typed("minecraft:random_offset");
-        if (xzSpread > 0) {
-            modifier.add("xz_spread", uniform(-xzSpread, xzSpread));
-        } else {
-            modifier.addProperty("xz_spread", 0);
+        JsonObject modifier = typed("minecraft:offset");
+        for (String axis : new String[] {"x", "z"}) {
+            if (xzSpread > 0) {
+                modifier.add(axis, uniform(-xzSpread, xzSpread));
+            } else {
+                modifier.addProperty(axis, 0);
+            }
         }
         if (ySpread > 0) {
-            modifier.add("y_spread", uniform(yShift - ySpread, yShift + ySpread));
+            modifier.add("y", uniform(yShift - ySpread, yShift + ySpread));
         } else {
-            modifier.addProperty("y_spread", yShift);
+            modifier.addProperty("y", yShift);
         }
         return modifier;
     }

@@ -61,8 +61,8 @@ final class XieAges {
     }
 
     /**
-     * The property for the block under construction. A codec-built block never
-     * primed, and takes the smallest.
+     * The property for the block under construction. A block built without
+     * priming takes the smallest.
      */
     static IntegerProperty pending() {
         Integer max = PENDING.get();

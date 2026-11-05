@@ -21,6 +21,7 @@ import mod.xie.xm.content.model.RecipeDef;
 import mod.xie.xm.content.model.ResourceNames;
 import mod.xie.xm.content.model.SeedReturns;
 import mod.xie.xm.content.model.Variants;
+import mod.xie.xm.recipe.XieRecipeCuller;
 import mod.xie.xm.reg.RegisteredContent;
 import mod.xie.xm.reg.XieOverrides;
 
@@ -46,6 +47,7 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Writes the generated datapack: loot tables from {@code drops}, and recipes.
@@ -102,20 +104,20 @@ public final class XieDataEmitter {
     /**
      * The three ways food is cooked, and how long each takes.
      *
-     * <p>Vanilla's own numbers: a smoker is twice as fast as a furnace and a campfire
-     * three times as slow, and every vanilla foodstuff that smelts has all three
-     * recipes. 1.6 had only the furnace, so the other two are what "cook this" means
-     * now rather than something the content asked for.
+     * <p>Vanilla's own numbers: a campfire is three times as slow as a furnace, and a
+     * smoker takes the furnace's time and halves it itself. Every vanilla foodstuff
+     * that smelts has all three recipes. 1.6 had only the furnace, so the other two
+     * are what "cook this" means now rather than something the content asked for.
      */
     private record Cooker(String recipeType, int cookingTime, boolean foodOnly) { }
 
     private static final List<Cooker> COOKERS = List.of(
         new Cooker("minecraft:smelting", SMELT_TIME, false),
-        new Cooker("minecraft:smoking", SMELT_TIME / 2, true),
+        new Cooker("minecraft:smoking", SMELT_TIME, true),
         new Cooker("minecraft:campfire_cooking", SMELT_TIME * 3, true));
 
-    /** Where NeoForge reads burn times from; the namespace is the data map's, not ours. */
-    private static final String FUEL_DATA_MAP = "data/neoforge/data_maps/item/furnace_fuels.json";
+    /** Where a burn time's provider goes, under {@code context_int_provider/}; the time follows. */
+    private static final String FUEL_PROVIDER_PREFIX = "cooking/time_";
 
     /** The one archetype whose {@code blocks} map anything reads. See {@link #checkStickDrops}. */
     private static final String STICK = "stick";
@@ -131,7 +133,7 @@ public final class XieDataEmitter {
      *                      and the log tag a {@code log} joins
      * @param features      worldgen entries written, as feature and biome modifier
      * @param trees         tree features written, one per registered {@code tree}
-     * @param fuels         burn times written into the furnace fuel data map
+     * @param fuels         items given a burn time
      * @param skippedDrops  drops whose item could not be resolved
      * @param skippedRecipes recipes dropped because something in them is not ported
      * @param skippedSpawns worldgen entries dropped for the same reason
@@ -186,13 +188,14 @@ public final class XieDataEmitter {
     /**
      * The items every {@code cull} entry named, resolved.
      *
-     * <p>A cull writes no file — it removes recipes rather than adding any — so this
-     * is the emitter's whole output for it, handed to {@link mod.xie.xm.recipe.XieRecipeCuller}
-     * to apply when the recipes are actually loaded. Resolving it here is what keeps
-     * {@code redDye} and {@code stoneSword} meaning the same thing they mean anywhere
-     * else in a definition file.
+     * <p>{@link #writeCulls} disables the vanilla recipes that produce them. Resolving
+     * them here is what keeps {@code redDye} and {@code stoneSword} meaning the same
+     * thing they mean anywhere else in a definition file.
      */
     private final Set<String> culledItems = new LinkedHashSet<>();
+
+    /** Item id to the burn time provider its {@code cooking_fuel} names. */
+    private final Map<String, String> fuels = new LinkedHashMap<>();
 
     /**
      * The id path of every subtype of a split definition, mapped to itself.
@@ -252,6 +255,7 @@ public final class XieDataEmitter {
         usedRecipeIds.clear();
         subtypePaths.clear();
         culledItems.clear();
+        fuels.clear();
         overrides = 0;
         advancements = 0;
         this.registered = registered;
@@ -359,7 +363,7 @@ public final class XieDataEmitter {
             recipes += writeCookingRecipes(pack);
         }
 
-        int fuels = writeFuelValues(packs);
+        int fuelItems = writeFuelValues(packs);
 
         // Named, not just counted. A recipe that quietly fails to appear is the
         // hardest thing to diagnose while archetypes are still being ported, and
@@ -370,21 +374,18 @@ public final class XieDataEmitter {
                 String.join(", ", skippedRecipes));
         }
 
-        if (!culledItems.isEmpty()) {
-            LOGGER.info("Culling every recipe but this mod's own for: {}",
-                String.join(", ", culledItems));
-        }
+        writeCulls();
 
         XieWorldgenEmitter.Counts spawns = worldgen.emit(packs, registered.trees());
 
         return new Counts(lootTables, recipes, advancements, tags, blockTags, spawns.features(),
-            spawns.trees(), fuels, skippedDrops, skippedRecipes.size(), spawns.skipped(),
+            spawns.trees(), fuelItems, skippedDrops, skippedRecipes.size(), spawns.skipped(),
             skippedCulls, overrides);
     }
 
-    /** The items every {@code cull} entry named; empty until {@link #emit} has run. */
-    public Set<String> culledItems() {
-        return Set.copyOf(culledItems);
+    /** Item id to burn time provider id, for {@code cooking_fuel}; empty until {@link #emit} runs. */
+    public Map<String, String> fuels() {
+        return Map.copyOf(fuels);
     }
 
     // ----------------------------------------------------------- loot tables
@@ -474,17 +475,14 @@ public final class XieDataEmitter {
      * The loot table for a definition that {@code override}s a vanilla block, written
      * at that block's own id so it replaces the table vanilla ships.
      *
-     * <p>This is the one place a datapack can express an override outright, and it is
-     * the mechanism {@link mod.xie.xm.recipe.XieRecipeCuller} exists because
-     * <em>cannot</em> be used for {@code cull}: a pack overrides a loot table by id,
-     * and a cull knows no ids where an override knows exactly one. Writing
+     * <p>A pack overrides a loot table by id, and an override knows exactly one. Writing
      * {@code data/minecraft/loot_table/blocks/wheat.json} into the generated pack
      * really does replace vanilla's, wholesale — which is what an override asks for,
      * since in 2013 the vanilla block was gone and the Xie block's drops were all
      * there were.
      *
      * <p>The ages come from the vanilla block rather than from the definition. A
-     * {@code block_state_property} condition naming a value the property cannot hold
+     * {@code match_block} condition naming a value the property cannot hold
      * is a load error, so a definition asking for more growth stages than the block
      * has is clamped and said so. {@code wheatOverride} asks for exactly vanilla
      * wheat's 0-7 and nothing is clamped.
@@ -608,13 +606,13 @@ public final class XieDataEmitter {
 
     /** The wrapper every block loot table shares. */
     private static JsonObject blockLootRoot(String randomSequence, JsonArray pools) {
-        JsonArray functions = new JsonArray();
-        functions.add(namedFunction("minecraft:explosion_decay"));
+        JsonObject explosionDecay = new JsonObject();
+        explosionDecay.addProperty("type", "minecraft:explosion_decay");
 
         JsonObject root = new JsonObject();
         root.addProperty("type", "minecraft:block");
         root.addProperty("random_sequence", randomSequence);
-        root.add("functions", functions);
+        root.add("modifier", explosionDecay);
         root.add("pools", pools);
         return root;
     }
@@ -704,22 +702,22 @@ public final class XieDataEmitter {
         entry.addProperty("name", itemId);
         if (chance < 100) {
             JsonObject randomChance = new JsonObject();
-            randomChance.addProperty("condition", "minecraft:random_chance");
+            randomChance.addProperty("type", "minecraft:random_chance");
             randomChance.addProperty("chance", chance / 100.0f);
-            entry.add("conditions", single(randomChance));
+            entry.add("condition", randomChance);
         }
 
         JsonObject pool = new JsonObject();
         pool.addProperty("rolls", rolls);
         if (ageCondition != null) {
-            pool.add("conditions", single(ageCondition));
+            pool.add("condition", ageCondition);
         }
         pool.add("entries", single(entry));
         return pool;
     }
 
     /**
-     * A {@code block_state_property} predicate over an age range, or null when the
+     * A {@code match_block} predicate over an age range, or null when the
      * range covers every age and the condition would be dead weight.
      */
     private JsonObject ageCondition(String blockId, int from, int to, int maxAge) {
@@ -739,9 +737,9 @@ public final class XieDataEmitter {
         }
 
         JsonObject condition = new JsonObject();
-        condition.addProperty("condition", "minecraft:block_state_property");
-        condition.addProperty("block", blockId);
-        condition.add("properties", properties);
+        condition.addProperty("type", "minecraft:match_block");
+        condition.addProperty("blocks", blockId);
+        condition.add("state", properties);
         return condition;
     }
 
@@ -861,8 +859,36 @@ public final class XieDataEmitter {
     }
 
     /**
-     * Resolves what a {@code cull} names, for {@link mod.xie.xm.recipe.XieRecipeCuller}
-     * to remove once the recipes are loaded.
+     * Disables, from the override pack, every vanilla recipe producing a culled item
+     * and the recipe-book advancement naming it. See {@link XieRecipeCuller}, which
+     * finds them.
+     */
+    private void writeCulls() throws IOException {
+        if (culledItems.isEmpty()) {
+            return;
+        }
+        Set<Identifier> files = XieRecipeCuller.vanillaRecipesProducing(culledItems);
+        Set<Identifier> advancements = XieRecipeCuller.vanillaAdvancementsNaming(
+            files.stream().map(XieRecipeCuller::recipeId).collect(Collectors.toSet()));
+        for (Set<Identifier> disabled : List.of(files, advancements)) {
+            for (Identifier file : disabled) {
+                PackJson.write(overrideRoot.resolve("data").resolve(file.getNamespace())
+                    .resolve(file.getPath()), XieRecipeCuller.disabled());
+                overrides++;
+            }
+        }
+        if (files.isEmpty()) {
+            LOGGER.info("Nothing to cull: no vanilla recipe produces any of {}",
+                String.join(", ", culledItems));
+            return;
+        }
+        LOGGER.info("Culled {} recipes producing {}: {}", files.size(),
+            String.join(", ", culledItems),
+            String.join(", ", files.stream().map(XieRecipeCuller::recipeId).toList()));
+    }
+
+    /**
+     * Resolves what a {@code cull} names, for {@link #writeCulls} to remove.
      *
      * <p><strong>The stack count is deliberately ignored.</strong> A cull names an
      * output <em>stack</em>, and {@code Xie.itemstacksEqual} compared the count along
@@ -1144,13 +1170,12 @@ public final class XieDataEmitter {
     // ------------------------------------------------------------------ fuel
 
     /**
-     * {@code fuel} as NeoForge's furnace-fuel data map: one file, one entry per item.
-     *
-     * <p>Burn time has no data component — vanilla builds its own table from item tags
-     * at {@code FuelValues.vanillaBurnTimes} — so this is the datapack-shaped answer,
-     * and the only file this emitter writes outside its own namespace: the loader
-     * keys the data map by the <em>directory</em> it is found in, so it has to be
-     * {@code neoforge}'s.
+     * {@code fuel} as the {@code minecraft:cooking_fuel} component, which is where a
+     * furnace reads burn time. The component names a {@code context_int_provider}
+     * rather than holding a number, so this writes one per distinct burn time in the
+     * shape of vanilla's {@code cooking/time_coal}: the time, divided by two in a smoker
+     * or blast furnace. {@link #fuels} is what {@link mod.xie.xm.reg.XieFuels} sets the
+     * component from.
      *
      * <p>The property comes two ways. {@code cornCob} and {@code oil} write a bare
      * number, and the saplings write a metadata table — {@code "fuel": {"0-4": 100}} —
@@ -1161,36 +1186,53 @@ public final class XieDataEmitter {
      * @return how many items were given a burn time
      */
     private int writeFuelValues(List<ContentPack> packs) throws IOException {
-        JsonObject values = new JsonObject();
-        int written = 0;
+        Map<String, Integer> burnTimes = new LinkedHashMap<>();
 
         for (ContentPack pack : packs) {
             for (ItemDef def : pack.items().values()) {
-                written += addFuelValues(values, def.props(), def.qualifiedName(),
+                addFuelValues(burnTimes, def.props(), def.qualifiedName(),
                     registered.itemPaths().getOrDefault(def.name(), List.of()), path -> true);
             }
             for (BlockDef def : pack.blocks().values()) {
                 // A block burns as its item form, and a block without one — every Xie
                 // block but the saplings — has nothing that could go in a furnace.
-                written += addFuelValues(values, def.props(), def.qualifiedName(),
+                addFuelValues(burnTimes, def.props(), def.qualifiedName(),
                     registered.blockPaths().getOrDefault(def.name(), List.of()),
                     registered.blockItems()::contains);
             }
         }
 
-        if (written == 0) {
-            return 0;
+        Set<Integer> written = new HashSet<>();
+        for (Map.Entry<String, Integer> fuel : burnTimes.entrySet()) {
+            String provider = FUEL_PROVIDER_PREFIX + fuel.getValue();
+            fuels.put(fuel.getKey(), XiesMod.MOD_ID + ":" + provider);
+            if (written.add(fuel.getValue())) {
+                PackJson.write(dataRoot.resolve("context_int_provider").resolve(provider + ".json"),
+                    burnTimeProvider(fuel.getValue()));
+            }
         }
-        JsonObject root = new JsonObject();
-        root.add("values", values);
-        PackJson.write(outputRoot.resolve(FUEL_DATA_MAP), root);
-        return written;
+        return burnTimes.size();
     }
 
-    private int addFuelValues(JsonObject values, PropertyMap props, String origin,
-                              List<String> paths, Predicate<String> burns) {
+    /** {@code data/minecraft/context_int_provider/cooking/time_coal.json}, with another time. */
+    private static JsonObject burnTimeProvider(int burnTime) {
+        JsonObject divisor = new JsonObject();
+        divisor.addProperty("type", "minecraft:conditional");
+        divisor.addProperty("condition", "minecraft:block/fast_cooking");
+        divisor.addProperty("on_false", "minecraft:cooking/normal_burn_time_reduction_factor");
+        divisor.addProperty("on_true", "minecraft:cooking/fast_burn_time_reduction_factor");
+
+        JsonObject provider = new JsonObject();
+        provider.addProperty("type", "minecraft:div");
+        provider.addProperty("left", burnTime);
+        provider.add("right", divisor);
+        return provider;
+    }
+
+    private void addFuelValues(Map<String, Integer> burnTimes, PropertyMap props, String origin,
+                               List<String> paths, Predicate<String> burns) {
         if (!props.has("fuel")) {
-            return 0;
+            return;
         }
         for (String bad : props.badMetaKeys("fuel")) {
             LOGGER.warn("{} has an unparseable fuel range \"{}\"", origin, bad);
@@ -1199,10 +1241,9 @@ public final class XieDataEmitter {
             value -> PropertyMap.asInt(value).orElse(null));
         if (fuel.isEmpty()) {
             LOGGER.warn("{} declares a fuel value that is not a number", origin);
-            return 0;
+            return;
         }
 
-        int written = 0;
         for (int meta = 0; meta < paths.size(); meta++) {
             String path = paths.get(meta);
             if (!burns.test(path)) {
@@ -1213,12 +1254,8 @@ public final class XieDataEmitter {
             if (burnTime.isEmpty()) {
                 continue;
             }
-            JsonObject entry = new JsonObject();
-            entry.addProperty("burn_time", burnTime.get());
-            values.add(XiesMod.MOD_ID + ":" + path, entry);
-            written++;
+            burnTimes.put(XiesMod.MOD_ID + ":" + path, burnTime.get());
         }
-        return written;
     }
 
     /** The {@code result} object, or empty when the product is not registered. */
@@ -1275,7 +1312,7 @@ public final class XieDataEmitter {
         JsonArray anyOf = new JsonArray();
 
         JsonObject unlocked = new JsonObject();
-        unlocked.addProperty("recipe", recipeId);
+        unlocked.addProperty("recipes", recipeId);
         criteria.add("has_the_recipe", criterion("minecraft:recipe_unlocked", unlocked));
         anyOf.add("has_the_recipe");
 
@@ -1528,12 +1565,6 @@ public final class XieDataEmitter {
     }
 
     // ---------------------------------------------------------------- plumbing
-
-    private static JsonObject namedFunction(String function) {
-        JsonObject json = new JsonObject();
-        json.addProperty("function", function);
-        return json;
-    }
 
     private static JsonArray single(JsonObject element) {
         JsonArray array = new JsonArray();

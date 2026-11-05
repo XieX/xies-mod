@@ -13,7 +13,7 @@ cookpot and cheese.
 Installing
 ----------
 
-Needs Minecraft 26.1.2 with NeoForge 26.1.2.94 or later. Put the jar in `.minecraft/mods/` on
+Needs Minecraft 26.3 with NeoForge 26.3.0.101 or later. Put the jar in `.minecraft/mods/` on
 both the client and the server, and give both the same content: blocks and items
 are registered from it, so a client and a server that disagree cannot connect. The
 server refuses such a client with a "Channel of mod" message showing the content
@@ -156,8 +156,8 @@ The key is the product, with an optional `:count`:
   shorter way, and also gives smoker and campfire recipes when the result is food.
 - **Several recipes for one product:** give each its own key and name the product
   with `"product"`, as in `{"product": "mayo", "content": "lemon,egg,oil"}`.
-- **Removing vanilla recipes:** `{"cull": "redDye"}` removes every recipe that
-  makes red dye, except this mod's own.
+- **Removing vanilla recipes:** `{"cull": "redDye"}` removes every vanilla recipe
+  that makes red dye. Recipes from other mods and datapacks are left alone.
 
 An **alias** is a group of interchangeable ingredients. `"aliases": {"protein":
 "beefCooked,tofu"}` lets a recipe say `$protein`, and becomes the item tag
